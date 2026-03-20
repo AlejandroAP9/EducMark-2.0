@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
+import { PAID_PLAN_IDS, PLAN_DISPLAY_NAMES } from '@/shared/constants/metrics';
 import {
     CreditCard, DollarSign, TrendingUp, TrendingDown,
     CheckCircle2, XCircle, Clock, AlertTriangle, BarChart3, ArrowLeft
@@ -253,7 +254,7 @@ export function AdminSubscriptions() {
                         Distribución por Plan
                     </h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                        {['trial', 'copihue', 'araucaria', 'condor'].map(plan => {
+                        {PAID_PLAN_IDS.map(plan => {
                             const dist = stats?.planDistribution.find(d => d.plan === plan);
                             return (
                                 <div key={plan} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

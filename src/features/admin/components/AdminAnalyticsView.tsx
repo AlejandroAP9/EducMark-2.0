@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { ChartBar, Zap, Cpu, DollarSign, Database, TrendingUp, TrendingDown, Receipt, Image, ChartLine, Bot, Users, Gauge, ArrowLeft } from 'lucide-react';
@@ -44,8 +44,16 @@ export function AdminAnalyticsView() {
     const [stats, setStats] = useState<UsageStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [period, setPeriod] = useState<'7d' | '30d' | '90d'>('30d');
+    const statsCache = useRef<Record<string, { data: UsageStats; timestamp: number }>>({});
+    const CACHE_TTL = 60_000; // 1 minute
 
     useEffect(() => {
+        const cached = statsCache.current[period];
+        if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+            setStats(cached.data);
+            setLoading(false);
+            return;
+        }
         fetchStats();
     }, [period]);
 
@@ -140,12 +148,14 @@ export function AdminAnalyticsView() {
         const totalImages = imageCount || 0;
         const imageCostCLP = totalImages * 0.003 * USD_TO_CLP;
 
-        setStats({
+        const result: UsageStats = {
             totalGenerations, totalTokens, totalCost, cacheHitRate, avgResponseTime,
             usageByModel, dailyUsage, topUsers,
             totalRevenue: totalRevenueCLP, totalProfit: totalProfitCLP, ivaAmount,
             totalImages, imageCostCLP, totalCostCLP, subscriptionBreakdown
-        });
+        };
+        statsCache.current[period] = { data: result, timestamp: Date.now() };
+        setStats(result);
         setLoading(false);
     };
 

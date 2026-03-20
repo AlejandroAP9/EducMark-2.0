@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { ThumbsUp, ThumbsDown, FileText, Presentation, CheckSquare, Trash2, Search, Plus, FolderHeart, PencilLine, Copy, ClipboardList, Download, CheckCheck, X } from 'lucide-react';
 import { logAuditEvent } from '@/shared/lib/auditLog';
 import { downloadUrlAsPdf, buildPdfFilename } from '@/shared/lib/htmlToPdf';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface GeneratedClassRow {
     id: string;
@@ -31,10 +31,11 @@ export function History() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Filter States
-    const [selectedSubject, setSelectedSubject] = useState('Asignatura');
-    const [selectedLevel, setSelectedLevel] = useState('Nivel');
-    const [dateOrder, setDateOrder] = useState('Recientes');
+    // Filter States — initialized from URL params
+    const searchParams = useSearchParams();
+    const [selectedSubject, setSelectedSubject] = useState(searchParams.get('subject') || 'Asignatura');
+    const [selectedLevel, setSelectedLevel] = useState(searchParams.get('level') || 'Nivel');
+    const [dateOrder, setDateOrder] = useState(searchParams.get('order') || 'Recientes');
 
     // Menu State
     const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -46,6 +47,16 @@ export function History() {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [batchDeleting, setBatchDeleting] = useState(false);
     const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false);
+
+    // Sync filters to URL
+    useEffect(() => {
+        const params = new URLSearchParams();
+        if (selectedSubject !== 'Asignatura') params.set('subject', selectedSubject);
+        if (selectedLevel !== 'Nivel') params.set('level', selectedLevel);
+        if (dateOrder !== 'Recientes') params.set('order', dateOrder);
+        const qs = params.toString();
+        window.history.replaceState({}, '', qs ? `?${qs}` : window.location.pathname);
+    }, [selectedSubject, selectedLevel, dateOrder]);
 
     const toggleSelect = (id: string) => {
         setSelectedIds(prev => {

@@ -94,46 +94,84 @@ export function LeadDetail({ lead, stages, onClose, onUpdate }: LeadDetailProps)
         total_revenue: lead?.total_revenue || 0
     });
 
-    // Fetch interactions and tasks
+    // Track initial form state to detect unsaved changes
+    const [initialFormData] = useState(() => JSON.stringify({
+        nombre: lead?.nombre || '',
+        email: lead?.email || '',
+        telefono: lead?.telefono || '',
+        institucion: lead?.institucion || '',
+        stage: lead?.stage || 'lead_frio',
+        priority: lead?.priority || 'media',
+        source: lead?.source || 'organic',
+        notes: lead?.notes || '',
+        instagram: lead?.instagram || '',
+        total_revenue: lead?.total_revenue || 0
+    }));
+
+    const hasUnsavedChanges = JSON.stringify(formData) !== initialFormData;
+
+    const handleClose = () => {
+        if (hasUnsavedChanges) {
+            if (window.confirm('Tienes cambios sin guardar. ¿Seguro que quieres cerrar?')) {
+                onClose();
+            }
+        } else {
+            onClose();
+        }
+    };
+
+    // Fetch interactions and tasks (with abort controller to prevent race conditions)
     useEffect(() => {
+        const controller = new AbortController();
+
         if (lead?.id) {
-            fetchInteractions();
-            fetchTasks();
+            fetchInteractions(controller.signal);
+            fetchTasks(controller.signal);
         } else {
             setLoadingInteractions(false);
         }
+
+        return () => controller.abort();
     }, [lead?.id]);
 
-    const fetchInteractions = async () => {
+    const fetchInteractions = async (signal?: AbortSignal) => {
         if (!lead?.id) return;
         try {
-            const { data, error } = await supabase
+            let query = supabase
                 .from('interactions')
                 .select('*')
                 .eq('lead_id', lead.id)
                 .order('created_at', { ascending: false });
 
+            if (signal) query = query.abortSignal(signal);
+            const { data, error } = await query;
+
             if (error) throw error;
             setInteractions(data || []);
-        } catch (error) {
+        } catch (error: unknown) {
+            if (error instanceof Error && error.name === 'AbortError') return;
             console.error('Error fetching interactions:', error);
         } finally {
             setLoadingInteractions(false);
         }
     };
 
-    const fetchTasks = async () => {
+    const fetchTasks = async (signal?: AbortSignal) => {
         if (!lead?.id) return;
         try {
-            const { data, error } = await supabase
+            let query = supabase
                 .from('crm_tasks')
                 .select('*')
                 .eq('lead_id', lead.id)
                 .order('due_date', { ascending: true });
 
+            if (signal) query = query.abortSignal(signal);
+            const { data, error } = await query;
+
             if (error) throw error;
             setTasks(data || []);
-        } catch (error) {
+        } catch (error: unknown) {
+            if (error instanceof Error && error.name === 'AbortError') return;
             console.error('Error fetching tasks:', error);
         }
     };
@@ -142,6 +180,24 @@ export function LeadDetail({ lead, stages, onClose, onUpdate }: LeadDetailProps)
     const handleSave = async () => {
         if (!formData.email) {
             toast.error('El email es obligatorio');
+            return;
+        }
+
+        // Validate email format
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            toast.error('El formato del email no es valido');
+            return;
+        }
+
+        // Validate phone format (optional, but if present must be valid)
+        if (formData.telefono && !/^\+?[\d\s\-()]{7,20}$/.test(formData.telefono)) {
+            toast.error('El formato del telefono no es valido');
+            return;
+        }
+
+        // Validate revenue is non-negative
+        if (formData.total_revenue < 0) {
+            toast.error('El revenue no puede ser negativo');
             return;
         }
 
@@ -325,7 +381,7 @@ export function LeadDetail({ lead, stages, onClose, onUpdate }: LeadDetailProps)
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-            onClick={onClose}
+            onClick={handleClose}
         >
             <motion.div
                 initial={{ scale: 0.95, opacity: 0 }}
@@ -382,7 +438,7 @@ export function LeadDetail({ lead, stages, onClose, onUpdate }: LeadDetailProps)
                             </button>
                         )}
                         <button
-                            onClick={onClose}
+                            onClick={handleClose}
                             className="p-2 rounded-lg hover:bg-[var(--border)] transition-colors text-[var(--foreground)]"
                         >
                             <X className="w-5 h-5" />

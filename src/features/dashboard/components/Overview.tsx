@@ -14,6 +14,7 @@ import { UsageCard } from './UsageTracker';
 import { Tour } from './Tour';
 import { downloadUrlAsHtml, buildHtmlFilename } from '@/shared/lib/htmlToPdf';
 import { trackEvent } from '@/shared/lib/analytics';
+import { MINUTES_PER_CLASS, CLP_PER_HOUR, STUDENTS_PER_CLASS } from '@/shared/constants/metrics';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -123,7 +124,7 @@ export function Overview() {
             // Stats logic
             setStats({
                 total: totalClasses,
-                timeSaved: totalClasses * 45 // minutes
+                timeSaved: totalClasses * MINUTES_PER_CLASS
             });
 
             // Weekly Stats logic (Current Week)
@@ -135,7 +136,7 @@ export function Overview() {
             const weeklyClasses = allClasses.filter(c => new Date(c.created_at) >= startOfWeek);
             setWeeklyStats({
                 count: weeklyClasses.length,
-                timeSaved: Math.round((weeklyClasses.length * 45) / 60) // hours
+                timeSaved: Math.round((weeklyClasses.length * MINUTES_PER_CLASS) / 60)
             });
 
             // Streak Logic (Weeks)
@@ -276,7 +277,7 @@ export function Overview() {
     // Helper to calc stroke offset for rings. Circumference = 2 * PI * 28 ≈ 175.9
     const CIRCUMFERENCE = 175;
     const timeSavedHours = Math.floor(stats.timeSaved / 60);
-    const moneySaved = timeSavedHours * 7500; // CLP per hour (teacher avg)
+    const moneySaved = timeSavedHours * CLP_PER_HOUR;
 
     const getSubjectStyle = (subject: string) => {
         const s = (subject || '').toLowerCase();
@@ -444,7 +445,7 @@ export function Overview() {
                     </p>
                     <div className="flex items-baseline gap-2 mb-2">
                         <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">
-                            {stats.total * 35}
+                            {stats.total * STUDENTS_PER_CLASS}
                         </span>
                     </div>
                     <p className="text-sm text-[var(--muted)] mb-4 leading-snug">

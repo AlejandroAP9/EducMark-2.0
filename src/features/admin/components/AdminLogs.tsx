@@ -61,6 +61,7 @@ export function AdminLogs() {
             setLogs(data || []);
         } catch (err) {
             console.error('Error fetching audit logs:', err);
+            setLogs([]);
         } finally {
             setLoading(false);
         }
