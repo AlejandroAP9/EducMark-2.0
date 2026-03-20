@@ -657,13 +657,22 @@ export function LeadDetail({ lead, stages, onClose, onUpdate }: LeadDetailProps)
                                             placeholder="Título de la tarea..."
                                             className="w-full px-3 py-2 bg-[var(--background)] border border-[var(--border)] rounded-lg text-[var(--foreground)] text-sm mb-2"
                                         />
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 flex-wrap">
                                             <input
                                                 type="datetime-local"
                                                 value={newTask.due_date}
                                                 onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
-                                                className="flex-1 px-3 py-2 bg-[var(--background)] border border-[var(--border)] rounded-lg text-[var(--foreground)] text-sm"
+                                                className="flex-1 min-w-[140px] px-3 py-2 bg-[var(--background)] border border-[var(--border)] rounded-lg text-[var(--foreground)] text-sm"
                                             />
+                                            <select
+                                                value={newTask.priority}
+                                                onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as 'alta' | 'media' | 'baja' })}
+                                                className="px-3 py-2 bg-[var(--background)] border border-[var(--border)] rounded-lg text-[var(--foreground)] text-sm"
+                                            >
+                                                <option value="baja">Baja</option>
+                                                <option value="media">Media</option>
+                                                <option value="alta">Alta</option>
+                                            </select>
                                             <button
                                                 onClick={handleAddTask}
                                                 className="px-3 py-2 bg-[var(--primary)] text-white rounded-lg text-sm"

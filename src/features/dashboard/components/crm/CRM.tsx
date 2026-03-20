@@ -11,48 +11,7 @@ import {
     Download, CheckSquare, Square, ArrowUpDown, List, LayoutGrid, Percent
 } from 'lucide-react';
 import { LeadDetail } from './LeadDetail';
-
-// Types
-interface Lead {
-    id: string;
-    user_id: string | null;
-    nombre: string;
-    email: string;
-    telefono: string | null;
-    rol: string | null;
-    plan: string | null;
-    estatus_suscripcion: string | null;
-    creditos_restantes: number | null;
-    institucion: string | null;
-    created_at: string;
-    descarga_ebook: string | null;
-    source: string;
-    stage: string;
-    last_interaction: string | null;
-    notes: string | null;
-    tags: string[];
-    priority: string;
-    instagram: string | null;
-    total_revenue: number | null;
-    last_contacted_at: string | null;
-}
-
-interface PipelineStage {
-    name: string;
-    display_name: string;
-    color: string;
-    position: number;
-    count: number;
-}
-
-interface FunnelData {
-    stage: string;
-    display_name: string;
-    color: string;
-    position: number;
-    count: number;
-    percentage: number;
-}
+import { Lead, PipelineStage, FunnelData, DEFAULT_STAGES, ATTENTION_THRESHOLD_MS, CRM_SOURCES } from './types';
 
 interface VelocityStatRow {
     [key: string]: string | number | null;
@@ -80,6 +39,7 @@ export function CRM() {
     // Filters
     const [filterRol, setFilterRol] = useState('');
     const [filterInst, setFilterInst] = useState('');
+    const [filterSource, setFilterSource] = useState('');
 
     // Bulk selection
     const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
@@ -103,13 +63,7 @@ export function CRM() {
                 console.error('Error fetching stages:', stagesError);
                 toast.error('Error al cargar etapas (usando por defecto)');
                 // Fallback Stages incase DB table is missing/restricted
-                setStages([
-                    { name: 'prospecto', display_name: 'Prospecto', color: '#64748b', position: 1, count: 0 },
-                    { name: 'lead_calificado', display_name: 'Lead Calificado', color: '#3b82f6', position: 2, count: 0 },
-                    { name: 'propuesta', display_name: 'Propuesta', color: '#eab308', position: 3, count: 0 },
-                    { name: 'negociacion', display_name: 'Negociación', color: '#f97316', position: 4, count: 0 },
-                    { name: 'ganada', display_name: 'Ganada', color: '#22c55e', position: 5, count: 0 }
-                ]);
+                setStages(DEFAULT_STAGES);
             } else {
                 setStages(stagesData || []);
             }
@@ -153,7 +107,7 @@ export function CRM() {
                     .lte('due_date', now.toISOString());
 
                 // Recalculate insights
-                const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+                const threeDaysAgo = new Date(now.getTime() - ATTENTION_THRESHOLD_MS);
                 const todayStr = now.toISOString().split('T')[0];
 
                 const needingAttention = leadsData?.filter(l =>
@@ -211,8 +165,9 @@ export function CRM() {
 
         const matchesRol = filterRol === '' || lead.rol === filterRol;
         const matchesInst = filterInst === '' || lead.institucion === filterInst;
+        const matchesSource = filterSource === '' || lead.source === filterSource;
 
-        return matchesSearch && matchesRol && matchesInst;
+        return matchesSearch && matchesRol && matchesInst && matchesSource;
     });
 
     // Group leads by stage (with sorting)
@@ -498,9 +453,17 @@ export function CRM() {
                         <option value="">Todas las Instituciones</option>
                         {institutions.map(i => <option key={i} value={i}>{i}</option>)}
                     </select>
-                    {(filterRol || filterInst) && (
+                    <select
+                        value={filterSource}
+                        onChange={(e) => setFilterSource(e.target.value)}
+                        className="bg-[var(--surface)] text-sm border border-[var(--border)] rounded-lg px-3 py-1.5 text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+                    >
+                        <option value="">Todas las Fuentes</option>
+                        {CRM_SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                    {(filterRol || filterInst || filterSource) && (
                         <button
-                            onClick={() => { setFilterRol(''); setFilterInst(''); }}
+                            onClick={() => { setFilterRol(''); setFilterInst(''); setFilterSource(''); }}
                             className="text-xs text-[var(--primary)] hover:underline"
                         >
                             Limpiar
@@ -729,7 +692,7 @@ export function CRM() {
                                             <div className="ml-6">
                                                 <h4 className="font-medium text-[var(--foreground)] truncate flex items-center justify-between">
                                                     {lead.nombre || 'Sin nombre'}
-                                                    {lead.last_interaction && (new Date().getTime() - new Date(lead.last_interaction).getTime() > 3 * 24 * 60 * 60 * 1000) && (
+                                                    {lead.last_interaction && (new Date().getTime() - new Date(lead.last_interaction).getTime() > ATTENTION_THRESHOLD_MS) && (
                                                         <AlertCircle className="w-3 h-3 text-red-400" />
                                                     )}
                                                 </h4>
