@@ -16,8 +16,6 @@ import { StudentManagement } from '@/features/dashboard/components/StudentManage
 import { SpecificationTable } from './SpecificationTable';
 import { createClient } from '@/lib/supabase/client';
 
-const supabase = createClient();
-
 interface AnswerSheetEvalData {
     id: string;
     subject: string;
@@ -58,6 +56,7 @@ interface EvaluationMeta {
 }
 
 const ItemBankView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+    const supabase = createClient();
     const [items, setItems] = useState<ItemBankRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [query, setQuery] = useState('');
@@ -207,6 +206,7 @@ const ItemBankView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 };
 
 const SpecificationView: React.FC<{ selectedEvalId: string | null }> = ({ selectedEvalId }) => {
+    const supabase = createClient();
     const [loading, setLoading] = useState(true);
     const [evaluation, setEvaluation] = useState<EvaluationMeta | null>(null);
     const [items, setItems] = useState<EvalItemRow[]>([]);
@@ -314,6 +314,7 @@ const SpecificationView: React.FC<{ selectedEvalId: string | null }> = ({ select
 type ViewType = 'dashboard' | 'designer' | 'answersheet' | 'omr-results' | 'analytics' | 'specification' | 'items' | 'assessment' | 'omr-scanner' | 'feedback' | 'students' | 'trash';
 
 export const SummativeAssessmentPage = () => {
+    const supabase = createClient();
     const [activeView, setActiveView] = useState<ViewType>('dashboard');
     const [editingTestId, setEditingTestId] = useState<string | null>(null);
     const [answerSheetData, setAnswerSheetData] = useState<AnswerSheetEvalData | null>(null);

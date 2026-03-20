@@ -12,8 +12,6 @@ import { createClient } from '@/lib/supabase/client';
 import { logAuditEvent } from '@/shared/lib/auditLog';
 import { decryptQRData, type QRData } from '../AnswerSheet/QRCodeGenerator';
 
-const supabase = createClient();
-
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '');
 const trimQuotes = (value: string) => value.replace(/^['"]+|['"]+$/g, '');
 const stripInvisibleChars = (value: string) =>
@@ -54,20 +52,25 @@ const getApiCandidates = () => {
         if (isValidHttpBaseUrl(normalizedFromEnv)) {
             candidates.push(normalizedFromEnv);
         } else {
-            console.warn('[OMR] Ignorando VITE_ASSESSMENT_API_URL inválida:', fromEnv);
+            console.warn('[OMR] Ignorando NEXT_PUBLIC_ASSESSMENT_API_URL invalida:', fromEnv);
         }
     }
 
     // Si no hay variable de entorno, fallamos limpiamente, sin fallbacks destructivos
     if (candidates.length === 0) {
-        console.error('[OMR] CRITICAL ERROR: VITE_ASSESSMENT_API_URL no está definida o es inválida.');
+        console.error('[OMR] CRITICAL ERROR: NEXT_PUBLIC_ASSESSMENT_API_URL no esta definida o es invalida.');
     }
 
     return Array.from(new Set(candidates.filter(Boolean).map(trimTrailingSlash).filter(isValidHttpBaseUrl)));
 };
 
-const API_CANDIDATES = getApiCandidates();
-const DEFAULT_API_BASE = API_CANDIDATES[0] || '';
+// Lazy-evaluated: avoids issues with SSR/hydration where env vars aren't ready
+let _apiCandidatesCache: string[] | null = null;
+const getApiCandidatesLazy = () => {
+    if (_apiCandidatesCache === null) _apiCandidatesCache = getApiCandidates();
+    return _apiCandidatesCache;
+};
+const DEFAULT_API_BASE = '';
 const formatApiLabel = (base: string) => {
     if (!base) return 'API';
     try {
@@ -214,6 +217,7 @@ interface BarcodeDetectorCtorLike {
 
 // ── E3: Coverage Summary Component (OM-13 + OM-15) ──
 const CoverageSummary: React.FC<{ evaluationId: string }> = ({ evaluationId }) => {
+    const supabase = createClient();
     const [coverage, setCoverage] = useState<{ total: number; scanned: number; missing: { name: string; rut: string }[]; avgScore: number; passRate: number } | null>(null);
 
     useEffect(() => {
@@ -304,6 +308,7 @@ const CoverageSummary: React.FC<{ evaluationId: string }> = ({ evaluationId }) =
 };
 
 export const WebOMRScanner: React.FC<WebOMRScannerProps> = ({ onBack, onOpenFeedback }) => {
+    const supabase = createClient();
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
@@ -530,8 +535,9 @@ export const WebOMRScanner: React.FC<WebOMRScannerProps> = ({ onBack, onOpenFeed
     }, []);
 
     const fetchApi = useCallback(async (path: string, options: RequestInit, timeoutMs = 30000) => {
-        if (API_CANDIDATES.length === 0) {
-            throw new Error('No hay endpoint de API válido. Define VITE_ASSESSMENT_API_URL con una URL https://...');
+        const candidates = getApiCandidatesLazy();
+        if (candidates.length === 0) {
+            throw new Error('No hay endpoint de API valido. Define NEXT_PUBLIC_ASSESSMENT_API_URL en las variables de entorno.');
         }
         const isConnectivityError = (message: string) =>
             /(load failed|failed to fetch|network|network request failed|fetch failed|aborted|timeout|dns|string did not match the expected pattern)/i.test(message);
@@ -546,7 +552,7 @@ export const WebOMRScanner: React.FC<WebOMRScannerProps> = ({ onBack, onOpenFeed
         };
 
         let lastError: unknown = null;
-        for (const base of API_CANDIDATES) {
+        for (const base of candidates) {
             try {
                 const endpoint = joinBaseAndPath(base, path);
                 const response = await fetchWithTimeout(endpoint, optionsWithAuth, timeoutMs);
@@ -566,7 +572,7 @@ export const WebOMRScanner: React.FC<WebOMRScannerProps> = ({ onBack, onOpenFeed
         }
 
         throw new Error(`OMR_ALL_HOSTS_FAILED: No se pudo conectar al servidor de evaluación. Verifica tu conexión. Detalles: ${lastError instanceof Error ? lastError.message : String(lastError)}`);
-    }, [fetchWithTimeout]);
+    }, [fetchWithTimeout, supabase]);
 
     const parseJsonResponse = useCallback(async <T,>(response: Response, context: string): Promise<T> => {
         const raw = await response.text();
@@ -1331,7 +1337,7 @@ export const WebOMRScanner: React.FC<WebOMRScannerProps> = ({ onBack, onOpenFeed
                             API activa: {activeApiBase || 'sin configurar'}
                         </p>
                         <p className="text-[10px] text-[var(--muted)] mt-1 break-all">
-                            Candidatas: {API_CANDIDATES.join(' · ')}
+                            Candidatas: {getApiCandidatesLazy().join(' · ')}
                         </p>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${isOnline ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25' : 'bg-amber-500/15 text-amber-300 border border-amber-500/25'}`}>
