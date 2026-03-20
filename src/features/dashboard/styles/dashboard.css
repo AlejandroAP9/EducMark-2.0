@@ -140,18 +140,17 @@ h4 {
     /* Ensure it doesn't overflow horizontally */
 }
 
-/* 3. SIDEBAR - FLOATING GLASS */
+/* 3. SIDEBAR - LIQUID GLASS */
 .sidebar {
     position: fixed;
     top: 0;
     left: 0;
     width: var(--sidebar-width);
     height: 100vh;
-    background: var(--background);
-    /* Match background for seamless look */
-    /* Glass Effect Inner Container is handled in React component strictly or we style full bar */
-    border-right: 1px solid transparent;
-    /* Removed borders for floating feel */
+    background: rgba(5, 5, 10, 0.6);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
     display: flex;
     flex-direction: column;
     z-index: 50;
@@ -159,7 +158,7 @@ h4 {
     padding: 1.5rem;
 }
 
-/* Sidebar "Float" Container inside (Optional refined look) */
+/* Sidebar liquid refraction line */
 .sidebar::after {
     content: "";
     position: absolute;
@@ -167,8 +166,17 @@ h4 {
     right: 0;
     height: 100%;
     width: 1px;
-    background: linear-gradient(to bottom, transparent, var(--border), transparent);
-    opacity: 0.5;
+    background: linear-gradient(
+        to bottom,
+        transparent,
+        rgba(139, 92, 246, 0.3),
+        rgba(6, 182, 212, 0.2),
+        rgba(139, 92, 246, 0.3),
+        transparent
+    );
+    background-size: 100% 200%;
+    animation: aurora 6s ease-in-out infinite;
+    opacity: 0.7;
 }
 
 .sidebar-header {
@@ -221,13 +229,16 @@ h4 {
 
 .nav-item:hover {
     color: var(--on-background);
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
 }
 
 .nav-item.active {
     color: var(--on-background);
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px) saturate(150%);
     font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 /* Active Indicator "Light" */
@@ -244,7 +255,7 @@ h4 {
     box-shadow: 0 0 10px var(--primary);
 }
 
-/* Header Styling - Precise Prototype Match */
+/* Header Styling - Liquid Glass */
 .top-header {
     position: fixed;
     top: 0;
@@ -255,10 +266,11 @@ h4 {
     align-items: center;
     justify-content: space-between;
     padding: 0 4rem;
-    /* Match main content padding */
     z-index: 40;
-    background: var(--background);
-    border-bottom: 1px solid var(--border);
+    background: rgba(5, 5, 10, 0.55);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     gap: 2rem;
 }
 
@@ -278,15 +290,16 @@ h4 {
 
 .header-search input {
     width: 100%;
-    background: var(--input-bg);
-    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 100px;
     padding: 0.85rem 3rem;
     color: var(--on-background);
     outline: none;
     font-size: 0.9rem;
     transition: all 0.2s;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
 }
 
 .header-search input::placeholder {
@@ -295,10 +308,9 @@ h4 {
 }
 
 .header-search input:focus {
-    background: var(--card);
-    /* Adaptive */
+    background: rgba(255, 255, 255, 0.06);
     border-color: var(--primary);
-    box-shadow: 0 0 0 1px var(--primary-bg);
+    box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.15);
 }
 
 .header-search .search-icon {
@@ -345,9 +357,8 @@ h4 {
 }
 
 .header-btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    /* Adaptive */
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     width: 42px;
     height: 42px;
@@ -356,14 +367,15 @@ h4 {
     justify-content: center;
     color: var(--foreground);
     cursor: pointer;
-    transition: var(--transition);
+    transition: all 0.2s ease;
     font-size: 1.25rem;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .header-btn:hover {
-    background: var(--input-bg);
-    /* Adaptive */
-    border-color: var(--on-background);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
     color: var(--on-background);
 }
 
@@ -394,26 +406,26 @@ h4 {
 
 /* 4. COMPONENT STYLES (PREMIUM) */
 
-/* Cards */
+/* Cards - Liquid Glass */
 .card-proto {
-    background: var(--card);
-    border: 1px solid var(--card-border);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 1.25rem;
-    /* Slightly more rounded */
     padding: 1.75rem;
     position: relative;
     overflow: hidden;
-    transition: var(--transition);
-    backdrop-filter: blur(10px);
-    /* Premium feel */
+    transition: all 0.3s var(--transition);
+    backdrop-filter: blur(30px) saturate(160%);
+    -webkit-backdrop-filter: blur(30px) saturate(160%);
 }
 
 .card-proto:hover {
-    border-color: rgba(164, 143, 255, 0.5);
+    border-color: rgba(164, 143, 255, 0.3);
+    background: rgba(255, 255, 255, 0.06);
     box-shadow:
         0 0 30px rgba(164, 143, 255, 0.1),
-        inset 0 0 20px rgba(164, 143, 255, 0.05);
-    transform: translateY(-5px) scale(1.02);
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+    transform: translateY(-3px);
 }
 
 /* Neural Wave Background */
@@ -469,33 +481,36 @@ h4 {
 
 /* Premium Glass Card Variant - LIQUID GLASS (iOS Style) */
 .glass-card-premium {
-    background: var(--glass-bg);
+    background: rgba(10, 10, 15, 0.5);
     backdrop-filter: blur(40px) saturate(200%);
-    /* High Blur + High Saturation */
     -webkit-backdrop-filter: blur(40px) saturate(200%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-top: 1px solid rgba(255, 255, 255, 0.15);
-    /* Top highlight */
     position: relative;
     overflow: hidden;
     box-shadow:
-        var(--glass-shadow),
+        0 8px 32px rgba(0, 0, 0, 0.3),
         inset 0 0 30px rgba(255, 255, 255, 0.02);
-    /* Inner depth */
-    transition: var(--transition);
+    transition: all 0.3s var(--transition);
     border-radius: 1.5rem;
+}
+
+.glass-card-premium:hover {
+    border-color: rgba(139, 92, 246, 0.25);
+    box-shadow:
+        0 8px 40px rgba(139, 92, 246, 0.12),
+        inset 0 0 30px rgba(255, 255, 255, 0.03);
 }
 
 .glass-card-premium::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(120deg,
-            transparent 0%,
-            rgba(255, 255, 255, 0.05) 30%,
-            rgba(255, 255, 255, 0.01) 50%,
-            transparent 100%);
-    opacity: 0.8;
+    background: linear-gradient(135deg,
+            rgba(139, 92, 246, 0.06) 0%,
+            transparent 40%,
+            transparent 60%,
+            rgba(6, 182, 212, 0.04) 100%);
     pointer-events: none;
     z-index: 1;
 }
@@ -539,14 +554,15 @@ h4 {
     }
 }
 
-/* Generator Wrapper */
+/* Generator Wrapper - Liquid Glass */
 .generator-hero {
-    background: var(--card);
-    border: 1px solid var(--card-border);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 1.5rem;
     padding: 3rem;
-    /* More spacious */
-    box-shadow: var(--shadow-glow);
+    backdrop-filter: blur(30px) saturate(160%);
+    -webkit-backdrop-filter: blur(30px) saturate(160%);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     text-align: center;
     position: relative;
     overflow: hidden;
@@ -736,8 +752,10 @@ h4 {
         width: 100%;
         padding: 0 1.25rem;
         gap: 0.5rem;
-        background: var(--background);
-        border-bottom: 1px solid var(--border);
+        background: rgba(5, 5, 10, 0.7);
+        backdrop-filter: blur(40px) saturate(180%);
+        -webkit-backdrop-filter: blur(40px) saturate(180%);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     /* Mobile Search Behavior - managed by React state mostly, but here for backup */
@@ -783,13 +801,14 @@ h4 {
     pointer-events: none;
 }
 
-/* Sidebar Overlay */
+/* Sidebar Overlay - Liquid Glass */
 .sidebar-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 45;
-    /* Below sidebar (50) but above content */
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s;
@@ -821,16 +840,18 @@ h4 {
     box-shadow: 0 0 50px -5px rgba(139, 92, 246, 0.7);
 }
 
-/* 5. DRIVER.JS CUSTOM THEME (PREMIUM DARK) */
+/* 5. DRIVER.JS CUSTOM THEME (LIQUID GLASS) */
 .driver-popover {
-    background-color: #1a1a2e !important;
+    background: rgba(20, 20, 36, 0.7) !important;
+    backdrop-filter: blur(40px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
     color: var(--on-background) !important;
-    border: 1px solid rgba(139, 92, 246, 0.3) !important;
+    border: 1px solid rgba(139, 92, 246, 0.25) !important;
     border-radius: 1.25rem !important;
     padding: 1.5rem !important;
     box-shadow:
-        0 0 0 4px rgba(139, 92, 246, 0.1),
-        0 20px 40px rgba(0, 0, 0, 0.6) !important;
+        0 0 0 4px rgba(139, 92, 246, 0.08),
+        0 20px 40px rgba(0, 0, 0, 0.5) !important;
     max-width: 350px !important;
     font-family: var(--font-body) !important;
 }

@@ -201,8 +201,8 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
     return (
         <div className="app-container">
             <div className="background-mesh">
-                <div className="mesh-orb orb-1"></div>
-                <div className="mesh-orb orb-2"></div>
+                <div className="aurora-orb aurora-orb-primary" style={{width: '500px', height: '500px', top: '10%', left: '60%'}}></div>
+                <div className="aurora-orb aurora-orb-secondary" style={{width: '400px', height: '400px', bottom: '10%', left: '20%'}}></div>
             </div>
 
             <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
