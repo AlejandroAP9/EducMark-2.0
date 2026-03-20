@@ -7,7 +7,8 @@ import { toast } from 'sonner';
 import {
     Users, UserPlus, Filter, Search, MoreVertical, Phone, Mail,
     MessageCircle, Calendar, Tag, ChevronRight, Clock, Sparkles,
-    TrendingUp, ArrowRight, Plus, X, Loader2, GripVertical, Instagram, AlertCircle
+    TrendingUp, ArrowRight, Plus, X, Loader2, GripVertical, Instagram, AlertCircle,
+    Download, CheckSquare, Square, ArrowUpDown, List, LayoutGrid, Percent
 } from 'lucide-react';
 import { LeadDetail } from './LeadDetail';
 
@@ -79,6 +80,14 @@ export function CRM() {
     // Filters
     const [filterRol, setFilterRol] = useState('');
     const [filterInst, setFilterInst] = useState('');
+
+    // Bulk selection
+    const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
+    const [bulkMoving, setBulkMoving] = useState(false);
+
+    // Sort & View
+    const [sortBy, setSortBy] = useState<'created' | 'name' | 'revenue' | 'last_contact'>('created');
+    const [mobileView, setMobileView] = useState<'kanban' | 'list'>('kanban');
 
     // Fetch initial data
     const fetchData = useCallback(async () => {
@@ -206,9 +215,9 @@ export function CRM() {
         return matchesSearch && matchesRol && matchesInst;
     });
 
-    // Group leads by stage
+    // Group leads by stage (with sorting)
     const leadsByStage = stages.reduce((acc, stage) => {
-        acc[stage.name] = filteredLeads.filter(lead => (lead.stage || 'lead_frio') === stage.name);
+        acc[stage.name] = sortLeads(filteredLeads.filter(lead => (lead.stage || 'lead_frio') === stage.name));
         return acc;
     }, {} as Record<string, Lead[]>);
 
@@ -254,6 +263,81 @@ export function CRM() {
         } finally {
             setDraggedLead(null);
         }
+    };
+
+    // Export CSV
+    const exportCSV = () => {
+        const headers = ['Nombre', 'Email', 'Telefono', 'Institucion', 'Etapa', 'Prioridad', 'Fuente', 'Plan', 'LTV', 'Creado'];
+        const rows = filteredLeads.map(l => [
+            l.nombre || '', l.email || '', l.telefono || '', l.institucion || '',
+            stages.find(s => s.name === l.stage)?.display_name || l.stage,
+            l.priority || 'media', l.source || 'organic', l.plan || '',
+            String(l.total_revenue || 0),
+            l.created_at ? new Date(l.created_at).toLocaleDateString('es-CL') : ''
+        ]);
+        const csv = [headers, ...rows].map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(',')).join('\n');
+        const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `crm-leads-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success(`${filteredLeads.length} leads exportados`);
+    };
+
+    // Duplicate detection
+    const duplicateEmails = leads.reduce((acc, lead) => {
+        const email = lead.email?.toLowerCase();
+        if (email) acc[email] = (acc[email] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+    const duplicateCount = Object.values(duplicateEmails).filter(c => c > 1).length;
+
+    // Conversion rate
+    const conversionRate = leads.length > 0
+        ? Math.round((leads.filter(l => l.stage === 'ganada').length / leads.length) * 100)
+        : 0;
+
+    // Bulk move
+    const bulkMoveToStage = async (newStage: string) => {
+        if (selectedLeadIds.size === 0) return;
+        setBulkMoving(true);
+        try {
+            for (const id of selectedLeadIds) {
+                await supabase.rpc('move_lead_to_stage', { p_lead_id: id, p_new_stage: newStage });
+            }
+            toast.success(`${selectedLeadIds.size} leads movidos`);
+            setSelectedLeadIds(new Set());
+            fetchData();
+        } catch {
+            toast.error('Error al mover leads');
+        } finally {
+            setBulkMoving(false);
+        }
+    };
+
+    // Toggle lead selection
+    const toggleLeadSelection = (e: React.MouseEvent, leadId: string) => {
+        e.stopPropagation();
+        setSelectedLeadIds(prev => {
+            const next = new Set(prev);
+            if (next.has(leadId)) next.delete(leadId); else next.add(leadId);
+            return next;
+        });
+    };
+
+    // Sort leads
+    const sortLeads = (leadsArr: Lead[]) => {
+        return [...leadsArr].sort((a, b) => {
+            switch (sortBy) {
+                case 'name': return (a.nombre || '').localeCompare(b.nombre || '');
+                case 'revenue': return (b.total_revenue || 0) - (a.total_revenue || 0);
+                case 'last_contact':
+                    return new Date(b.last_interaction || 0).getTime() - new Date(a.last_interaction || 0).getTime();
+                default: return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            }
+        });
     };
 
     // Open lead detail
@@ -325,7 +409,7 @@ export function CRM() {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 flex-wrap">
                     {/* Search */}
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted)]" />
@@ -334,9 +418,48 @@ export function CRM() {
                             placeholder="Buscar lead..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-10 pr-4 py-2 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50 w-64"
+                            className="pl-10 pr-4 py-2 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50 w-56"
                         />
                     </div>
+
+                    {/* Sort */}
+                    <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                        className="bg-[var(--surface)] text-sm border border-[var(--border)] rounded-lg px-3 py-2 text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+                        title="Ordenar leads"
+                    >
+                        <option value="created">Mas recientes</option>
+                        <option value="name">Nombre A-Z</option>
+                        <option value="revenue">Mayor LTV</option>
+                        <option value="last_contact">Ultimo contacto</option>
+                    </select>
+
+                    {/* Mobile view toggle */}
+                    <div className="flex md:hidden border border-[var(--border)] rounded-lg overflow-hidden">
+                        <button
+                            onClick={() => setMobileView('kanban')}
+                            className={`p-2 ${mobileView === 'kanban' ? 'bg-[var(--primary)]/20 text-[var(--primary)]' : 'text-[var(--muted)]'}`}
+                        >
+                            <LayoutGrid className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={() => setMobileView('list')}
+                            className={`p-2 ${mobileView === 'list' ? 'bg-[var(--primary)]/20 text-[var(--primary)]' : 'text-[var(--muted)]'}`}
+                        >
+                            <List className="w-4 h-4" />
+                        </button>
+                    </div>
+
+                    {/* Export CSV */}
+                    <button
+                        onClick={exportCSV}
+                        className="flex items-center gap-1.5 px-3 py-2 bg-[var(--surface)] border border-[var(--border)] text-[var(--foreground)] rounded-lg hover:bg-[var(--border)] transition-colors text-sm"
+                        title="Exportar leads a CSV"
+                    >
+                        <Download className="w-4 h-4" />
+                        <span className="hidden lg:inline">CSV</span>
+                    </button>
 
                     {/* Add Lead Button */}
                     <button
@@ -402,8 +525,38 @@ export function CRM() {
                 </div>
             </div>
 
-            {/* Actionable Insights Bar - Adoption Phase */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Bulk actions bar */}
+            {selectedLeadIds.size > 0 && (
+                <div className="flex items-center gap-3 p-3 bg-[var(--primary)]/10 border border-[var(--primary)]/30 rounded-xl">
+                    <span className="text-sm font-medium text-[var(--primary)]">{selectedLeadIds.size} seleccionados</span>
+                    <span className="text-[var(--muted)]">→ Mover a:</span>
+                    {stages.map(s => (
+                        <button
+                            key={s.name}
+                            onClick={() => bulkMoveToStage(s.name)}
+                            disabled={bulkMoving}
+                            className="text-xs px-3 py-1.5 rounded-lg border border-[var(--border)] hover:bg-[var(--surface)] text-[var(--foreground)] transition-colors disabled:opacity-50"
+                            style={{ borderColor: s.color }}
+                        >
+                            {s.display_name}
+                        </button>
+                    ))}
+                    <button onClick={() => setSelectedLeadIds(new Set())} className="ml-auto text-xs text-[var(--muted)] hover:text-[var(--foreground)]">
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
+            )}
+
+            {/* Duplicate warning */}
+            {duplicateCount > 0 && (
+                <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-sm text-amber-400">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>{duplicateCount} emails duplicados detectados en tu pipeline.</span>
+                </div>
+            )}
+
+            {/* Actionable Insights Bar */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-red-500/20">
                         <AlertCircle className="w-5 h-5 text-red-400" />
@@ -442,6 +595,15 @@ export function CRM() {
                         <div className="text-xs text-emerald-300">LTV Acumulado (CRM)</div>
                     </div>
                 </div>
+                <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-purple-500/20">
+                        <Percent className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <div>
+                        <div className="text-lg font-bold text-purple-400">{conversionRate}%</div>
+                        <div className="text-xs text-purple-300">Tasa de conversion</div>
+                    </div>
+                </div>
             </div>
 
             {/* Funnel Stats */}
@@ -464,8 +626,45 @@ export function CRM() {
                 ))}
             </div>
 
+            {/* Mobile List View */}
+            {mobileView === 'list' && (
+                <div className="md:hidden flex-1 overflow-y-auto space-y-2 pb-4">
+                    {stages.map(stage => {
+                        const stageLeads = leadsByStage[stage.name] || [];
+                        if (stageLeads.length === 0) return null;
+                        return (
+                            <div key={stage.name}>
+                                <div className="flex items-center gap-2 px-2 py-2 sticky top-0 bg-[var(--background)] z-10">
+                                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: stage.color }} />
+                                    <span className="text-sm font-semibold text-[var(--foreground)]">{stage.display_name}</span>
+                                    <span className="text-xs text-[var(--muted)]">({stageLeads.length})</span>
+                                </div>
+                                {stageLeads.map(lead => (
+                                    <div
+                                        key={lead.id}
+                                        onClick={() => openLeadDetail(lead)}
+                                        className="flex items-center gap-3 p-3 mx-1 rounded-lg bg-[var(--surface)] border border-[var(--border)] mb-1.5"
+                                    >
+                                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                                            {(lead.nombre || '?').charAt(0).toUpperCase()}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-sm text-[var(--foreground)] truncate">{lead.nombre || 'Sin nombre'}</p>
+                                            <p className="text-xs text-[var(--muted)] truncate">{lead.institucion || lead.email}</p>
+                                        </div>
+                                        <span className={`text-[10px] px-2 py-0.5 rounded-full border flex-shrink-0 ${getPriorityColor(lead.priority || 'media')}`}>
+                                            {lead.priority || 'media'}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
             {/* Kanban Board */}
-            <div className="flex-1 overflow-x-auto overflow-y-hidden pb-4">
+            <div className={`flex-1 overflow-x-auto overflow-y-hidden pb-4 ${mobileView === 'list' ? 'hidden md:block' : ''}`}>
                 <div className="flex gap-3 h-full min-w-full w-max px-4 pr-12">
                     {stages.map((stage) => (
                         <div
@@ -508,9 +707,14 @@ export function CRM() {
                                             className={`p-4 rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer hover:border-[var(--primary)]/50 transition-all group ${draggedLead?.id === lead.id ? 'opacity-50' : ''
                                                 }`}
                                         >
-                                            {/* Drag Handle */}
+                                            {/* Drag Handle + Select */}
                                             <div className="flex items-start justify-between mb-2">
                                                 <div className="flex items-center gap-2">
+                                                    <button onClick={(e) => toggleLeadSelection(e, lead.id)} className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        {selectedLeadIds.has(lead.id)
+                                                            ? <CheckSquare className="w-4 h-4 text-[var(--primary)]" />
+                                                            : <Square className="w-4 h-4 text-[var(--muted)]" />}
+                                                    </button>
                                                     <GripVertical className="w-4 h-4 text-[var(--muted)] opacity-0 group-hover:opacity-100 transition-opacity cursor-grab" />
                                                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white text-sm font-bold">
                                                         {(lead.nombre || lead.email || '?').charAt(0).toUpperCase()}
