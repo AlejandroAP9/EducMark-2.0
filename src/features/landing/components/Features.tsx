@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { FileText, Presentation, Gamepad2, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useRegisterModal } from '../context/RegisterModalContext';
@@ -48,13 +49,13 @@ export const Features: React.FC = () => {
           {/* Screenshot del formulario */}
           <FadeIn delay={0.6} className="mt-12 max-w-4xl mx-auto">
             <div className="rounded-2xl overflow-hidden border border-white/[0.06] shadow-[0_0_40px_-10px_rgba(164,143,255,0.2)]">
-              <img
+              <Image
                 src="/images/screenshots/formulario.jpg"
                 alt="Formulario de generacion EducMark -- selecciona asignatura, curso y OA del MINEDUC"
-                width="1200"
-                height="629"
-                loading="lazy"
+                width={1200}
+                height={629}
                 className="w-full h-auto"
+                quality={80}
               />
             </div>
             <p className="text-center text-xs text-muted-foreground/50 mt-3">Selecciona asignatura, curso y OA -- EducMark hace el resto.</p>
@@ -98,13 +99,13 @@ export const Features: React.FC = () => {
                 </ul>
                 {/* Screenshot */}
                 <div className="rounded-xl overflow-hidden border border-white/[0.06] shadow-lg">
-                  <img
+                  <Image
                     src="/images/screenshots/planificacion.jpg"
                     alt="Planificacion docente generada por EducMark -- Marco Curricular y Secuencia Didactica"
-                    width="1200"
-                    height="626"
-                    loading="lazy"
+                    width={1200}
+                    height={626}
                     className="w-full h-auto"
+                    quality={80}
                   />
                 </div>
               </div>
@@ -126,13 +127,13 @@ export const Features: React.FC = () => {
                 </div>
                 {/* Screenshot */}
                 <div className="rounded-xl overflow-hidden border border-white/[0.06] shadow-lg">
-                  <img
+                  <Image
                     src="/images/screenshots/slides.jpg"
                     alt="Diapositiva generada por EducMark -- Introduccion al Humanismo con imagen IA contextualizada"
-                    width="1200"
-                    height="744"
-                    loading="lazy"
+                    width={1200}
+                    height={744}
                     className="w-full h-auto"
+                    quality={80}
                   />
                 </div>
               </div>
@@ -154,13 +155,13 @@ export const Features: React.FC = () => {
                 </div>
                 {/* Screenshot */}
                 <div className="rounded-xl overflow-hidden border border-white/[0.06] shadow-lg">
-                  <img
+                  <Image
                     src="/images/screenshots/quiz.jpg"
                     alt="Quiz interactivo generado por EducMark -- preguntas con timer y opciones multiples"
-                    width="1200"
-                    height="621"
-                    loading="lazy"
+                    width={1200}
+                    height={621}
                     className="w-full h-auto"
+                    quality={80}
                   />
                 </div>
               </div>
@@ -181,13 +182,13 @@ export const Features: React.FC = () => {
                 </div>
                 {/* Screenshot */}
                 <div className="rounded-xl overflow-hidden border border-white/[0.06] shadow-lg">
-                  <img
+                  <Image
                     src="/images/screenshots/evaluaciones.jpg"
                     alt="Seccion de evaluaciones EducMark -- disenar, escanear y retroalimentar automaticamente"
-                    width="1200"
-                    height="644"
-                    loading="lazy"
+                    width={1200}
+                    height={644}
                     className="w-full h-auto"
+                    quality={80}
                   />
                 </div>
               </div>

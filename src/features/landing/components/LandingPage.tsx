@@ -12,7 +12,7 @@ import { Pricing } from './Pricing';
 import { FAQ } from './FAQ';
 import { Footer } from './Footer';
 import { FinalCTA } from './FinalCTA';
-import { trackEvent } from '@/shared/lib/analytics';
+import { trackEvent, trackPageView, initScrollDepthTracking } from '@/shared/lib/analytics';
 import { RegisterModalProvider, useRegisterModal } from '../context/RegisterModalContext';
 import { RegisterModal } from './RegisterModal';
 
@@ -22,6 +22,13 @@ function LandingPageContent() {
     const [hasShownExit, setHasShownExit] = useState(false);
 
     const [scrollProgress, setScrollProgress] = useState(0);
+
+    // Page view + scroll depth tracking
+    useEffect(() => {
+        trackPageView('landing');
+        const cleanup = initScrollDepthTracking();
+        return cleanup;
+    }, []);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -75,7 +82,7 @@ function LandingPageContent() {
 
             {/* Mobile Sticky CTA -- visible after scrolling past Hero */}
             {scrollProgress > 0.05 && (
-                <div className="fixed bottom-0 inset-x-0 z-50 md:hidden bg-background/90 backdrop-blur-lg border-t border-white/10 px-4 py-3 safe-area-bottom">
+                <div className="fixed bottom-0 inset-x-0 z-50 md:hidden bg-background/90 backdrop-blur-lg border-t border-white/10 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
                     <button
                         onClick={() => { trackEvent('click_cta', { location: 'sticky_mobile' }); openRegister(); }}
                         className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-6 rounded-full transition-colors text-sm"

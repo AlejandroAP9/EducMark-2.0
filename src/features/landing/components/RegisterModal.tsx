@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/shared/components/ui/UIComponents';
 import { createClient } from '@/lib/supabase/client';
 import { trackEvent } from '@/shared/lib/analytics';
+import { LegalModals } from './LegalModals';
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, l
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMSG, setErrorMSG] = useState('');
+  const [activeLegalModal, setActiveLegalModal] = useState<'terms' | 'privacy' | null>(null);
 
   // Reset form when modal opens
   useEffect(() => {
@@ -256,7 +258,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, l
                   <Check className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100" size={14} strokeWidth={3} />
                 </div>
                 <label htmlFor="modal-terms" className="text-xs text-muted-foreground leading-tight select-none cursor-pointer">
-                  Acepto los <a href="/terms" target="_blank" className="text-primary hover:underline">t&eacute;rminos y condiciones</a> y la <a href="/privacy" target="_blank" className="text-primary hover:underline">pol&iacute;tica de privacidad</a>.
+                  Acepto los <span className="text-primary hover:underline cursor-pointer" onClick={(e) => { e.preventDefault(); setActiveLegalModal('terms'); }}>t&eacute;rminos y condiciones</span> y la <span className="text-primary hover:underline cursor-pointer" onClick={(e) => { e.preventDefault(); setActiveLegalModal('privacy'); }}>pol&iacute;tica de privacidad</span>.
                 </label>
               </div>
 
@@ -282,6 +284,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, l
           </div>
         </div>
       </div>
+
+      <LegalModals activeModal={activeLegalModal} onClose={() => setActiveLegalModal(null)} />
     </div>
   );
 };

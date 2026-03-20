@@ -171,7 +171,8 @@ export const Pricing: React.FC = () => {
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const difference = +new Date('2026-04-15T23:59:59') - +new Date();
+      const deadline = process.env.NEXT_PUBLIC_PIONEER_DEADLINE || '2026-04-15T23:59:59';
+      const difference = +new Date(deadline) - +new Date();
 
       if (difference > 0) {
         return {
@@ -198,6 +199,7 @@ export const Pricing: React.FC = () => {
       .from('user_profiles')
       .select('*', { count: 'exact', head: true })
       .eq('plan', 'pioneer')
+      .eq('subscription_status', 'active')
       .then(({ count }) => {
         if (count !== null) setPioneerCount(count);
       });
@@ -427,7 +429,7 @@ export const Pricing: React.FC = () => {
                       )}
                       <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
                         {plan.id === 'free' && "Prueba el sistema sin compromiso. Al agotar tus 3 clases, elige un plan para continuar."}
-                        {plan.id === 'basic' && "Ideal para comenzar a planificar con neuroeducacion."}
+                        {plan.id === 'basic' && "Ideal para comenzar a planificar con diseno cerebro-compatible."}
                         {plan.id === 'pro' && "Todo el sistema pedagogico + evaluaciones con correccion automatizada."}
                         {plan.id === 'expert' && "Maxima capacidad para profesores con alta carga horaria."}
                       </p>

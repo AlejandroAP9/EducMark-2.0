@@ -46,7 +46,7 @@ export const Comparison: React.FC = () => {
   ];
 
   const benefits = [
-    '± 10 clases listas en 1 hora',
+    '10 clases listas en 1 hora',
     'Fines de semana libres',
     'Clases con respaldo neuroeducativo',
     'Alineacion curricular garantizada',
@@ -83,7 +83,7 @@ export const Comparison: React.FC = () => {
       chatgpt: false,
     },
     {
-      feature: 'Neuroeducacion integrada',
+      feature: 'Neuroeducacion (diseno cerebro-compatible)',
       educmark: true,
       chatLPO: false,
       califica: false,

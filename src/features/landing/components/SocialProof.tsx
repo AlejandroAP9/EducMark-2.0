@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Quote, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { FadeIn } from '@/shared/components/ui/UIComponents';
@@ -58,7 +59,7 @@ export const SocialProof: React.FC = () => {
               {/* Signature */}
               <div className="pt-8 border-t border-white/[0.06]">
                 <div className="flex items-center gap-4">
-                  <img
+                  <Image
                     src="/images/fundador.jpg"
                     alt="Alejandro -- Fundador de EducMark, profesor de Historia"
                     width={48}
@@ -98,13 +99,13 @@ export const SocialProof: React.FC = () => {
 
             {/* Biblioteca */}
             <div className="mt-12 rounded-2xl overflow-hidden border border-white/[0.06] shadow-[0_0_40px_-10px_rgba(164,143,255,0.15)]">
-              <img
+              <Image
                 src="/images/screenshots/biblioteca.jpg"
                 alt="Biblioteca EducMark -- historial de kits pedagogicos generados con acciones rapidas"
-                width="1200"
-                height="594"
-                loading="lazy"
+                width={1200}
+                height={594}
                 className="w-full h-auto"
+                quality={80}
               />
             </div>
             <p className="text-center text-xs text-muted-foreground/50 mt-3">Tu biblioteca de kits pedagogicos -- todo organizado y listo para reutilizar.</p>
@@ -131,7 +132,7 @@ export const SocialProof: React.FC = () => {
               </blockquote>
 
               <div className="flex items-center gap-4 mt-6 pt-6 border-t border-white/[0.06]">
-                <img
+                <Image
                   src="/images/fundador.jpg"
                   alt="Alejandro usando EducMark en aula"
                   width={40}

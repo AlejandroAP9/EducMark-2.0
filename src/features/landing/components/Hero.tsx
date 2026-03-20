@@ -266,7 +266,7 @@ export const Hero: React.FC = () => {
               <div className="flex flex-wrap gap-2">
                 {[
                   '100% MINEDUC',
-                  'Neuroeducacion',
+                  'Neuroeducacion: diseno basado en como aprende el cerebro',
                   'Hecho en Chile',
                   'OMR Integrado',
                   'Creado por un docente',

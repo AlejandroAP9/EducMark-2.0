@@ -43,7 +43,7 @@ const faqs: FaqItem[] = [
   },
   {
     question: "Hay un limite de clases que puedo generar al mes?",
-    answer: "Cada plan tiene una cantidad de cr\u00e9ditos mensuales que se renuevan autom\u00e1ticamente: Copihue (20), Araucaria (35) y C\u00f3ndor (50). Cada cr\u00e9dito genera el kit completo: planificaci\u00f3n + presentaci\u00f3n + quiz, todo en HTML editable."
+    answer: "Los planes pagados tienen creditos mensuales que se renuevan automaticamente: Copihue (20), Araucaria (35) y Condor (50). El plan gratuito incluye 3 clases que no se renuevan — es para que pruebes el sistema. Cada credito genera el kit completo: planificacion + presentacion + quiz, todo en HTML editable."
   },
   {
     question: "Puedo compartir mi cuenta con otro colega?",
