@@ -306,6 +306,48 @@ npm run lint         # ESLint
 - **Fix**: Siempre usar `npm run dev` (auto-detecta puerto)
 - **Aplicar en**: Todos los proyectos
 
+### 2026-03-20: Docker + Next.js requiere output standalone
+- **Error**: Build Docker enorme (~1GB) y lento sin standalone
+- **Fix**: Agregar `output: 'standalone'` en `next.config.ts`. Dockerfile multi-stage (deps → builder → runner)
+- **Aplicar en**: Cualquier deploy Docker de Next.js
+
+### 2026-03-20: No ignorar package-lock.json en .gitignore
+- **Error**: El .gitignore del template excluye `package-lock.json`, pero Docker necesita `npm ci` que lo requiere
+- **Fix**: Remover `package-lock.json` del .gitignore cuando se usa Docker
+- **Aplicar en**: Todo proyecto con Dockerfile
+
+### 2026-03-20: Imágenes del sitio anterior no migran solas
+- **Error**: Al migrar de Vite a Next.js, solo se copiaron las imágenes referenciadas en el código. Assets como el ebook-cover.jpg y el logo correcto no se incluyeron
+- **Fix**: Verificar TODOS los assets de `/public/images/` del proyecto original contra el nuevo. Descargar los faltantes desde el sitio en producción
+- **Aplicar en**: Cualquier migración de framework
+
+### 2026-03-20: DNS y Supabase Auth se cambian JUNTOS
+- **Error**: Si cambias la Site URL de Supabase antes del DNS, los usuarios de la versión vieja son redirigidos a la nueva (que puede no estar lista)
+- **Fix**: Cambiar DNS (registro A) y Site URL de Supabase al mismo tiempo. Nunca uno sin el otro
+- **Aplicar en**: Cualquier migración de dominio con Supabase Auth
+
+### 2026-03-20: Deploy Easypanel — flujo correcto
+- **Error**: Primer deploy quedó en "Waiting" por falta de variables de entorno
+- **Fix**: Agregar TODAS las variables de entorno ANTES del primer deploy. Las `NEXT_PUBLIC_*` se necesitan en build time
+- **Aplicar en**: Todo deploy en Easypanel con Next.js
+
+## Infraestructura EducMark
+
+| Servicio | URL | Tipo |
+|----------|-----|------|
+| App Next.js | `https://educmark-github.vfuqpl.easypanel.host` | Docker (Easypanel) |
+| Assessment API | `https://assessment-api.vfuqpl.easypanel.host` | Docker (Easypanel) |
+| RAG API | `https://educmark-rag-api.vfuqpl.easypanel.host` | Docker (Easypanel) — solo n8n la llama |
+| RAG Supabase | `https://educmark-supabase.vfuqpl.easypanel.host` | Docker (Easypanel) |
+| n8n | `https://n8n.educmark.cl` | Docker (Easypanel) |
+| Supabase Cloud | `https://gjudfgpudbqdhclbmjjo.supabase.co` | Cloud (Auth + BD) |
+| Dominio | `educmark.cl` | cPanel (V2Networks) → pendiente migrar a Easypanel |
+
+**Flujo generación:** Frontend → n8n (proxy) → rag-api → respuesta
+**Flujo evaluaciones:** Frontend → assessment-api (directo)
+**Deploy:** git push → GitHub webhook → Easypanel auto-rebuild
+**Repo:** https://github.com/AlejandroAP9/EducMark-2.0
+
 ---
 
 *V4: Todo es un Skill. Agent-First. El usuario habla, tu construyes.*
