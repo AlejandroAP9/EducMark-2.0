@@ -256,7 +256,10 @@ export function KitResult() {
             }
         } catch (err) {
             console.error('Error regenerating section:', err);
-            toast.error('Error al regenerar.');
+            const message = err instanceof Error && err.message.includes('not found')
+                ? 'La funcion de regeneracion no esta disponible. Contacta soporte.'
+                : 'Error al regenerar. Intenta nuevamente.';
+            toast.error(message);
         } finally {
             setRegeneratingSection(null);
         }

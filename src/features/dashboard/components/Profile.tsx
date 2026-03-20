@@ -45,8 +45,8 @@ export function Profile() {
     const { planName } = useSubscriptionStore();
 
     useEffect(() => {
-        getProfile();
-        getStats();
+        getProfile().catch(() => toast.error('Error al cargar perfil'));
+        getStats().catch(() => toast.error('Error al cargar estadisticas'));
     }, []);
 
     const getStats = async () => {

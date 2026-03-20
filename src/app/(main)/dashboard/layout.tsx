@@ -77,7 +77,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
     const downloadGuide = async () => {
         setIsDownloading(true);
         try {
-            const fileUrl = "https://gjudfgpudbqdhclbmjjo.supabase.co/storage/v1/object/public/EducMark/EBOOK%20PROMPT%20PROFESORES_compressed.pdf";
+            const fileUrl = process.env.NEXT_PUBLIC_EBOOK_URL || "/api/ebook-download";
             const response = await fetch(fileUrl);
             if (!response.ok) throw new Error('Download failed');
             const blob = await response.blob();
@@ -120,14 +120,15 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         // Clear welcome param
-        if (searchParams.get('welcome') === 'true') {
+        const isWelcome = searchParams.get('welcome') === 'true';
+        if (isWelcome) {
             window.history.replaceState({}, '', pathname);
         }
 
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session?.user) checkEbookStatus(session.user.id);
         });
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [searchParams, pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         supabase.auth.getSession().then(async ({ data: { session } }) => {

@@ -153,6 +153,21 @@ export function UserManagement() {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        // Validate file size (max 5MB)
+        const MAX_FILE_SIZE = 5 * 1024 * 1024;
+        if (file.size > MAX_FILE_SIZE) {
+            toast.error('El archivo es demasiado grande. Maximo 5 MB.');
+            e.target.value = '';
+            return;
+        }
+
+        // Validate file type
+        if (!file.name.toLowerCase().endsWith('.csv') && file.type !== 'text/csv') {
+            toast.error('Solo se aceptan archivos CSV.');
+            e.target.value = '';
+            return;
+        }
+
         setUploadingCSV(true);
         toast.info('Analizando archivo CSV...');
 
@@ -170,7 +185,12 @@ export function UserManagement() {
                 // Batch insert students
                 try {
                     const { data: authData } = await supabase.auth.getUser();
-                    const importerUserId = authData?.user?.id || null;
+                    const importerUserId = authData?.user?.id;
+                    if (!importerUserId) {
+                        toast.error('Sesion expirada. Inicia sesion nuevamente.');
+                        setUploadingCSV(false);
+                        return;
+                    }
 
                     const studentsToInsert = data.map(row => {
                         const rawName = String(row.full_name || row.nombre || row.Nombre || '').trim();

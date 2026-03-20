@@ -65,6 +65,7 @@ export function Overview() {
             await downloadUrlAsHtml(url, filename);
             toast.success('Descarga iniciada');
         } catch {
+            toast.error('Error al descargar. Abriendo en nueva pestaña...');
             window.open(url, '_blank');
         } finally {
             setDownloadingPdf(null);

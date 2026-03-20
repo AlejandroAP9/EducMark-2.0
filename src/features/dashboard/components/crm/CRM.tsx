@@ -531,7 +531,7 @@ export function CRM() {
                                                 </h4>
                                                 <p className="text-sm text-[var(--muted)] truncate flex items-center gap-1">
                                                     <Mail className="w-3 h-3" />
-                                                    {lead.email}
+                                                    {lead.email ? lead.email.replace(/^(.{2}).*(@.*)$/, '$1***$2') : 'Sin email'}
                                                 </p>
                                                 {lead.instagram && (
                                                     <p className="text-xs text-[var(--muted)] truncate flex items-center gap-1 mt-1">
