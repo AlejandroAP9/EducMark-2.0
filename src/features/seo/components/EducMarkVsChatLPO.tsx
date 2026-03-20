@@ -13,7 +13,7 @@ type RowType = {
 };
 
 const rows: RowType[] = [
-    { feature: 'Flujo integrado plan + presentación + quiz en 4 minutos', educmark: true, chatlpo: false },
+    { feature: 'Flujo integrado plan + presentación + quiz en 6 minutos', educmark: true, chatlpo: false },
     { feature: 'RAG con Bases Curriculares MINEDUC completas', educmark: true, chatlpo: false },
     { feature: 'Precio mensual', educmark: '$13.900', chatlpo: '$25.000' },
     { feature: 'Corrección OMR con cámara del celular', educmark: true, chatlpo: false },
@@ -164,7 +164,7 @@ const EducMarkVsChatLPO: React.FC = () => {
                         ChatLPO es una buena opci&oacute;n si valoras tener acceso a muchas herramientas
                         individuales, si necesitas soporte espec&iacute;fico para reportes SEP/PIE, o si
                         quieres formaci&oacute;n certificada con su Academia. Pero cuando necesitas <strong className="text-foreground">un
-                        flujo integrado que genere plan + presentaci&oacute;n + evaluaci&oacute;n en 4 minutos</strong>,
+                        flujo integrado que genere plan + presentaci&oacute;n + evaluaci&oacute;n en 6 minutos</strong>,
                         con correcci&oacute;n OMR y adaptaciones NEE/DUA, EducMark ofrece todo eso a un precio 44% menor.
                     </p>
                     <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-6 text-center">
@@ -216,6 +216,12 @@ const EducMarkVsChatLPO: React.FC = () => {
                     </div>
                 </div>
             </section>
+
+            <div className="max-w-4xl mx-auto px-6 py-6">
+                <p className="text-xs text-muted-foreground/50 leading-relaxed">
+                    Precios y funcionalidades de terceros verificados en marzo de 2026. Consulta los sitios oficiales para informacion actualizada. EducMark no tiene relacion comercial con las marcas mencionadas. Esta comparacion se basa en informacion publica.
+                </p>
+            </div>
 
             <footer className="border-t border-white/[0.06] py-10 px-6 text-center">
                 <p className="text-muted-foreground text-sm">

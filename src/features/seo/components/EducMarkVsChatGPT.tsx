@@ -205,7 +205,7 @@ const EducMarkVsChatGPT: React.FC = () => {
                                 </li>
                                 <li className="flex gap-3">
                                     <span className="text-emerald-400 font-bold shrink-0">3.</span>
-                                    <span>Haces clic en «Generar». EducMark produce <strong className="text-foreground">3 documentos simultáneamente</strong>: planificación completa con formato UTP, presentación con diapositivas editables, y quiz interactivo autocorregible. Todo en HTML editable. <strong className="text-foreground">~4 minutos de generación.</strong></span>
+                                    <span>Haces clic en «Generar». EducMark produce <strong className="text-foreground">3 documentos simultáneamente</strong>: planificación completa con formato UTP, presentación con diapositivas editables, y quiz interactivo autocorregible. Todo en HTML editable. <strong className="text-foreground">~6 minutos en total.</strong></span>
                                 </li>
                                 <li className="flex gap-3">
                                     <span className="text-emerald-400 font-bold shrink-0">4.</span>
@@ -464,6 +464,12 @@ const EducMarkVsChatGPT: React.FC = () => {
                     </div>
                 </div>
             </section>
+
+            <div className="max-w-4xl mx-auto px-6 py-6">
+                <p className="text-xs text-muted-foreground/50 leading-relaxed">
+                    Precios y funcionalidades de terceros verificados en marzo de 2026. Consulta los sitios oficiales para informacion actualizada. EducMark no tiene relacion comercial con las marcas mencionadas. Esta comparacion se basa en informacion publica.
+                </p>
+            </div>
 
             <footer className="border-t border-white/[0.06] py-10 px-6 text-center">
                 <p className="text-muted-foreground text-sm">

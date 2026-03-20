@@ -7,6 +7,13 @@ export const metadata: Metadata = {
     alternates: {
         canonical: 'https://educmark.cl/educmark-vs-chatgpt',
     },
+    openGraph: {
+        title: 'EducMark vs ChatGPT — Comparación para Profesores Chilenos',
+        description: '¿ChatGPT o EducMark para planificar clases en Chile? Compara alineación MINEDUC, OA reales, formato UTP y más.',
+        url: 'https://educmark.cl/educmark-vs-chatgpt',
+        siteName: 'EducMark',
+        type: 'article',
+    },
 };
 
 export default function EducMarkVsChatGPTPage() {

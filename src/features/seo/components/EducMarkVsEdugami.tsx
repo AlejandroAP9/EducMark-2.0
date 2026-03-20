@@ -102,7 +102,7 @@ const EducMarkVsEdugami: React.FC = () => {
                         {[
                             {
                                 title: 'Evaluar no es planificar',
-                                desc: 'Edugami te ayuda a crear y corregir evaluaciones digitales, pero antes de evaluar necesitas la clase: la planificaci\u00F3n, la presentaci\u00F3n y las actividades. EducMark genera todo eso en 4 minutos.',
+                                desc: 'Edugami te ayuda a crear y corregir evaluaciones digitales, pero antes de evaluar necesitas la clase: la planificaci\u00F3n, la presentaci\u00F3n y las actividades. EducMark genera todo eso en 6 minutos.',
                             },
                             {
                                 title: 'Enfocado en matem\u00E1ticas',
@@ -180,7 +180,7 @@ const EducMarkVsEdugami: React.FC = () => {
                         Prueba EducMark gratis
                     </h2>
                     <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
-                        3 clases completas gratis. Sin tarjeta. Genera tu primera planificaci&oacute;n + PPT + quiz en 4 minutos.
+                        3 clases completas gratis. Sin tarjeta. Genera tu primera planificaci&oacute;n + PPT + quiz en 6 minutos.
                     </p>
                     <Button
                         onClick={handleCTA}
@@ -215,6 +215,12 @@ const EducMarkVsEdugami: React.FC = () => {
                     </div>
                 </div>
             </section>
+
+            <div className="max-w-4xl mx-auto px-6 py-6">
+                <p className="text-xs text-muted-foreground/50 leading-relaxed">
+                    Precios y funcionalidades de terceros verificados en marzo de 2026. Consulta los sitios oficiales para informacion actualizada. EducMark no tiene relacion comercial con las marcas mencionadas. Esta comparacion se basa en informacion publica.
+                </p>
+            </div>
 
             <footer className="border-t border-white/[0.06] py-10 px-6 text-center">
                 <p className="text-muted-foreground text-sm">
