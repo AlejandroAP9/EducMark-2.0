@@ -43,6 +43,14 @@
     --animate-spin-slow: spin 12s linear infinite;
     --animate-zoom-slow: zoom-slow 20s ease-out forwards;
 
+    /* Liquid Glass Animations */
+    --animate-aurora: aurora 8s ease-in-out infinite;
+    --animate-aurora-slow: aurora 15s ease-in-out infinite;
+    --animate-shimmer: shimmer 3s linear infinite;
+    --animate-liquid-float: liquid-float 6s ease-in-out infinite;
+    --animate-color-shift: color-shift 10s ease-in-out infinite;
+    --animate-glass-shine: glass-shine 4s ease-in-out infinite;
+
     /* Keyframes */
     @keyframes slide-up-fade {
         0% { opacity: 0; transform: translateY(20px); }
@@ -69,6 +77,32 @@
     @keyframes zoom-slow {
         0% { transform: scale(1); }
         100% { transform: scale(1.15); }
+    }
+
+    /* Liquid Glass Keyframes */
+    @keyframes aurora {
+        0%, 100% { background-position: 0% 50%; opacity: 0.6; }
+        25% { background-position: 50% 0%; opacity: 0.8; }
+        50% { background-position: 100% 50%; opacity: 1; }
+        75% { background-position: 50% 100%; opacity: 0.7; }
+    }
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+    @keyframes liquid-float {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        25% { transform: translateY(-8px) rotate(1deg); }
+        50% { transform: translateY(-4px) rotate(-0.5deg); }
+        75% { transform: translateY(-10px) rotate(0.5deg); }
+    }
+    @keyframes color-shift {
+        0%, 100% { filter: hue-rotate(0deg); }
+        50% { filter: hue-rotate(20deg); }
+    }
+    @keyframes glass-shine {
+        0%, 100% { opacity: 0; transform: translateX(-100%) skewX(-15deg); }
+        50% { opacity: 0.15; transform: translateX(100%) skewX(-15deg); }
     }
 }
 
@@ -124,6 +158,133 @@
     --radius: 1.5rem;
     --radius-sm: 0.75rem;
     --transition: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* =========================================
+   LIQUID GLASS — Utility Classes
+   ========================================= */
+
+/* Base liquid glass panel */
+.liquid-glass {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Liquid glass with highlight shine */
+.liquid-glass::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.1) 0%,
+        transparent 40%,
+        transparent 60%,
+        rgba(255, 255, 255, 0.05) 100%
+    );
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Animated shine sweep on hover */
+.liquid-glass-shine {
+    overflow: hidden;
+}
+.liquid-glass-shine::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 50%;
+    height: 200%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.08),
+        transparent
+    );
+    transform: skewX(-15deg);
+    transition: left 0.8s ease;
+    pointer-events: none;
+    z-index: 2;
+}
+.liquid-glass-shine:hover::after {
+    left: 120%;
+}
+
+/* Aurora orb — animated gradient blob */
+.aurora-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    background-size: 200% 200%;
+    animation: aurora 8s ease-in-out infinite;
+    will-change: background-position, opacity;
+}
+.aurora-orb-primary {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(99, 102, 241, 0.2), rgba(6, 182, 212, 0.3));
+}
+.aurora-orb-secondary {
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.3), rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.3));
+    animation-delay: -4s;
+    animation-duration: 12s;
+}
+
+/* Liquid border — animated gradient border */
+.liquid-border {
+    position: relative;
+}
+.liquid-border::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+        135deg,
+        rgba(139, 92, 246, 0.3),
+        rgba(255, 255, 255, 0.1),
+        rgba(6, 182, 212, 0.3),
+        rgba(255, 255, 255, 0.1),
+        rgba(139, 92, 246, 0.3)
+    );
+    background-size: 300% 300%;
+    animation: aurora 6s ease-in-out infinite;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Refraction — subtle color distortion */
+.liquid-refraction {
+    position: relative;
+}
+.liquid-refraction::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(139, 92, 246, 0.5),
+        rgba(6, 182, 212, 0.5),
+        rgba(236, 72, 153, 0.5),
+        transparent
+    );
+    background-size: 200% 100%;
+    animation: aurora 4s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 2;
 }
 
 /* Base reset */

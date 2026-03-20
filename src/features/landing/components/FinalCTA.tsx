@@ -32,18 +32,20 @@ export const FinalCTA: React.FC = () => {
                 <motion.div
                     animate={{
                         scale: [1, 1.2, 1],
-                        opacity: [0.08, 0.15, 0.08],
+                        opacity: [0.15, 0.3, 0.15],
                     }}
                     transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute top-1/2 left-1/3 w-[600px] h-[600px] bg-primary rounded-full blur-[150px] -translate-y-1/2 pointer-events-none"
+                    className="aurora-orb aurora-orb-primary w-[600px] h-[600px] top-1/2 left-1/3 -translate-y-1/2"
+                    style={{ filter: 'blur(120px)' }}
                 />
                 <motion.div
                     animate={{
                         scale: [1, 1.15, 1],
-                        opacity: [0.05, 0.1, 0.05],
+                        opacity: [0.1, 0.2, 0.1],
                     }}
                     transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-                    className="absolute top-1/2 right-1/4 w-[500px] h-[500px] bg-secondary rounded-full blur-[120px] -translate-y-1/2 pointer-events-none"
+                    className="aurora-orb aurora-orb-secondary w-[500px] h-[500px] top-1/2 right-1/4 -translate-y-1/2"
+                    style={{ filter: 'blur(100px)' }}
                 />
             </div>
 

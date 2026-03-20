@@ -248,7 +248,7 @@ export const Hero: React.FC = () => {
                   { value: '6 min', label: 'por clase' },
                   { value: '1° a IV°', label: 'medio' },
                 ].map((metric, i) => (
-                  <div key={i} className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2">
+                  <div key={i} className="flex items-center gap-2 bg-white/[0.06] backdrop-blur-md border border-white/[0.12] rounded-full px-4 py-2 hover:bg-white/[0.1] transition-all duration-300">
                     <span className="text-sm font-bold text-white">{metric.value}</span>
                     <span className="text-xs text-muted-foreground">{metric.label}</span>
                   </div>
@@ -282,10 +282,11 @@ export const Hero: React.FC = () => {
           {/* Right Column: Form + Image */}
           <div className="relative">
             <FadeIn delay={0.2} className="relative z-10">
-              {/* Decorative Glow */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-primary/20 blur-[80px] rounded-full -z-10 pointer-events-none"></div>
+              {/* Aurora Glow Orbs */}
+              <div className="aurora-orb aurora-orb-primary w-[300px] h-[300px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10"></div>
+              <div className="aurora-orb aurora-orb-secondary w-[250px] h-[250px] top-1/3 left-1/3 -z-10"></div>
 
-              <div className="bg-card/95 backdrop-blur-xl border border-white/10 rounded-3xl p-5 md:p-6 shadow-[0_0_60px_-15px_rgba(76,29,149,0.5)] max-w-[480px] mx-auto">
+              <div className="liquid-glass liquid-glass-shine liquid-border rounded-3xl p-5 md:p-6 shadow-[0_0_60px_-15px_rgba(76,29,149,0.5)] max-w-[480px] mx-auto">
                 <div className="flex flex-col items-center mb-4">
                   {/* Ebook Image - Static with Hover Glow */}
                   <div className="relative group mb-4 transition-all duration-500">
@@ -509,14 +510,14 @@ export const Hero: React.FC = () => {
 
         {/* === VIDEO SECTION (Restored) === */}
         <FadeIn delay={0.4} className="mt-8 relative max-w-5xl mx-auto group perspective-[1200px]">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-indigo-600/20 blur-[100px] rounded-full -z-10 pointer-events-none"></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-blue-500/10 blur-[80px] rounded-full -z-10 pointer-events-none mix-blend-screen"></div>
+          <div className="aurora-orb aurora-orb-primary w-[120%] h-[120%] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10"></div>
+          <div className="aurora-orb aurora-orb-secondary w-[80%] h-[80%] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 mix-blend-screen"></div>
 
           <div className="perspective-[1200px] w-full">
             <motion.div
               style={{ rotateX, scale, opacity }}
               transition={{ type: "spring", stiffness: 100, damping: 30 }}
-              className="relative rounded-2xl bg-[#0f111a] border border-white/10 shadow-2xl overflow-hidden ring-1 ring-white/5 mx-auto group/video"
+              className="relative rounded-2xl bg-[#0f111a]/80 backdrop-blur-xl border border-white/[0.12] shadow-2xl overflow-hidden ring-1 ring-white/[0.08] mx-auto group/video"
             >
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent z-20 opacity-50"></div>
 

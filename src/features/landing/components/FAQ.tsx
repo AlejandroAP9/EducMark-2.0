@@ -57,8 +57,8 @@ export const FAQ: React.FC = () => {
 
   return (
     <section id="faq" className="py-28 bg-gradient-to-b from-background to-[#131320] relative overflow-hidden">
-      {/* Ambient glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[150px] pointer-events-none" />
+      {/* Aurora ambient */}
+      <div className="aurora-orb aurora-orb-primary w-[600px] h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
 
       <div className="container mx-auto px-4 max-w-3xl relative z-10">
         <FadeIn>
@@ -74,8 +74,8 @@ export const FAQ: React.FC = () => {
                 <div
                   className={`rounded-2xl border transition-all duration-300 ${
                     isOpen
-                      ? 'bg-card/80 border-primary/30 shadow-[0_0_30px_-10px_rgba(139,92,246,0.15)]'
-                      : 'bg-transparent border-white/[0.06] hover:border-white/10 hover:bg-card/30'
+                      ? 'bg-white/[0.06] backdrop-blur-[40px] saturate-[180%] border-primary/30 shadow-[0_0_30px_-10px_rgba(139,92,246,0.15)]'
+                      : 'bg-transparent border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.03] hover:backdrop-blur-md'
                   }`}
                 >
                   <button

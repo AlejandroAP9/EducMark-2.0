@@ -62,6 +62,16 @@ function LandingPageContent() {
 
     return (
         <div className="min-h-screen text-foreground font-body bg-background selection:bg-primary/30">
+            {/* SVG Liquid Glass Distortion Filter */}
+            <svg className="absolute w-0 h-0" aria-hidden="true">
+                <defs>
+                    <filter id="liquid-distortion">
+                        <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="3" seed="2" result="noise" />
+                        <feDisplacementMap in="SourceGraphic" in2="noise" scale="6" xChannelSelector="R" yChannelSelector="G" />
+                    </filter>
+                </defs>
+            </svg>
+
             {/* Scroll Progress Bar */}
             <div
                 className="fixed top-0 left-0 h-1 bg-gradient-to-r from-primary to-[#8080ff] z-[100]"
@@ -82,7 +92,7 @@ function LandingPageContent() {
 
             {/* Mobile Sticky CTA -- visible after scrolling past Hero */}
             {scrollProgress > 0.05 && (
-                <div className="fixed bottom-0 inset-x-0 z-50 md:hidden bg-background/90 backdrop-blur-lg border-t border-white/10 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+                <div className="fixed bottom-0 inset-x-0 z-50 md:hidden bg-background/60 backdrop-blur-[40px] saturate-[180%] border-t border-white/[0.12] px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
                     <button
                         onClick={() => { trackEvent('click_cta', { location: 'sticky_mobile' }); openRegister(); }}
                         className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-6 rounded-full transition-colors text-sm"
@@ -96,7 +106,7 @@ function LandingPageContent() {
             {/* Exit Popup */}
             {showExitPopup && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-                    <div className="bg-card border border-primary/50 rounded-2xl p-8 max-w-sm text-center shadow-2xl relative">
+                    <div className="liquid-glass !border-primary/50 rounded-2xl p-8 max-w-sm text-center shadow-2xl relative">
                         <button onClick={() => setShowExitPopup(false)} className="absolute top-4 right-4 text-muted-foreground hover:text-white">&#x2715;</button>
                         <div className="text-4xl mb-4">&#127873;</div>
                         <h3 className="text-2xl font-bold mb-2">Espera!</h3>

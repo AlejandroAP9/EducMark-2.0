@@ -227,11 +227,9 @@ export const Pricing: React.FC = () => {
         <FadeIn>
           <div className="container max-w-4xl mx-auto relative">
             {timeLeft ? (
-              <div className="rounded-3xl border border-primary/20 bg-card/60 backdrop-blur-sm p-8 md:p-12 relative overflow-hidden shadow-[0_0_60px_-20px_rgba(139,92,246,0.2)]">
-                {/* Top accent */}
-                <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-                {/* Ambient glow */}
-                <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
+              <div className="liquid-glass liquid-refraction liquid-border rounded-3xl !border-primary/20 p-8 md:p-12 shadow-[0_0_60px_-20px_rgba(139,92,246,0.2)]">
+                {/* Aurora glow */}
+                <div className="aurora-orb aurora-orb-primary w-[400px] h-[400px] top-0 right-0" />
 
                 <div className="text-center mb-10 relative z-10">
                   <span className="inline-block bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-semibold border border-primary/20 mb-4">
@@ -328,8 +326,7 @@ export const Pricing: React.FC = () => {
                 </p>
               </div>
             ) : (
-              <div className="rounded-3xl border border-primary/20 bg-card/60 backdrop-blur-sm p-8 md:p-12 text-center relative overflow-hidden shadow-[0_0_60px_-20px_rgba(139,92,246,0.2)]">
-                <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+              <div className="liquid-glass liquid-refraction rounded-3xl !border-primary/20 p-8 md:p-12 text-center shadow-[0_0_60px_-20px_rgba(139,92,246,0.2)]">
                 <span className="inline-block bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-semibold border border-primary/20 mb-4">
                   Oferta Miembros Pioneros
                 </span>
@@ -401,8 +398,8 @@ export const Pricing: React.FC = () => {
                     className={`
                     relative rounded-3xl p-7 flex flex-col h-full transition-all duration-300
                     ${plan.recommended
-                        ? 'bg-gradient-to-b from-[#1e1b4b] to-[#0f0f1a] border border-primary/50 shadow-[0_0_40px_rgba(76,29,149,0.3)] transform md:-translate-y-4 md:scale-[1.03] z-10'
-                        : 'bg-card/50 backdrop-blur-sm border border-white/10 hover:border-primary/30 hover:bg-card/80 hover:-translate-y-2 hover:shadow-2xl'
+                        ? 'bg-gradient-to-b from-[#1e1b4b]/80 to-[#0f0f1a]/60 backdrop-blur-[40px] saturate-[180%] border border-primary/50 shadow-[0_0_40px_rgba(76,29,149,0.3)] transform md:-translate-y-4 md:scale-[1.03] z-10'
+                        : 'bg-white/[0.04] backdrop-blur-[40px] saturate-[180%] border border-white/[0.1] hover:border-primary/30 hover:bg-white/[0.08] hover:-translate-y-2 hover:shadow-2xl'
                       }
                   `}
                   >
@@ -485,9 +482,8 @@ export const Pricing: React.FC = () => {
           {/* 6.6 -- Plan Establecimiento B2B */}
           <div className="mt-16 max-w-5xl mx-auto">
             <FadeIn>
-              <div className="rounded-3xl border border-blue-500/20 bg-gradient-to-br from-blue-500/[0.06] to-cyan-500/[0.03] p-8 md:p-10 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-400/30 to-transparent" />
-                <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
+              <div className="liquid-glass liquid-refraction rounded-3xl !border-blue-500/20 bg-gradient-to-br from-blue-500/[0.04] to-cyan-500/[0.02] p-8 md:p-10">
+                <div className="aurora-orb w-[400px] h-[400px] top-0 right-0" style={{background: 'linear-gradient(135deg, rgba(59,130,246,0.3), rgba(6,182,212,0.2))'}} />
 
                 <div className="text-center mb-8 relative z-10">
                   <span className="inline-block bg-blue-500/10 text-blue-400 px-4 py-1.5 rounded-full text-sm font-semibold border border-blue-500/20 mb-4">
@@ -612,7 +608,7 @@ export const Pricing: React.FC = () => {
       {/* 2.15 + 2.16 -- Payment verification overlay */}
       {paymentPending && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="relative bg-card border border-white/10 rounded-3xl p-8 md:p-10 max-w-md w-full mx-4 text-center shadow-2xl">
+          <div className="relative liquid-glass rounded-3xl p-8 md:p-10 max-w-md w-full mx-4 text-center shadow-2xl">
             {!paymentSuccess && (
               <button
                 onClick={() => { setPaymentPending(null); stopPolling(); }}

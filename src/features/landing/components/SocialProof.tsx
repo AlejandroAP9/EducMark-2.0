@@ -22,17 +22,15 @@ export const SocialProof: React.FC = () => {
 
   return (
     <section id="testimonios" className="py-32 bg-background relative overflow-hidden">
-      {/* Ambient background */}
-      <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[120px] pointer-events-none" />
+      {/* Aurora ambient background */}
+      <div className="aurora-orb aurora-orb-primary w-[500px] h-[500px] top-1/2 left-1/4 -translate-y-1/2" />
+      <div className="aurora-orb aurora-orb-secondary w-[400px] h-[400px] bottom-0 right-1/4" />
 
       <div className="container mx-auto px-4 relative z-10">
         <FadeIn>
           <div className="max-w-3xl mx-auto">
             {/* Card */}
-            <div className="relative rounded-3xl border border-white/[0.06] bg-card/40 backdrop-blur-sm p-10 md:p-14">
-              {/* Top accent line */}
-              <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+            <div className="relative liquid-glass liquid-refraction rounded-3xl p-10 md:p-14">
 
               {/* Quote mark */}
               <div className="mb-8">
@@ -111,7 +109,7 @@ export const SocialProof: React.FC = () => {
             <p className="text-center text-xs text-muted-foreground/50 mt-3">Tu biblioteca de kits pedagogicos -- todo organizado y listo para reutilizar.</p>
 
             {/* Real usage testimonial */}
-            <div className="mt-12 rounded-2xl border border-white/[0.06] bg-card/40 backdrop-blur-sm p-8 md:p-10">
+            <div className="mt-12 liquid-glass rounded-2xl p-8 md:p-10">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
                   <Zap size={18} className="text-emerald-400" />

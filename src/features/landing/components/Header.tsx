@@ -70,13 +70,13 @@ export const Header: React.FC = () => {
           pointer-events: auto;
           display: flex;
           align-items: center;
-          background: var(--nav-bg);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
+          background: rgba(10, 10, 20, 0.55);
+          backdrop-filter: blur(40px) saturate(180%);
+          -webkit-backdrop-filter: blur(40px) saturate(180%);
           padding: 5px;
           border-radius: 9999px;
-          border: 1px solid var(--nav-border);
-          box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 0 rgba(255,255,255,0.08);
           transition: all 0.3s ease;
           max-width: 100%;
         }
@@ -319,7 +319,7 @@ export const Header: React.FC = () => {
             transition={{ duration: 0.2 }}
             className="fixed top-24 left-6 right-6 z-[98] md:hidden"
           >
-            <div className="bg-[#1a1a2e]/95 backdrop-blur-xl border border-white/10 rounded-[2rem] p-2 shadow-2xl overflow-hidden">
+            <div className="bg-[#1a1a2e]/60 backdrop-blur-[40px] saturate-[180%] border border-white/[0.12] rounded-[2rem] p-2 shadow-2xl overflow-hidden">
               <div className="flex flex-col gap-1">
                 {navItems.map((item) => (
                   <a

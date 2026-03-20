@@ -35,7 +35,7 @@ export const Features: React.FC = () => {
               { num: 3, title: 'Descarga', desc: 'En segundos, obten tu Planificacion, Diapositivas, Quiz y Evaluaciones.' }
             ].map((step, idx) => (
               <FadeIn key={idx} delay={idx * 0.2} className="relative z-10">
-                <div className="bg-card backdrop-blur-md border border-border p-8 rounded-3xl hover:border-primary/50 transition-colors group text-center h-full">
+                <div className="liquid-glass liquid-glass-shine rounded-3xl p-8 hover:border-primary/50 transition-all duration-300 group text-center h-full">
                   <div className="w-16 h-16 rounded-full bg-primary/20 text-primary flex items-center justify-center text-2xl font-bold mx-auto mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(164,143,255,0.3)]">
                     {step.num}
                   </div>
@@ -80,7 +80,7 @@ export const Features: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-12 max-w-6xl mx-auto">
             {/* Planning Card */}
-            <FadeIn className="md:col-span-6 bg-card border border-border rounded-3xl p-8 hover:border-primary/50 hover:scale-[1.02] hover:shadow-[0_0_40px_-10px_rgba(164,143,255,0.4)] transition-all duration-300 flex flex-col justify-between overflow-hidden relative group">
+            <FadeIn className="md:col-span-6 liquid-glass liquid-glass-shine rounded-3xl p-8 hover:border-primary/50 hover:scale-[1.02] hover:shadow-[0_0_40px_-10px_rgba(164,143,255,0.4)] transition-all duration-300 flex flex-col justify-between relative group">
               <div className="absolute top-0 left-0 w-1 h-full bg-primary"></div>
               <div className="absolute top-6 right-6 bg-primary/20 text-primary text-xs font-bold px-3 py-1 rounded-full uppercase">HTML Editable</div>
 
@@ -112,7 +112,7 @@ export const Features: React.FC = () => {
             </FadeIn>
 
             {/* PPT Card */}
-            <FadeIn delay={0.2} className="md:col-span-6 bg-card border border-border rounded-3xl p-8 hover:border-amber-400/50 hover:scale-[1.02] hover:shadow-[0_0_40px_-10px_rgba(251,191,36,0.4)] transition-all duration-300 flex flex-col justify-between overflow-hidden relative group">
+            <FadeIn delay={0.2} className="md:col-span-6 liquid-glass liquid-glass-shine rounded-3xl p-8 hover:border-amber-400/50 hover:scale-[1.02] hover:shadow-[0_0_40px_-10px_rgba(251,191,36,0.4)] transition-all duration-300 flex flex-col justify-between relative group">
               <div className="absolute top-0 left-0 w-1 h-full bg-amber-400"></div>
               <div className="absolute top-6 right-6 bg-amber-400/20 text-amber-400 text-xs font-bold px-3 py-1 rounded-full uppercase">HTML Editable</div>
 
@@ -140,7 +140,7 @@ export const Features: React.FC = () => {
             </FadeIn>
 
             {/* Quiz Card */}
-            <FadeIn delay={0.4} className="md:col-span-6 bg-card border border-border rounded-3xl p-8 hover:border-emerald-500/50 hover:scale-[1.02] hover:shadow-[0_0_40px_-10px_rgba(16,185,129,0.4)] transition-all duration-300 flex flex-col justify-between overflow-hidden relative group">
+            <FadeIn delay={0.4} className="md:col-span-6 liquid-glass liquid-glass-shine rounded-3xl p-8 hover:border-emerald-500/50 hover:scale-[1.02] hover:shadow-[0_0_40px_-10px_rgba(16,185,129,0.4)] transition-all duration-300 flex flex-col justify-between relative group">
               <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
               <div className="absolute top-6 right-6 bg-emerald-500/20 text-emerald-500 text-xs font-bold px-3 py-1 rounded-full uppercase">App Interactiva</div>
 
@@ -168,7 +168,7 @@ export const Features: React.FC = () => {
             </FadeIn>
 
             {/* Evaluaciones OMR Card */}
-            <FadeIn delay={0.6} className="md:col-span-6 bg-card border border-border rounded-3xl p-8 hover:border-primary/50 hover:scale-[1.02] hover:shadow-[0_0_40px_-10px_rgba(164,143,255,0.4)] transition-all duration-300 flex flex-col justify-between overflow-hidden relative group">
+            <FadeIn delay={0.6} className="md:col-span-6 liquid-glass liquid-glass-shine rounded-3xl p-8 hover:border-primary/50 hover:scale-[1.02] hover:shadow-[0_0_40px_-10px_rgba(164,143,255,0.4)] transition-all duration-300 flex flex-col justify-between relative group">
               <div className="absolute top-0 left-0 w-1 h-full bg-primary"></div>
 
               <div>

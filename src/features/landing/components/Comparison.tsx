@@ -139,9 +139,9 @@ export const Comparison: React.FC = () => {
 
   return (
     <section id="comparativa" className="py-28 relative overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute top-1/4 -left-64 w-96 h-96 bg-destructive/8 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-1/4 -right-64 w-96 h-96 bg-primary/8 blur-[120px] rounded-full pointer-events-none" />
+      {/* Aurora Background */}
+      <div className="aurora-orb aurora-orb-secondary w-96 h-96 top-1/4 -left-64" />
+      <div className="aurora-orb aurora-orb-primary w-96 h-96 bottom-1/4 -right-64" />
 
       <div className="container mx-auto px-4 relative z-10">
         <FadeIn>
@@ -155,7 +155,7 @@ export const Comparison: React.FC = () => {
         <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto mb-24">
           {/* BEFORE card */}
           <FadeIn delay={0.15}>
-            <div className="rounded-3xl p-8 border border-white/[0.06] bg-card/30 h-full">
+            <div className="liquid-glass rounded-3xl p-8 h-full">
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
                   <X size={20} className="text-destructive" />
@@ -185,9 +185,7 @@ export const Comparison: React.FC = () => {
 
           {/* AFTER card */}
           <FadeIn delay={0.3}>
-            <div className="rounded-3xl p-8 border border-primary/20 bg-card/50 relative overflow-hidden h-full shadow-[0_0_40px_-15px_rgba(139,92,246,0.15)]">
-              {/* Top accent line */}
-              <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+            <div className="liquid-glass liquid-refraction rounded-3xl p-8 !border-primary/20 h-full shadow-[0_0_40px_-15px_rgba(139,92,246,0.15)]">
 
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
@@ -219,7 +217,7 @@ export const Comparison: React.FC = () => {
 
         {/* 4.1 + 4.9 -- Named Competitor Comparison Table */}
         <FadeIn>
-          <div className="rounded-3xl p-6 md:p-10 border border-white/[0.06] bg-card/30 max-w-6xl mx-auto mb-16">
+          <div className="liquid-glass rounded-3xl p-6 md:p-10 max-w-6xl mx-auto mb-16">
             <div className="text-center mb-10">
               <h2 className="text-3xl font-bold font-heading tracking-tight">EducMark vs. Alternativas</h2>
               <p className="text-sm text-muted-foreground mt-3 max-w-lg mx-auto">
@@ -270,7 +268,7 @@ export const Comparison: React.FC = () => {
 
         {/* 4.2 -- Por que no usar un chatbot generico? */}
         <FadeIn>
-          <div className="rounded-3xl p-8 md:p-10 border border-white/[0.06] bg-card/30 max-w-5xl mx-auto mb-16">
+          <div className="liquid-glass rounded-3xl p-8 md:p-10 max-w-5xl mx-auto mb-16">
             <div className="text-center mb-8">
               <h2 className="text-2xl md:text-3xl font-bold font-heading tracking-tight">Por que no usar un chatbot generico?</h2>
               <p className="text-sm text-muted-foreground mt-3 max-w-lg mx-auto">
@@ -307,7 +305,7 @@ export const Comparison: React.FC = () => {
 
         {/* 4.3 -- ROI: Costo Real del Tiempo Docente */}
         <FadeIn>
-          <div className="rounded-3xl p-8 md:p-12 border border-white/[0.06] bg-card/30 max-w-5xl mx-auto mb-16">
+          <div className="liquid-glass rounded-3xl p-8 md:p-12 max-w-5xl mx-auto mb-16">
             <div className="text-center mb-10">
               <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-4 py-1.5 rounded-full text-sm font-semibold border border-emerald-500/20 mb-4">
                 <DollarSign size={16} />
@@ -387,7 +385,7 @@ export const Comparison: React.FC = () => {
 
         {/* 4.5 -- Positioning Map */}
         <FadeIn>
-          <div className="rounded-3xl p-8 md:p-10 border border-white/[0.06] bg-card/30 max-w-4xl mx-auto mb-16">
+          <div className="liquid-glass rounded-3xl p-8 md:p-10 max-w-4xl mx-auto mb-16">
             <div className="text-center mb-8">
               <h2 className="text-2xl md:text-3xl font-bold font-heading tracking-tight">Mapa de Posicionamiento</h2>
               <p className="text-sm text-muted-foreground mt-3 max-w-lg mx-auto">
