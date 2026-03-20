@@ -78,7 +78,7 @@ export function LeadDetail({ lead, stages, onClose, onUpdate }: LeadDetailProps)
     const [newNote, setNewNote] = useState('');
     const [addingNote, setAddingNote] = useState(false);
     const [showAddTask, setShowAddTask] = useState(false);
-    const [newTask, setNewTask] = useState({ title: '', due_date: '' });
+    const [newTask, setNewTask] = useState({ title: '', due_date: '', priority: 'media' as 'alta' | 'media' | 'baja' });
 
     // Form state
     const [formData, setFormData] = useState({
@@ -303,13 +303,13 @@ export function LeadDetail({ lead, stages, onClose, onUpdate }: LeadDetailProps)
                     lead_id: lead.id,
                     title: newTask.title,
                     due_date: newTask.due_date || null,
-                    priority: 'media',
+                    priority: newTask.priority,
                     status: 'pendiente'
                 });
 
             if (error) throw error;
 
-            setNewTask({ title: '', due_date: '' });
+            setNewTask({ title: '', due_date: '', priority: 'media' });
             setShowAddTask(false);
             fetchTasks();
             toast.success('Tarea creada');
@@ -706,6 +706,21 @@ export function LeadDetail({ lead, stages, onClose, onUpdate }: LeadDetailProps)
                                         <p className="text-sm text-[var(--muted)] text-center py-2">
                                             Sin tareas pendientes
                                         </p>
+                                    )}
+
+                                    {/* Completed tasks */}
+                                    {tasks.filter(t => t.status === 'completada').length > 0 && (
+                                        <div className="mt-4 pt-3 border-t border-[var(--border)]">
+                                            <p className="text-xs text-[var(--muted)] mb-2 uppercase tracking-wider">Completadas</p>
+                                            {tasks.filter(t => t.status === 'completada').map((task) => (
+                                                <div key={task.id} className="flex items-center gap-2 py-1.5 opacity-50">
+                                                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                                                        <span className="text-emerald-400 text-xs">✓</span>
+                                                    </div>
+                                                    <span className="text-sm text-[var(--muted)] line-through flex-1">{task.title}</span>
+                                                </div>
+                                            ))}
+                                        </div>
                                     )}
                                 </div>
                             </div>

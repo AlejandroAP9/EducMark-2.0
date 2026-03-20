@@ -57,7 +57,7 @@ interface UsageCardProps {
     className?: string;
 }
 
-export function UsageCard({ className = '' }: UsageCardProps) {
+export const UsageCard = React.memo(function UsageCard({ className = '' }: UsageCardProps) {
     const router = useRouter();
     const supabase = createClient();
     const { plan, planName, credits, classesLimit, imagesLimit, isLoading } = useSubscriptionStore();
@@ -196,4 +196,4 @@ export function UsageCard({ className = '' }: UsageCardProps) {
             )}
         </div>
     );
-}
+});

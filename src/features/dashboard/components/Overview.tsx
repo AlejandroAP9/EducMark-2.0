@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import {
@@ -276,17 +276,17 @@ export function Overview() {
 
     // Helper to calc stroke offset for rings. Circumference = 2 * PI * 28 ≈ 175.9
     const CIRCUMFERENCE = 175;
-    const timeSavedHours = Math.floor(stats.timeSaved / 60);
-    const moneySaved = timeSavedHours * CLP_PER_HOUR;
+    const timeSavedHours = useMemo(() => Math.floor(stats.timeSaved / 60), [stats.timeSaved]);
+    const moneySaved = useMemo(() => timeSavedHours * CLP_PER_HOUR, [timeSavedHours]);
 
-    const getSubjectStyle = (subject: string) => {
+    const getSubjectStyle = useCallback((subject: string) => {
         const s = (subject || '').toLowerCase();
         if (s.includes('matem')) return { icon: Calculator, color: 'blue', badge: 'blue' };
         if (s.includes('cienc') || s.includes('fís') || s.includes('quím') || s.includes('biol')) return { icon: FlaskConical, color: 'green', badge: 'green' };
         if (s.includes('hist') || s.includes('socía') || s.includes('cív')) return { icon: Globe, color: 'orange', badge: 'orange' };
         if (s.includes('leng') || s.includes('lit') || s.includes('ingl') || s.includes('comun')) return { icon: BookOpen, color: 'primary', badge: 'primary' };
         return { icon: Folder, color: 'primary', badge: 'blue' };
-    };
+    }, []);
 
     return (
         <motion.div className="space-y-10 pb-12 -mt-2" variants={container} initial="hidden" animate="show">

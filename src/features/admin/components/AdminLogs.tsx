@@ -147,7 +147,7 @@ export function AdminLogs() {
                         <div style={{ width: 32, height: 32, borderRadius: '50%', margin: '0 auto', border: '4px solid var(--primary)', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }}></div>
                     </div>
                 ) : (
-                    <table className="admin-table">
+                    <div className="admin-table-wrapper"><table className="admin-table">
                         <thead>
                             <tr>
                                 <th>Evento</th>
@@ -205,12 +205,14 @@ export function AdminLogs() {
                             {logs.length === 0 && (
                                 <tr>
                                     <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--muted)' }}>
-                                        No se encontraron registros de auditoría
+                                        {eventFilter !== 'all'
+                                            ? 'No hay registros para este filtro. Prueba cambiando el filtro o selecciona "Todos".'
+                                            : 'Aun no hay registros de auditoria. Se crearan automaticamente con la actividad del sistema.'}
                                     </td>
                                 </tr>
                             )}
                         </tbody>
-                    </table>
+                    </table></div>
                 )}
 
                 {/* Pagination */}

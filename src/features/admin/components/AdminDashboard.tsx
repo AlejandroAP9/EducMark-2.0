@@ -132,12 +132,13 @@ export function AdminDashboard() {
 
     if (loading) {
         return (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '1rem' }}>
                 <div style={{
-                    width: 48, height: 48, borderRadius: '50%',
-                    border: '4px solid var(--primary)', borderTopColor: 'transparent',
+                    width: 40, height: 40, borderRadius: '50%',
+                    border: '3px solid var(--primary)', borderTopColor: 'transparent',
                     animation: 'spin 1s linear infinite'
                 }}></div>
+                <p style={{ color: 'var(--muted)', fontSize: '0.875rem' }}>Cargando panel de administracion...</p>
             </div>
         );
     }

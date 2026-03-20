@@ -348,7 +348,7 @@ export function UserManagement() {
                         }}></div>
                     </div>
                 ) : (
-                    <table className="admin-table">
+                    <div className="admin-table-wrapper"><table className="admin-table">
                         <thead>
                             <tr>
                                 <th>Usuario</th>
@@ -403,7 +403,7 @@ export function UserManagement() {
                                 </tr>
                             )}
                         </tbody>
-                    </table>
+                    </table></div>
                 )}
 
                 <div className="admin-pagination">
