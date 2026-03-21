@@ -351,6 +351,48 @@ export const WebOMRScanner: React.FC<WebOMRScannerProps> = ({ onBack, onOpenFeed
         });
     }, [totalTF, totalMC]);
 
+    // Auto-load correct answers from evaluation_items when evaluation changes
+    useEffect(() => {
+        if (!selectedEvaluationId) return;
+
+        const loadAnswerKey = async () => {
+            try {
+                const { data: items, error } = await supabase
+                    .from('evaluation_items')
+                    .select('type, correct_answer')
+                    .eq('evaluation_id', selectedEvaluationId)
+                    .order('created_at', { ascending: true });
+
+                if (error || !items || items.length === 0) return;
+
+                const tfAnswers: string[] = [];
+                const mcAnswers: string[] = [];
+
+                items.forEach(item => {
+                    const answer = item.correct_answer || '';
+                    const type = (item.type || '').toLowerCase();
+
+                    if (type.includes('verdadero') || type.includes('falso') || type === 'tf') {
+                        tfAnswers.push(answer.toUpperCase() === 'V' || answer.toUpperCase() === 'VERDADERO' ? 'V' : 'F');
+                    } else if (type.includes('selecci') || type.includes('multiple') || type === 'mc') {
+                        mcAnswers.push(answer.toUpperCase());
+                    }
+                });
+
+                if (tfAnswers.length > 0 || mcAnswers.length > 0) {
+                    setTotalTF(tfAnswers.length);
+                    setTotalMC(mcAnswers.length);
+                    setCorrectAnswers({ tf: tfAnswers, mc: mcAnswers });
+                    console.log(`[OMR] Pauta auto-cargada: ${tfAnswers.length} V/F + ${mcAnswers.length} SM`);
+                }
+            } catch (err) {
+                console.error('[OMR] Error loading answer key:', err);
+            }
+        };
+
+        loadAnswerKey();
+    }, [selectedEvaluationId]);
+
     useEffect(() => {
         try {
             const savedRequests = localStorage.getItem(OMR_PENDING_REQUESTS_KEY);
@@ -1174,12 +1216,12 @@ export const WebOMRScanner: React.FC<WebOMRScannerProps> = ({ onBack, onOpenFeed
                     ? `[${OMR_BUILD_TAG}][${stage}] El backend respondió en un formato inválido. (${errorName}: ${rawMessage})`
                     : `[${OMR_BUILD_TAG}][${stage}] ${errorName}: ${rawMessage}`;
 
-            console.error(message);
+            console.error('[OMR] Error:', message);
             const userFriendlyMessage = "No se pudo procesar la hoja. Verifica tu conexión a internet e inténtalo nuevamente.";
-            setError(`${userFriendlyMessage} | DEBUG: ${message}`);
+            setError(userFriendlyMessage);
             setPhase('preview');
             if (isBatchMode) {
-                toast.error(`${userFriendlyMessage} | DEBUG: ${message}`);
+                toast.error(userFriendlyMessage);
             }
         } finally {
             isProcessingRef.current = false;
@@ -1329,15 +1371,10 @@ export const WebOMRScanner: React.FC<WebOMRScannerProps> = ({ onBack, onOpenFeed
             <div className="glass-card-premium p-6 space-y-4">
                 <div className="flex items-center justify-between gap-3">
                     <div>
-                        <h3 className="text-base font-semibold text-[var(--on-background)]">Estado de conexión</h3>
+                        <h3 className="text-base font-semibold text-[var(--on-background)]">Escáner OMR</h3>
                         <p className="text-sm text-[var(--muted)]">
-                            {isOnline ? 'En línea' : 'Sin conexión'} · Pendientes: {pendingRequests.length + pendingResults.length}
-                        </p>
-                        <p className="text-xs text-[var(--muted)] mt-1">
-                            API activa: {activeApiBase || 'sin configurar'}
-                        </p>
-                        <p className="text-[10px] text-[var(--muted)] mt-1 break-all">
-                            Candidatas: {getApiCandidatesLazy().join(' · ')}
+                            {isOnline ? 'Conectado al servidor de corrección' : 'Sin conexión — los escaneos se guardarán localmente'}
+                            {(pendingRequests.length + pendingResults.length) > 0 && ` · ${pendingRequests.length + pendingResults.length} pendiente(s)`}
                         </p>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${isOnline ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25' : 'bg-amber-500/15 text-amber-300 border border-amber-500/25'}`}>
