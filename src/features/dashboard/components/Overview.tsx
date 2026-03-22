@@ -236,6 +236,19 @@ export function Overview() {
     };
 
 
+    // Hooks MUST be before any conditional return
+    const timeSavedHours = useMemo(() => Math.floor(stats.timeSaved / 60), [stats.timeSaved]);
+    const moneySaved = useMemo(() => timeSavedHours * CLP_PER_HOUR, [timeSavedHours]);
+
+    const getSubjectStyle = useCallback((subject: string) => {
+        const s = (subject || '').toLowerCase();
+        if (s.includes('matem')) return { icon: Calculator, color: 'blue', badge: 'blue' };
+        if (s.includes('cienc') || s.includes('fís') || s.includes('quím') || s.includes('biol')) return { icon: FlaskConical, color: 'green', badge: 'green' };
+        if (s.includes('hist') || s.includes('socía') || s.includes('cív')) return { icon: Globe, color: 'orange', badge: 'orange' };
+        if (s.includes('leng') || s.includes('lit') || s.includes('ingl') || s.includes('comun')) return { icon: BookOpen, color: 'primary', badge: 'primary' };
+        return { icon: Folder, color: 'primary', badge: 'blue' };
+    }, []);
+
     if (loading) {
         return (
             <div className="space-y-6 p-2">
@@ -274,19 +287,7 @@ export function Overview() {
     if (hour >= 12 && hour < 20) greeting = 'Buenas Tardes';
     else if (hour >= 20) greeting = 'Buenas Noches';
 
-    // Helper to calc stroke offset for rings. Circumference = 2 * PI * 28 ≈ 175.9
     const CIRCUMFERENCE = 175;
-    const timeSavedHours = useMemo(() => Math.floor(stats.timeSaved / 60), [stats.timeSaved]);
-    const moneySaved = useMemo(() => timeSavedHours * CLP_PER_HOUR, [timeSavedHours]);
-
-    const getSubjectStyle = useCallback((subject: string) => {
-        const s = (subject || '').toLowerCase();
-        if (s.includes('matem')) return { icon: Calculator, color: 'blue', badge: 'blue' };
-        if (s.includes('cienc') || s.includes('fís') || s.includes('quím') || s.includes('biol')) return { icon: FlaskConical, color: 'green', badge: 'green' };
-        if (s.includes('hist') || s.includes('socía') || s.includes('cív')) return { icon: Globe, color: 'orange', badge: 'orange' };
-        if (s.includes('leng') || s.includes('lit') || s.includes('ingl') || s.includes('comun')) return { icon: BookOpen, color: 'primary', badge: 'primary' };
-        return { icon: Folder, color: 'primary', badge: 'blue' };
-    }, []);
 
     return (
         <motion.div className="space-y-10 pb-12 -mt-2" variants={container} initial="hidden" animate="show">
