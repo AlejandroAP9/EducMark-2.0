@@ -157,6 +157,19 @@ export function CRM() {
     const institutions = Array.from(new Set(leads.map(l => l.institucion).filter((v): v is string => Boolean(v))));
     const subjects = Array.from(new Set(leads.map(l => l.rol).filter((v): v is string => Boolean(v))));
 
+    // Sort leads (must be defined before leadsByStage)
+    const sortLeads = (leadsArr: Lead[]) => {
+        return [...leadsArr].sort((a, b) => {
+            switch (sortBy) {
+                case 'name': return (a.nombre || '').localeCompare(b.nombre || '');
+                case 'revenue': return (b.total_revenue || 0) - (a.total_revenue || 0);
+                case 'last_contact':
+                    return new Date(b.last_interaction || 0).getTime() - new Date(a.last_interaction || 0).getTime();
+                default: return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            }
+        });
+    };
+
     // Filter leads
     const filteredLeads = leads.filter(lead => {
         const matchesSearch =
@@ -279,19 +292,6 @@ export function CRM() {
             const next = new Set(prev);
             if (next.has(leadId)) next.delete(leadId); else next.add(leadId);
             return next;
-        });
-    };
-
-    // Sort leads
-    const sortLeads = (leadsArr: Lead[]) => {
-        return [...leadsArr].sort((a, b) => {
-            switch (sortBy) {
-                case 'name': return (a.nombre || '').localeCompare(b.nombre || '');
-                case 'revenue': return (b.total_revenue || 0) - (a.total_revenue || 0);
-                case 'last_contact':
-                    return new Date(b.last_interaction || 0).getTime() - new Date(a.last_interaction || 0).getTime();
-                default: return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-            }
         });
     };
 
