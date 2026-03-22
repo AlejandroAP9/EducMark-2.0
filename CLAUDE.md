@@ -331,6 +331,41 @@ npm run lint         # ESLint
 - **Fix**: Agregar TODAS las variables de entorno ANTES del primer deploy. Las `NEXT_PUBLIC_*` se necesitan en build time
 - **Aplicar en**: Todo deploy en Easypanel con Next.js
 
+### 2026-03-20: MercadoPago > Polar para mercado chileno
+- **Contexto**: Se evaluó Polar (MoR) vs MercadoPago para profesores chilenos
+- **Decisión**: MercadoPago. CLP nativo, cuotas sin interés, menor comisión (~3.49% vs ~5%), conocido por el público objetivo
+- **Aplicar en**: No sugerir Polar ni Stripe directo para EducMark
+
+### 2026-03-20: Separar RAGs por propósito
+- **Contexto**: El RAG actual solo tiene programas MINEDUC (curricular). El contenido de slides/quiz es genérico
+- **Decisión**: 2 colecciones separadas — `curriculum_programs` (planificación) + `teaching_content` (slides, quiz, evaluaciones)
+- **Modelo**: Gemini Embedding 2 (gratis, PDF nativo hasta 6 páginas, 100+ idiomas)
+- **Estado**: Planificado, pendiente ubicación de los 280 PDFs docentes
+- **Aplicar en**: Cuando se implemente el pipeline de ingesta
+
+### 2026-03-21: Siempre hacer deploy después de cada cambio
+- **Regla**: Después de cada commit con cambios funcionales, hacer `git push` para que Easypanel auto-deploye
+- **Motivo**: Alejandro prueba en producción (Easypanel), no en localhost. Si no se pushea, no ve los cambios
+- **Aplicar en**: Todo cambio de código en el proyecto Next.js
+
+### 2026-03-21: OMR Scanner requiere evaluaciones activas con items
+- **Error**: El escáner mostraba "No hay evaluaciones activas" aunque se habían creado evaluaciones
+- **Causa**: Las evaluaciones estaban en status `archived` y el workflow de n8n no insertaba items en `evaluation_items`
+- **Fix**: Agregado nodo "Insertar Items en DB" + "Guardar Item en Supabase" al workflow de n8n. Agregado auto-carga de pauta en el frontend
+- **Aplicar en**: Cualquier cambio al flujo de evaluaciones sumativas
+
+### 2026-03-21: RAG con Gemini File Search implementado
+- **Store**: `fileSearchStores/educmarkprogramas-64nwiv8hkept`
+- **Contenido**: 136 PDFs (programas MINEDUC + bases curriculares, 1° básico a 4° medio + electivos)
+- **Metadata**: asignatura, nivel, ciclo por cada documento
+- **Script**: `scripts/ingest-rag.mjs`
+- **Aplicar en**: Cuando se conecte con n8n para mejorar la generación de contenido
+
+### 2026-03-20: Favicon es SVG, no ICO
+- **Error**: El sitio devuelve HTML al pedir favicon.ico. El favicon real es favicon.svg
+- **Fix**: Siempre verificar formato real del favicon con `file` command. Usar SVG
+- **Aplicar en**: Migraciones de assets
+
 ## Infraestructura EducMark
 
 | Servicio | URL | Tipo |
