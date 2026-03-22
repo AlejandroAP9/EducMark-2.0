@@ -434,7 +434,8 @@ export function Generator() {
                                                             const next = isSelected
                                                                 ? formData.oaCodes.filter(c => c !== code)
                                                                 : [...formData.oaCodes, code];
-                                                            setSelectedOAs(next);
+                                                            const nextTexts = next.map(c => oaOptions.find(o => o.code === c)?.description || '');
+                                                            setSelectedOAs(next, nextTexts);
                                                         }}
                                                         className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
                                                             isSelected
@@ -478,7 +479,8 @@ export function Generator() {
                                                                 const next = selected
                                                                     ? formData.oaCodes.filter((code) => code !== oa.code)
                                                                     : [...formData.oaCodes, oa.code];
-                                                                setSelectedOAs(next);
+                                                                const nextTexts = next.map(c => oaOptions.find(o => o.code === c)?.description || '');
+                                                                setSelectedOAs(next, nextTexts);
                                                             }}
                                                             className={`w-full text-left px-3 py-2 border-b border-[var(--border)]/40 last:border-b-0 transition-colors ${selected ? 'bg-[var(--primary)]/15 text-[var(--primary)]' : 'hover:bg-[var(--card-hover)] text-[var(--foreground)]'}`}
                                                         >
@@ -497,7 +499,11 @@ export function Generator() {
                                                 OA {code}
                                                 <button
                                                     type="button"
-                                                    onClick={() => setSelectedOAs(formData.oaCodes.filter((oa) => oa !== code))}
+                                                    onClick={() => {
+                                                        const next = formData.oaCodes.filter((oa) => oa !== code);
+                                                        const nextTexts = next.map(c => oaOptions.find(o => o.code === c)?.description || '');
+                                                        setSelectedOAs(next, nextTexts);
+                                                    }}
                                                     className="text-[var(--primary)] hover:text-white"
                                                 >
                                                     ×

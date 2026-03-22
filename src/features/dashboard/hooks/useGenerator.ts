@@ -22,6 +22,7 @@ export interface FormData {
     grade: string;
     oa: string;
     oaCodes: string[];
+    oaTexts: string[];
     topic: string;
     nee: string;
     dua: boolean;
@@ -107,6 +108,7 @@ export function useGenerator() {
         grade: '1° Básico',
         oa: '',
         oaCodes: [],
+        oaTexts: [],
         topic: '',
         nee: 'Ninguna',
         dua: true,
@@ -139,11 +141,12 @@ export function useGenerator() {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    const setSelectedOAs = (codes: string[]) => {
+    const setSelectedOAs = (codes: string[], texts?: string[]) => {
         const normalized = Array.from(new Set(codes.map((code) => code.trim()).filter(Boolean)));
         setFormData(prev => ({
             ...prev,
             oaCodes: normalized,
+            oaTexts: texts || prev.oaTexts,
             oa: normalized.join(', ')
         }));
     };
@@ -340,6 +343,7 @@ export function useGenerator() {
                 curso: formData.grade,
                 oa: formData.oaCodes.length > 0 ? formData.oaCodes.join(', ') : formData.oa,
                 oas: formData.oaCodes,
+                oa_textos: formData.oaTexts,
                 objetivo_clase: formData.topic,
                 nee: formData.nee,
                 dua: formData.dua,
