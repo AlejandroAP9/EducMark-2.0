@@ -1,13 +1,17 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-
-const Agentation = dynamic(
-  () => import('agentation').then((mod) => mod.Agentation),
-  { ssr: false }
-);
+import { useEffect, useState } from 'react';
 
 export function AgentationWrapper() {
-  if (process.env.NODE_ENV !== 'development') return null;
-  return <Agentation endpoint="http://localhost:4747" />;
+  const [Component, setComponent] = useState<React.ComponentType<{ endpoint: string }> | null>(null);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'development') return;
+    import('agentation')
+      .then((mod) => setComponent(() => mod.Agentation))
+      .catch(() => {}); // Silently fail if not installed
+  }, []);
+
+  if (!Component) return null;
+  return <Component endpoint="http://localhost:4747" />;
 }
