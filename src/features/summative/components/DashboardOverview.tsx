@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { FileText, Layers, Plus, Sparkles, ClipboardList, Camera, Download, ExternalLink, Trash2, Package, BrainCircuit, BookKey, Users } from 'lucide-react';
+import { FileText, Layers, Plus, Sparkles, ClipboardList, Camera, Download, ExternalLink, Trash2, Package, Lightbulb, BookKey, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
@@ -317,7 +317,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onCreateTe
                     <div className="absolute top-0 right-0 w-48 h-48 bg-violet-500/5 rounded-full blur-3xl -mr-10 -mt-10 transition-all group-hover:bg-violet-500/10"></div>
                     <div className="relative z-10">
                         <div className="w-11 h-11 rounded-xl bg-[var(--input-bg)] border border-[var(--border)] flex items-center justify-center text-violet-500 mb-4 shadow-sm group-hover:scale-110 transition-transform duration-300">
-                            <BrainCircuit size={24} />
+                            <Lightbulb size={24} />
                         </div>
                         <h3 className="text-lg font-bold text-[var(--on-background)] mb-1.5 group-hover:text-violet-400 transition-colors">
                             Retroalimentación

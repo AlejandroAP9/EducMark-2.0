@@ -378,9 +378,9 @@ export function Overview() {
                                 <>
                                     <motion.span
                                         whileHover={{ scale: 1.05 }}
-                                        className="inline-block py-1.5 px-4 rounded-full bg-[var(--primary-bg)] text-[var(--primary)] text-xs font-bold uppercase tracking-wider border border-[var(--primary)]/20 shadow-[0_0_15px_rgba(164,143,255,0.2)] flex items-center gap-1 w-fit mb-6"
+                                        className="inline-flex items-center gap-2 py-2 px-5 rounded-full bg-white/10 text-white text-sm font-bold uppercase tracking-wider border border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.1)] w-fit mb-6"
                                     >
-                                        <Sparkles size={14} className="fill-current" /> Generador Unificado
+                                        <Sparkles size={16} className="fill-current" /> Generador Unificado
                                     </motion.span>
 
                                     <h2 className="text-2xl md:text-4xl font-bold text-[var(--on-background)] tracking-tight mb-4 leading-tight font-[family-name:var(--font-heading)]">
@@ -579,6 +579,7 @@ export function Overview() {
                                     <tr>
                                         <th>Nombre del Kit</th>
                                         <th>Asignatura</th>
+                                        <th>Curso</th>
                                         <th>Feedback</th>
                                         <th>Creado</th>
                                         <th className="text-right">Acciones Rápidas</th>
@@ -602,6 +603,11 @@ export function Overview() {
                                                 <td>
                                                     <span className={`badge-proto ${style.badge}`}>
                                                         {item.asignatura || 'General'}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span className="text-sm text-[var(--muted)]">
+                                                        {item.curso || '—'}
                                                     </span>
                                                 </td>
                                                 <td>

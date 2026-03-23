@@ -409,11 +409,12 @@ export function History() {
                                                 {selectedIds.size === filteredClasses.length && filteredClasses.length > 0 && <CheckCheck size={12} />}
                                             </button>
                                         </th>
-                                        <th className="px-6 py-4 font-bold">Nombre del Kit</th>
-                                        <th className="px-6 py-4 font-bold">Asignatura</th>
-                                        <th className="px-6 py-4 font-bold text-center">Feedback</th>
-                                        <th className="px-6 py-4 font-bold">Creado</th>
-                                        <th className="px-6 py-4 font-bold text-right">Acciones Rápidas</th>
+                                        <th className="px-3 py-4 font-bold">Nombre del Kit</th>
+                                        <th className="px-3 py-4 font-bold">Asignatura</th>
+                                        <th className="px-3 py-4 font-bold">Curso</th>
+                                        <th className="px-3 py-4 font-bold text-center">Feedback</th>
+                                        <th className="px-3 py-4 font-bold">Creado</th>
+                                        <th className="px-3 py-4 font-bold text-right">Acciones Rápidas</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-[var(--border)]">
@@ -431,7 +432,7 @@ export function History() {
                                                     {selectedIds.has(item.id) && <CheckCheck size={12} />}
                                                 </button>
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-3 py-4">
                                                 <div className="flex items-center gap-4">
                                                     <div className="w-10 h-10 rounded-lg bg-[var(--primary)]/10 flex items-center justify-center text-[var(--primary)]">
                                                         <FolderHeart size={20} className="fill-current" />
@@ -443,12 +444,17 @@ export function History() {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-3 py-4">
                                                 <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${getSubjectBadgeStyle(item.asignatura ?? '')}`}>
                                                     {item.asignatura || 'General'}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 text-center">
+                                            <td className="px-3 py-4">
+                                                <span className="text-sm text-[var(--muted)]">
+                                                    {item.curso || '—'}
+                                                </span>
+                                            </td>
+                                            <td className="px-3 py-4 text-center">
                                                 <div className="flex items-center justify-center gap-2">
                                                     <button
                                                         onClick={() => handleFeedback(item.id, 'up')}
@@ -464,10 +470,10 @@ export function History() {
                                                     </button>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-[var(--muted)]">
+                                            <td className="px-3 py-4 text-sm text-[var(--muted)]">
                                                 {new Date(item.created_at).toLocaleDateString('es-CL')}
                                             </td>
-                                            <td className="px-6 py-4 text-right">
+                                            <td className="px-3 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
                                                     {item.link_presentacion && (
                                                         <div className="relative group/doc">

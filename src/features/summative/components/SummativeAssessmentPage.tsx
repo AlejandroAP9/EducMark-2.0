@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Menu, Search } from 'lucide-react';
+import { Menu, Moon, Wand2, Search } from 'lucide-react';
+import { useSubscriptionStore } from '@/features/auth/store/subscriptionStore';
+import { useRouter } from 'next/navigation';
 import { DashboardOverview } from './DashboardOverview';
 import { AssessmentList } from './AssessmentList';
 import { TestDesigner } from './TestDesigner/TestDesigner';
@@ -313,6 +315,50 @@ const SpecificationView: React.FC<{ selectedEvalId: string | null }> = ({ select
 
 type ViewType = 'dashboard' | 'designer' | 'answersheet' | 'omr-results' | 'analytics' | 'specification' | 'items' | 'assessment' | 'omr-scanner' | 'feedback' | 'students' | 'trash';
 
+function SummativeHeader({ setMobileOpen }: { setMobileOpen: (open: boolean) => void }) {
+    const { planName, fullName, credits, classesLimit } = useSubscriptionStore();
+    const router = useRouter();
+    const percentage = classesLimit > 0 ? (credits.used / classesLimit) * 100 : 0;
+    const colorClass = percentage >= 80 ? 'text-red-400 bg-red-500/10 border-red-500/20' : percentage >= 50 ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+
+    return (
+        <header className="top-header">
+            <div className="mobile-toggle block md:hidden mr-4">
+                <button onClick={() => setMobileOpen(true)}>
+                    <Menu size={24} />
+                </button>
+            </div>
+            <div className="flex-1"></div>
+            <div className="header-actions">
+                <button
+                    onClick={() => router.push('/dashboard/subscription')}
+                    className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors hover:opacity-80 ${colorClass}`}
+                    title="Uso de créditos"
+                >
+                    <Wand2 size={13} />
+                    <span>{credits.used}/{classesLimit}</span>
+                </button>
+                <button className="header-btn" onClick={() => document.body.classList.toggle('light-mode')} title="Cambiar Tema">
+                    <Moon size={20} />
+                </button>
+                <div className="user-profile">
+                    <div className="text-right hidden md:block mr-3">
+                        <div className="text-sm font-semibold text-[var(--on-background)] leading-tight">
+                            {fullName || 'Usuario'}
+                        </div>
+                        <div className="text-[11px] text-[var(--muted)] font-medium">
+                            {planName}
+                        </div>
+                    </div>
+                    <div className="avatar">
+                        {(fullName || 'U').charAt(0).toUpperCase()}
+                    </div>
+                </div>
+            </div>
+        </header>
+    );
+}
+
 export const SummativeAssessmentPage = () => {
     const supabase = createClient();
     const [activeView, setActiveView] = useState<ViewType>('dashboard');
@@ -357,14 +403,9 @@ export const SummativeAssessmentPage = () => {
             <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
 
             <main className="main-content">
-                <header className="md:hidden flex items-center p-4">
-                    <button onClick={() => setMobileOpen(true)}>
-                        <Menu size={24} className="text-gray-600" />
-                    </button>
-                    <span className="ml-4 font-bold text-gray-800">Evaluaciones</span>
-                </header>
+                <SummativeHeader setMobileOpen={setMobileOpen} />
 
-                <div className="content-wrapper p-6 h-full overflow-auto">
+                <div className="content-wrapper px-6 pt-2 pb-6 h-full overflow-auto">
                     {activeView === 'dashboard' && <DashboardOverview
                         onCreateTest={handleCreateTest}
                         onOpenAnswerSheet={() => handleOpenAnswerSheet()}
