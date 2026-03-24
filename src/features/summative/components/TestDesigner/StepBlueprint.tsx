@@ -17,6 +17,29 @@ const ITEM_TYPES = [
     'Doble Proceso'
 ];
 
+// Cantidad de preguntas objetivas por nivel (sin contar desarrollo)
+function getMaxQuestions(grade: string): number {
+    const g = (grade || '').toLowerCase().replace(/[°º]/g, '');
+    if (g.includes('1') && g.includes('basico') || g.includes('2') && g.includes('basico')) return 20;
+    if (g.includes('3') && g.includes('basico') || g.includes('4') && g.includes('basico')) return 35;
+    if (g.includes('5') && g.includes('basico') || g.includes('6') && g.includes('basico')) return 38;
+    if (g.includes('7') && g.includes('basico') || g.includes('8') && g.includes('basico')) return 40;
+    if (g.includes('medio')) return 44;
+    return 40; // default
+}
+
+// Distribución de habilidades por nivel (%)
+function getSkillDistribution(grade: string): { skill: string; pct: number; itemType: string }[] {
+    const g = (grade || '').toLowerCase();
+    const isMedio = g.includes('medio');
+    return [
+        { skill: 'Recordar', pct: isMedio ? 0.15 : 0.20, itemType: 'Verdadero o Falso' },
+        { skill: 'Comprender', pct: 0.20, itemType: 'Selección Múltiple' },
+        { skill: 'Aplicar', pct: 0.30, itemType: 'Selección Múltiple' },
+        { skill: 'Analizar', pct: isMedio ? 0.35 : 0.30, itemType: 'Selección Múltiple' },
+    ];
+}
+
 export const StepBlueprint: React.FC = () => {
     const {
         blueprint,
@@ -29,6 +52,10 @@ export const StepBlueprint: React.FC = () => {
     const [availableOAs, setAvailableOAs] = useState<{ label: string; id?: string; description: string; topic?: string }[]>([]);
     const [loadingOAs, setLoadingOAs] = useState(false);
     const totalQuestions = blueprint.reduce((acc, row) => acc + row.count, 0);
+    const maxQuestions = getMaxQuestions(grade);
+    const devQuestions = blueprint.filter(r => r.itemType === 'Desarrollo').reduce((s, r) => s + r.count, 0);
+    const objQuestions = totalQuestions - devQuestions;
+    const isOverLimit = objQuestions > maxQuestions;
 
     const loadOAs = async (forcePopulate = false) => {
         if (grade && subject && unit) {
@@ -67,15 +94,50 @@ export const StepBlueprint: React.FC = () => {
             const isDefault = blueprint.length === 0 || (blueprint.length === 1 && blueprint[0].oa === 'OA 01' && blueprint[0].count === 1);
 
             if ((isDefault || forcePopulate) && sortedOAs.length > 0) {
-                const newBlueprint = sortedOAs.map((oa, index) => ({
-                    id: index + 1,
-                    oa: oa.label,
-                    topic: oa.topic || 'General',
-                    skill: 'Recordar',
-                    itemType: 'Selección Múltiple',
-                    count: 2 // Default count per OA
-                }));
-                onChange(newBlueprint);
+                const maxQ = getMaxQuestions(grade);
+                const dist = getSkillDistribution(grade);
+                const newBlueprint: BlueprintRow[] = [];
+                let rowId = 1;
+
+                // Distribute items across OAs and skills
+                for (const { skill, pct, itemType } of dist) {
+                    const totalForSkill = Math.round(maxQ * pct);
+                    const perOA = Math.max(1, Math.floor(totalForSkill / sortedOAs.length));
+                    const remainder = totalForSkill - (perOA * sortedOAs.length);
+
+                    for (let i = 0; i < sortedOAs.length; i++) {
+                        const oa = sortedOAs[i];
+                        newBlueprint.push({
+                            id: rowId++,
+                            oa: oa.label,
+                            topic: oa.topic || 'General',
+                            skill,
+                            itemType,
+                            count: perOA + (i < remainder ? 1 : 0),
+                        });
+                    }
+                }
+
+                // Add 3 development questions (1 per first 3 OAs or cycle)
+                const devCount = 3;
+                for (let i = 0; i < devCount; i++) {
+                    const oa = sortedOAs[i % sortedOAs.length];
+                    newBlueprint.push({
+                        id: rowId++,
+                        oa: oa.label,
+                        topic: oa.topic || 'General',
+                        skill: 'Analizar',
+                        itemType: 'Desarrollo',
+                        count: 1,
+                    });
+                }
+
+                // Remove rows with count 0
+                onChange(newBlueprint.filter(r => r.count > 0));
+
+                if (forcePopulate) {
+                    toast.success(`Tabla generada: ${maxQ} preguntas objetivas + ${devCount} desarrollo para ${grade}`);
+                }
             }
         }
     };
@@ -154,8 +216,12 @@ export const StepBlueprint: React.FC = () => {
                     </button>
 
                     <div className="text-right">
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-[var(--muted)] block mb-1">Total Ítems</span>
-                        <div className="text-4xl font-bold text-[var(--on-background)] leading-none font-[var(--font-heading)]">{totalQuestions}</div>
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-[var(--muted)] block mb-1">Objetivas + Desarrollo</span>
+                        <div className={`text-3xl font-bold leading-none font-[var(--font-heading)] ${isOverLimit ? 'text-red-400' : 'text-[var(--on-background)]'}`}>
+                            {objQuestions}<span className="text-lg text-[var(--muted)]">/{maxQuestions}</span>
+                            {devQuestions > 0 && <span className="text-lg text-amber-400 ml-1">+{devQuestions}</span>}
+                        </div>
+                        {isOverLimit && <span className="text-[10px] text-red-400 font-bold">Excede el máximo para {grade}</span>}
                     </div>
                 </div>
             </div>
