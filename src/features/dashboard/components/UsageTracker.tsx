@@ -165,33 +165,68 @@ export const UsageCard = React.memo(function UsageCard({ className = '' }: Usage
                         </button>
                     )}
 
-                    {dailyActivity.length > 0 && (
-                        <div className="pt-4 border-t border-[var(--border)]">
-                            <p className="text-xs font-medium text-[var(--muted)] mb-3">Actividad últimos 7 días</p>
-                            <div className="flex items-end gap-1.5 h-12">
-                                {dailyActivity.map((day, i) => (
-                                    <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
-                                        <div
-                                            className="w-full rounded-t-sm bg-gradient-to-t from-[var(--primary)] to-[var(--secondary)] transition-all duration-300 group-hover:opacity-80"
-                                            style={{
-                                                height: `${Math.max((day.count / maxDaily) * 100, day.count > 0 ? 15 : 4)}%`,
-                                                minHeight: day.count > 0 ? '6px' : '2px',
-                                                opacity: day.count > 0 ? 1 : 0.2,
-                                            }}
-                                        />
-                                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[var(--card)] border border-[var(--border)] text-[var(--on-background)] text-[10px] font-medium px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg z-10">
-                                            {day.count} clases
+                    {dailyActivity.length > 0 && (() => {
+                        const totalWeek = dailyActivity.reduce((s, d) => s + d.count, 0);
+                        const streak = (() => {
+                            let s = 0;
+                            for (let i = dailyActivity.length - 1; i >= 0; i--) {
+                                if (dailyActivity[i].count > 0) s++;
+                                else break;
+                            }
+                            return s;
+                        })();
+                        const getIntensity = (count: number) => {
+                            if (count === 0) return 'bg-[var(--input-bg)]';
+                            if (count <= 2) return 'bg-emerald-500/40';
+                            if (count <= 5) return 'bg-emerald-500/70';
+                            return 'bg-emerald-400';
+                        };
+
+                        return (
+                            <div className="pt-4 border-t border-[var(--border)]">
+                                {/* Stats row */}
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-4">
+                                        <div>
+                                            <span className="text-2xl font-bold text-[var(--on-background)]">{totalWeek}</span>
+                                            <span className="text-xs text-[var(--muted)] ml-1">{totalWeek === 1 ? 'clase' : 'clases'} esta semana</span>
                                         </div>
+                                        {streak > 0 && (
+                                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20">
+                                                <span className="text-sm">🔥</span>
+                                                <span className="text-xs font-bold text-amber-400">{streak} {streak === 1 ? 'día' : 'días'}</span>
+                                            </div>
+                                        )}
                                     </div>
-                                ))}
+                                    <div className="flex items-center gap-1 text-[9px] text-[var(--muted)]">
+                                        <span>Menos</span>
+                                        <div className="w-3 h-3 rounded-sm bg-[var(--input-bg)]" />
+                                        <div className="w-3 h-3 rounded-sm bg-emerald-500/40" />
+                                        <div className="w-3 h-3 rounded-sm bg-emerald-500/70" />
+                                        <div className="w-3 h-3 rounded-sm bg-emerald-400" />
+                                        <span>Más</span>
+                                    </div>
+                                </div>
+
+                                {/* Heatmap grid */}
+                                <div className="flex gap-2">
+                                    {dailyActivity.map((day, i) => (
+                                        <div key={i} className="flex-1 group relative">
+                                            <div className={`aspect-square rounded-lg ${getIntensity(day.count)} transition-all duration-300 group-hover:scale-110 group-hover:ring-2 group-hover:ring-[var(--primary)]/50 flex items-center justify-center`}>
+                                                {day.count > 0 && (
+                                                    <span className="text-xs font-bold text-white drop-shadow-sm">{day.count}</span>
+                                                )}
+                                            </div>
+                                            <p className="text-center text-[9px] text-[var(--muted)] capitalize mt-1.5">{day.date}</p>
+                                            <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-[var(--card)] border border-[var(--border)] text-[var(--on-background)] text-[10px] font-medium px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg z-10">
+                                                {day.count} {day.count === 1 ? 'clase' : 'clases'}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="flex gap-1.5 mt-1">
-                                {dailyActivity.map((day, i) => (
-                                    <span key={i} className="flex-1 text-center text-[9px] text-[var(--muted)] capitalize">{day.date}</span>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                        );
+                    })()}
                 </div>
             )}
         </div>

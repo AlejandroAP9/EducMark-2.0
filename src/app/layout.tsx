@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
 import { Toaster } from 'sonner'
-// AgentationWrapper only used in development (loaded dynamically)
+import { AgentationWrapper } from '@/shared/components/AgentationWrapper'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -51,6 +51,7 @@ export default function RootLayout({
       </head>
       <body>
         {children}
+        <AgentationWrapper />
         <Toaster richColors position="top-right" />
 
         {/* Google Analytics */}

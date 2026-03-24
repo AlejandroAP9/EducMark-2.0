@@ -31,6 +31,10 @@ const HELP_ARTICLES = [
         articles: [
             { title: 'Cómo generar tu primera clase', body: 'Ingresa al Generador desde el menú lateral. Selecciona asignatura, curso, unidad y OA. En menos de 2 minutos el sistema generará una planificación completa con inicio, desarrollo, cierre, recursos y ticket de salida.' },
             { title: 'Qué es DUA/PACI', body: 'DUA (Diseño Universal para el Aprendizaje) asegura que tu clase sea accesible para todos. PACI (Plan de Adecuación Curricular Individual) se genera automáticamente cuando seleccionas una NEE distinta de "Ninguna". Está alineado al Decreto 83/2015.' },
+            { title: 'Qué incluye el kit de clase', body: 'Cada generación incluye 3 archivos HTML: Planificación (secuencia didáctica completa con rúbrica), Presentación (slides interactivas con imágenes únicas) y Quiz (evaluación formativa con retroalimentación). Todo llega también por email.' },
+            { title: 'Cómo editar los archivos generados', body: 'Cada archivo HTML tiene un botón "Editar" que permite modificar textos, preguntas y contenido directamente. Luego puedes guardar la versión editada con el botón "Guardar". Las presentaciones también permiten cambiar imágenes en modo edición.' },
+            { title: 'Qué pasa si genero dos veces el mismo OA', body: 'Cada generación es única. Aunque selecciones el mismo OA, la planificación, actividades, preguntas e imágenes serán diferentes. Esto es útil si tienes varios cursos del mismo nivel.' },
+            { title: 'Cómo funciona la alineación curricular', body: 'El sistema busca automáticamente el OA oficial en los programas del MINEDUC y extrae los indicadores de evaluación. La planificación se genera con un objetivo tridimensional (habilidad + contenido + actitud) alineado al nivel DESTACADO de Docentemás.' },
         ],
     },
     {
@@ -38,61 +42,103 @@ const HELP_ARTICLES = [
         icon: ClipboardCheck,
         iconColor: 'text-emerald-400',
         articles: [
-            { title: 'Cómo crear una evaluación', body: 'Ve a Evaluaciones > Crear Nueva. Define asignatura, curso y OA. El sistema generará ítems alineados al currículum. Puedes editar, reordenar y agregar ítems manualmente o desde el Banco de Ítems compartido.' },
-            { title: 'Cómo escanear hojas OMR', body: 'Genera la hoja de respuesta desde tu evaluación. Imprímela y repártela. Luego usa el Escáner OMR (cámara del celular o webcam) para capturar las respuestas. Los resultados se guardan automáticamente.' },
+            { title: 'Cómo crear una evaluación sumativa', body: 'Ve a Evaluaciones > Diseñar Nueva Evaluación. Define asignatura, curso y OA. El sistema generará ítems alineados al currículum. Puedes editar, reordenar y agregar ítems manualmente.' },
+            { title: 'Cómo escanear hojas de respuesta', body: 'Genera la hoja de respuesta desde tu evaluación. Imprímela y repártela. Luego usa el Escáner OMR (cámara del celular o webcam) para capturar las respuestas. Los resultados se guardan automáticamente.' },
+            { title: 'Para qué sirve la hoja de respuestas', body: 'La hoja de respuestas es un formulario imprimible con burbujas que los estudiantes rellenan. Incluye un código QR único que identifica la evaluación. Al escanearla, el sistema corrige automáticamente y registra las notas.' },
+            { title: 'Cómo interpretar los resultados', body: 'Después del escaneo, verás el puntaje de cada estudiante, las preguntas con más errores y un semáforo de logro por OA. Rojo (<50%) requiere refuerzo urgente, amarillo (50-69%) refuerzo focalizado, verde (>=70%) dominio adecuado.' },
         ],
     },
     {
-        module: 'Analytics',
+        module: 'Cuenta y Suscripción',
         icon: BarChart3,
         iconColor: 'text-blue-400',
         articles: [
-            { title: 'Interpretar el semáforo de OA', body: 'Rojo (<50%) indica que el OA requiere refuerzo urgente. Amarillo (50-69%) sugiere refuerzo focalizado. Verde (>=70%) confirma dominio adecuado. Puedes generar un Plan Remedial automático desde el semáforo.' },
-            { title: 'Cómo leer el análisis de ítems', body: 'La dificultad indica qué porcentaje de estudiantes acertó. La discriminación mide si el ítem diferencia entre estudiantes con alto y bajo puntaje. Ítems marcados como defectuosos deben revisarse o anularse.' },
+            { title: 'Cuántas clases puedo generar', body: 'Depende de tu plan: Semilla (gratis) = 3 clases/mes, Copihue = 20 clases/mes, Araucaria = 35 clases/mes, Cóndor = 50 clases/mes. Los créditos se renuevan el primer día de cada mes.' },
+            { title: 'Cómo cambiar mi plan', body: 'Ve a Suscripción en el menú lateral. Selecciona el plan que necesites y sigue las instrucciones de pago. El cambio se aplica inmediatamente y los créditos se ajustan al nuevo plan.' },
+            { title: 'Dónde encuentro mis clases generadas', body: 'En el Dashboard principal verás tu historial de clases. Cada una tiene botones para descargar la Presentación, Planificación y Quiz. También recibes todo por email después de cada generación.' },
+            { title: 'Puedo usar EducMark desde el celular', body: 'Sí. EducMark es una aplicación web progresiva (PWA). Puedes instalarla en tu celular desde el navegador y usarla como una app. Las presentaciones generadas también funcionan offline.' },
         ],
     },
 ];
 
 const HelpArticles: React.FC = () => {
     const [expandedKey, setExpandedKey] = useState<string | null>(null);
+    const [activeModule, setActiveModule] = useState(HELP_ARTICLES[0].module);
+    const activeSection = HELP_ARTICLES.find(s => s.module === activeModule) || HELP_ARTICLES[0];
 
     return (
         <div className="glass-card-premium p-6 rounded-2xl border border-[var(--border)]">
-            <h3 className="text-lg font-semibold text-[var(--on-background)] mb-4 flex items-center gap-2">
-                <BookOpen size={20} className="text-[var(--primary)]" />
-                Artículos de Ayuda
-            </h3>
-            <div className="space-y-4">
-                {HELP_ARTICLES.map((section) => (
-                    <div key={section.module}>
-                        <p className="text-sm font-bold text-[var(--on-background)] mb-2 flex items-center gap-2">
-                            <section.icon size={16} className={section.iconColor} />
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-[var(--on-background)] flex items-center gap-2">
+                    <BookOpen size={20} className="text-[var(--primary)]" />
+                    Preguntas Frecuentes
+                </h3>
+                <span className="text-xs text-[var(--muted)]">{HELP_ARTICLES.reduce((s, m) => s + m.articles.length, 0)} artículos</span>
+            </div>
+
+            {/* Module tabs */}
+            <div className="flex gap-2 mb-6">
+                {HELP_ARTICLES.map((section) => {
+                    const isActive = activeModule === section.module;
+                    return (
+                        <button
+                            key={section.module}
+                            onClick={() => { setActiveModule(section.module); setExpandedKey(null); }}
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                                isActive
+                                    ? 'bg-[var(--primary)]/15 text-[var(--primary)] border border-[var(--primary)]/30 shadow-sm shadow-[var(--primary)]/10'
+                                    : 'bg-[var(--card)]/40 text-[var(--muted)] border border-[var(--border)] hover:text-[var(--on-background)] hover:bg-[var(--card-hover)]/40'
+                            }`}
+                        >
+                            <section.icon size={16} className={isActive ? 'text-[var(--primary)]' : ''} />
                             {section.module}
-                        </p>
-                        <div className="space-y-2">
-                            {section.articles.map((article) => {
-                                const key = `${section.module}-${article.title}`;
-                                const isOpen = expandedKey === key;
-                                return (
-                                    <div key={key} className="rounded-xl border border-[var(--border)] bg-[var(--card)]/40 overflow-hidden">
-                                        <button
-                                            onClick={() => setExpandedKey(isOpen ? null : key)}
-                                            className="w-full flex items-center justify-between p-3 text-left hover:bg-[var(--card-hover)]/40 transition-colors"
-                                        >
-                                            <span className="text-sm font-medium text-[var(--on-background)]">{article.title}</span>
-                                            {isOpen ? <ChevronUp size={14} className="text-[var(--muted)]" /> : <ChevronDown size={14} className="text-[var(--muted)]" />}
-                                        </button>
-                                        {isOpen && (
-                                            <div className="px-3 pb-3">
-                                                <p className="text-sm text-[var(--muted)] leading-relaxed">{article.body}</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
+                        </button>
+                    );
+                })}
+            </div>
+
+            {/* Articles */}
+            <div className="space-y-2">
+                {activeSection.articles.map((article, idx) => {
+                    const key = `${activeSection.module}-${article.title}`;
+                    const isOpen = expandedKey === key;
+                    return (
+                        <div
+                            key={key}
+                            className={`rounded-xl border overflow-hidden transition-all duration-200 ${
+                                isOpen
+                                    ? 'border-[var(--primary)]/30 bg-[var(--primary)]/5'
+                                    : 'border-[var(--border)] bg-[var(--card)]/30 hover:bg-[var(--card)]/50'
+                            }`}
+                        >
+                            <button
+                                onClick={() => setExpandedKey(isOpen ? null : key)}
+                                className="w-full flex items-center gap-3 p-4 text-left transition-colors"
+                            >
+                                <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
+                                    isOpen
+                                        ? 'bg-[var(--primary)]/20 text-[var(--primary)]'
+                                        : 'bg-[var(--input-bg)] text-[var(--muted)]'
+                                }`}>
+                                    {idx + 1}
+                                </span>
+                                <span className={`text-sm font-medium flex-1 ${isOpen ? 'text-[var(--primary)]' : 'text-[var(--on-background)]'}`}>
+                                    {article.title}
+                                </span>
+                                <ChevronDown
+                                    size={16}
+                                    className={`text-[var(--muted)] transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180' : ''}`}
+                                />
+                            </button>
+                            {isOpen && (
+                                <div className="px-4 pb-4 pl-14">
+                                    <p className="text-sm text-[var(--muted)] leading-relaxed">{article.body}</p>
+                                </div>
+                            )}
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );
@@ -301,55 +347,7 @@ export function HelpCenter() {
                 <p className="text-[var(--muted)] text-sm md:text-base mt-1">Soporte, artículos y seguimiento de tickets.</p>
             </div>
 
-            <div className="glass-card-premium p-6 rounded-2xl border border-[var(--border)]">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                        <h2 className="text-lg font-semibold text-[var(--on-background)] flex items-center gap-2">
-                            <LifeBuoy size={20} className="text-[var(--primary)]" />
-                            Estado Institucional
-                        </h2>
-                        <p className="text-sm text-[var(--muted)] mt-1">
-                            {institution || 'Sin institución asignada'}
-                        </p>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full border text-xs font-semibold ${statusBadge}`}>
-                        Licencia: {(settings?.license_status || 'trial').toUpperCase()}
-                    </span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
-                    <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--card)]/40">
-                        <div className="flex items-center gap-2 text-[var(--muted)] text-sm mb-1">
-                            <Users size={16} />
-                            WAU institucional
-                        </div>
-                        <div className="text-2xl font-bold text-[var(--on-background)]">{weeklyActiveUsers}</div>
-                    </div>
-                    <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--card)]/40">
-                        <div className="flex items-center gap-2 text-[var(--muted)] text-sm mb-1">
-                            <TrendingUp size={16} />
-                            Retención 4 semanas
-                        </div>
-                        <div className="text-2xl font-bold text-[var(--on-background)]">{retention4w}%</div>
-                    </div>
-                    <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--card)]/40">
-                        <div className="flex items-center gap-2 text-[var(--muted)] text-sm mb-1">
-                            <Activity size={16} />
-                            Uso por módulo (28d)
-                        </div>
-                        <div className="text-sm text-[var(--on-background)]">
-                            Planificación: <strong>{moduleUsage.planning}</strong> · Evaluación: <strong>{moduleUsage.summative}</strong> · OMR: <strong>{moduleUsage.omr}</strong>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="text-xs text-[var(--muted)] mt-4">
-                    Contacto institucional: {settings?.help_email || 'soporte@educmark.cl'}{settings?.help_whatsapp ? ` · WhatsApp: ${settings.help_whatsapp}` : ''}
-                    {settings?.license_expires_at ? ` · Vence: ${new Date(settings.license_expires_at).toLocaleDateString('es-CL')}` : ''}
-                </div>
-            </div>
-
-            {/* AD-17: Centro de Ayuda — FAQ Articles */}
+            {/* Artículos de Ayuda */}
             <HelpArticles />
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

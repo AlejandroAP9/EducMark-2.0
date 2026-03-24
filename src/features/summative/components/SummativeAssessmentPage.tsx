@@ -379,7 +379,7 @@ export const SummativeAssessmentPage = () => {
     };
 
     const handleBackToManager = () => {
-        setActiveView('assessment');
+        setActiveView('dashboard');
         setEditingTestId(null);
     };
 
@@ -420,18 +420,6 @@ export const SummativeAssessmentPage = () => {
                         onOpenStudents={() => setActiveView('students')}
                         onOpenTrash={() => setActiveView('trash')}
                     />}
-
-                    {activeView === 'assessment' && (
-                        <div className="animate-fade-in">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-2xl font-bold text-gray-800">Banco de Evaluaciones</h2>
-                                <button onClick={() => setActiveView('dashboard')} className="text-sm text-gray-500 hover:text-gray-800">
-                                    &larr; Volver al Resumen
-                                </button>
-                            </div>
-                            <AssessmentList onCreate={handleCreateTest} onEdit={handleEditTest} />
-                        </div>
-                    )}
 
                     {activeView === 'designer' && (
                         <TestDesigner

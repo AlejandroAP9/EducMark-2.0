@@ -478,15 +478,6 @@ export const AnswerSheetGenerator: React.FC<AnswerSheetGeneratorProps> = ({
                             <span className="hidden sm:inline">Imprimir</span>
                         </button>
                         <button
-                            onClick={handleDownloadPdf}
-                            disabled={isDownloadingPdf}
-                            className="flex items-center gap-2 px-4 py-2 text-[var(--foreground)] bg-[var(--card)] border border-[var(--border)] rounded-lg hover:bg-[var(--card-hover)] transition-colors disabled:opacity-50"
-                            title="Descargar como PDF"
-                        >
-                            {isDownloadingPdf ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
-                            <span className="hidden sm:inline">PDF</span>
-                        </button>
-                        <button
                             onClick={handleDownloadHTML}
                             disabled={isDownloading || isSaving}
                             className="btn-gradient px-4 py-2 rounded-lg flex items-center gap-2 text-white shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed"

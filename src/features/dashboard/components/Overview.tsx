@@ -631,43 +631,43 @@ export function Overview() {
                                                 </td>
                                                 <td className="text-right">
                                                     <div className="flex items-center justify-end gap-2 opacity-70 group-hover:opacity-100 transition-opacity">
-                                                        {/* Download Slide PDF */}
+                                                        {/* Download Slide HTML */}
                                                         <button
                                                             onClick={() => item.link_presentacion ? handleDownloadHtml(item.link_presentacion, 'presentacion', item) : toast.error('Link de Presentación no disponible')}
                                                             disabled={downloadingPdf === `${item.id}-presentacion`}
                                                             className="p-2 hover:bg-[var(--primary)]/10 text-[var(--muted)] hover:text-[var(--primary)] rounded-lg transition-colors disabled:opacity-50"
-                                                            title="Descargar Slide como PDF"
+                                                            title="Descargar Presentación"
                                                         >
                                                             <Presentation size={18} />
                                                         </button>
 
-                                                        {/* Download Planning PDF */}
+                                                        {/* Download Planning HTML */}
                                                         <button
                                                             onClick={() => item.planificacion ? handleDownloadHtml(item.planificacion, 'planificacion', item) : toast.error('Link de Planificación no disponible')}
                                                             disabled={downloadingPdf === `${item.id}-planificacion`}
                                                             className="p-2 hover:bg-blue-500/10 text-[var(--muted)] hover:text-blue-500 rounded-lg transition-colors disabled:opacity-50"
-                                                            title="Descargar Planificación como PDF"
+                                                            title="Descargar Planificación"
                                                         >
                                                             <FileText size={18} />
                                                         </button>
 
-                                                        {/* Download Quiz PDF */}
+                                                        {/* Download Quiz HTML */}
                                                         <button
                                                             onClick={() => item.quiz ? handleDownloadHtml(item.quiz, 'evaluacion', item) : toast.error('Link de Quiz no disponible')}
                                                             disabled={downloadingPdf === `${item.id}-evaluacion`}
                                                             className="p-2 hover:bg-green-500/10 text-[var(--muted)] hover:text-green-500 rounded-lg transition-colors disabled:opacity-50"
-                                                            title="Descargar Quiz como PDF"
+                                                            title="Descargar Quiz"
                                                         >
                                                             <CheckSquare size={18} />
                                                         </button>
 
-                                                        {/* Download PACI PDF */}
+                                                        {/* Download PACI HTML */}
                                                         {item.link_paci && (
                                                             <button
                                                                 onClick={() => handleDownloadHtml(item.link_paci!, 'planificacion', item)}
                                                                 disabled={downloadingPdf === `${item.id}-paci`}
                                                                 className="p-2 hover:bg-orange-500/10 text-[var(--muted)] hover:text-orange-500 rounded-lg transition-colors disabled:opacity-50"
-                                                                title="Descargar PACI como PDF"
+                                                                title="Descargar PACI"
                                                             >
                                                                 <ClipboardList size={18} />
                                                             </button>
