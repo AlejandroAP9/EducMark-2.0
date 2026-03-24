@@ -129,9 +129,9 @@ export const StepItemSelection: React.FC<StepItemSelectionProps> = ({ onFinalize
             timerAndProgressInterval = setInterval(() => {
                 setElapsedTime((prev) => prev + 100);
                 setLoadingProgress((prev) => {
-                    const stageTarget = ((currentStage + 1) / LOADING_MESSAGES.length) * 100;
+                    const stageTarget = ((currentStage + 1) / LOADING_MESSAGES.length) * 95; // max 95% until done
                     if (prev < stageTarget) {
-                        return prev + 0.5;
+                        return prev + 0.15; // slower increment for ~3 min total
                     }
                     return prev;
                 });
@@ -143,7 +143,7 @@ export const StepItemSelection: React.FC<StepItemSelectionProps> = ({ onFinalize
                     if (prev < LOADING_MESSAGES.length - 1) return prev + 1;
                     return prev;
                 });
-            }, 3000);
+            }, 25000); // 25s per stage × 6 stages = ~2.5 min
 
             // Rotación de tips educativos
             tipInterval = setInterval(() => {
@@ -237,11 +237,15 @@ export const StepItemSelection: React.FC<StepItemSelectionProps> = ({ onFinalize
                 blueprint: blueprintPayload
             };
 
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 min timeout
             const response = await fetch(webhookUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(payload),
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
 
             if (!response.ok) throw new Error('Error en la generación');
 
@@ -906,7 +910,7 @@ export const StepItemSelection: React.FC<StepItemSelectionProps> = ({ onFinalize
                     <div className="flex items-center justify-center gap-2 text-[var(--muted)] mb-6">
                         <Clock size={16} />
                         <span className="font-mono text-lg">{formatTime(elapsedTime)}</span>
-                        <span className="text-sm opacity-70"> / est. 45 segs</span>
+                        <span className="text-sm opacity-70"> / est. 3 min</span>
                     </div>
 
                     {/* Progress Bar */}
