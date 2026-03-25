@@ -131,7 +131,7 @@ export const StepItemSelection: React.FC<StepItemSelectionProps> = ({ onFinalize
                 setLoadingProgress((prev) => {
                     const stageTarget = ((currentStage + 1) / LOADING_MESSAGES.length) * 95; // max 95% until done
                     if (prev < stageTarget) {
-                        return prev + 0.05; // ~3 min to reach 95%
+                        return prev + 0.038; // ~4 min to reach 95%
                     }
                     return prev;
                 });
@@ -143,7 +143,7 @@ export const StepItemSelection: React.FC<StepItemSelectionProps> = ({ onFinalize
                     if (prev < LOADING_MESSAGES.length - 1) return prev + 1;
                     return prev;
                 });
-            }, 25000); // 25s per stage × 6 stages = ~2.5 min
+            }, 35000); // 35s per stage × 6 stages = ~3.5 min
 
             // Rotación de tips educativos
             tipInterval = setInterval(() => {
@@ -238,7 +238,7 @@ export const StepItemSelection: React.FC<StepItemSelectionProps> = ({ onFinalize
             };
 
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 min timeout
+            const timeoutId = setTimeout(() => controller.abort(), 240000); // 4 min timeout
             const response = await fetch(webhookUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -927,7 +927,7 @@ export const StepItemSelection: React.FC<StepItemSelectionProps> = ({ onFinalize
                     <div className="flex items-center justify-center gap-2 text-[var(--muted)] mb-6">
                         <Clock size={16} />
                         <span className="font-mono text-lg">{formatTime(elapsedTime)}</span>
-                        <span className="text-sm opacity-70"> / est. 3 min</span>
+                        <span className="text-sm opacity-70"> / est. 3-4 min</span>
                     </div>
 
                     {/* Progress Bar */}
