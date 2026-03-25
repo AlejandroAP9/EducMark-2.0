@@ -131,7 +131,7 @@ export const StepItemSelection: React.FC<StepItemSelectionProps> = ({ onFinalize
                 setLoadingProgress((prev) => {
                     const stageTarget = ((currentStage + 1) / LOADING_MESSAGES.length) * 95; // max 95% until done
                     if (prev < stageTarget) {
-                        return prev + 0.15; // slower increment for ~3 min total
+                        return prev + 0.05; // ~3 min to reach 95%
                     }
                     return prev;
                 });
@@ -253,6 +253,7 @@ export const StepItemSelection: React.FC<StepItemSelectionProps> = ({ onFinalize
             const responseEvaluationId = data?.evaluationId || data?.evaluation_id || stableEvaluationId;
             setEvaluationId(responseEvaluationId);
 
+            // The webhook may return items (old flow) or Drive URLs (new flow with merge)
             if (data.items && Array.isArray(data.items)) {
                 const newItems = data.items.map((item: Record<string, unknown>, idx: number) => ({
                     ...item,
@@ -262,38 +263,54 @@ export const StepItemSelection: React.FC<StepItemSelectionProps> = ({ onFinalize
                 setGenerated(true);
                 setGenerating(false);
                 toast.success(`¡${newItems.length} ítems generados con éxito!`);
+            } else if (data.evaluacion || data.webContentLink || data.pauta) {
+                // New flow: webhook returns Drive URLs after merge
+                setGenerated(true);
+                setGenerating(false);
+                const links = [];
+                if (data.evaluacion || data.webContentLink) links.push('Evaluación');
+                if (data.pauta) links.push('Pauta');
+                toast.success(`¡Evaluación generada! Archivos: ${links.join(' + ')}`);
 
-                // === PERSISTIR BLUEPRINT EN SUPABASE ===
-                try {
-                    const evaluationTarget = responseEvaluationId;
-                    const blueprintRows: Record<string, unknown>[] = [];
-                    let questionNumber = 1;
-
-                    for (const row of blueprint) {
-                        for (let i = 0; i < row.count; i++) {
-                            blueprintRows.push({
-                                evaluation_id: evaluationTarget,
-                                question_number: questionNumber,
-                                question_type: row.itemType === 'Verdadero o Falso' ? 'tf' : 'mc',
-                                oa: row.oa,
-                                topic: row.topic,
-                                skill: row.skill,
-                            });
-                            questionNumber++;
-                        }
-                    }
-
-                    if (blueprintRows.length > 0) {
-                        await supabase.from('evaluation_blueprint').delete().eq('evaluation_id', evaluationTarget);
-                        await supabase.from('evaluation_blueprint').insert(blueprintRows);
-                        console.log(`Blueprint guardado: ${blueprintRows.length} preguntas mapeadas`);
-                    }
-                } catch (bpError) {
-                    console.error('Error guardando blueprint:', bpError);
-                    // No bloquear el flujo si falla el blueprint
+                // Open evaluation download in new tab
+                const evalUrl = data.evaluacion || data.webContentLink;
+                if (evalUrl) {
+                    window.open(evalUrl, '_blank');
                 }
             } else {
-                toast.error('Formato de respuesta inválido');
+                // Unknown format but not an error — just stop generating
+                setGenerated(true);
+                setGenerating(false);
+                toast.success('Evaluación generada correctamente');
+                console.log('Webhook response:', data);
+            }
+
+            // === PERSISTIR BLUEPRINT EN SUPABASE ===
+            try {
+                const evaluationTarget = responseEvaluationId;
+                const blueprintRows: Record<string, unknown>[] = [];
+                let questionNumber = 1;
+
+                for (const row of blueprint) {
+                    for (let i = 0; i < row.count; i++) {
+                        blueprintRows.push({
+                            evaluation_id: evaluationTarget,
+                            question_number: questionNumber,
+                            question_type: row.itemType === 'Verdadero o Falso' ? 'tf' : 'mc',
+                            oa: row.oa,
+                            topic: row.topic,
+                            skill: row.skill,
+                        });
+                        questionNumber++;
+                    }
+                }
+
+                if (blueprintRows.length > 0) {
+                    await supabase.from('evaluation_blueprint').delete().eq('evaluation_id', evaluationTarget);
+                    await supabase.from('evaluation_blueprint').insert(blueprintRows);
+                }
+            } catch (bpError) {
+                console.error('Error guardando blueprint:', bpError);
             }
 
         } catch (error) {
