@@ -265,24 +265,24 @@ export const StepItemSelection: React.FC<StepItemSelectionProps> = ({ onFinalize
                 toast.success(`¡${newItems.length} ítems generados con éxito!`);
             } else if (data.evaluacion || data.webContentLink || data.pauta) {
                 // New flow: webhook returns Drive URLs after merge
-                setGenerated(true);
                 setGenerating(false);
-                const links = [];
-                if (data.evaluacion || data.webContentLink) links.push('Evaluación');
-                if (data.pauta) links.push('Pauta');
-                toast.success(`¡Evaluación generada! Archivos: ${links.join(' + ')}`);
-
-                // Open evaluation download in new tab
                 const evalUrl = data.evaluacion || data.webContentLink;
-                if (evalUrl) {
-                    window.open(evalUrl, '_blank');
-                }
+                const pautaUrl = data.pauta;
+
+                // Download both files
+                if (evalUrl) window.open(evalUrl, '_blank');
+                if (pautaUrl) setTimeout(() => window.open(pautaUrl, '_blank'), 500);
+
+                toast.success('¡Evaluación y Pauta generadas! Descargando archivos...');
+
+                // Return to dashboard after a short delay
+                setTimeout(() => onFinalize(), 1500);
             } else {
-                // Unknown format but not an error — just stop generating
-                setGenerated(true);
+                // Unknown format — stop generating and go back
                 setGenerating(false);
                 toast.success('Evaluación generada correctamente');
                 console.log('Webhook response:', data);
+                setTimeout(() => onFinalize(), 1500);
             }
 
             // === PERSISTIR BLUEPRINT EN SUPABASE ===
