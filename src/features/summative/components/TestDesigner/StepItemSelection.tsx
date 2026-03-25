@@ -238,7 +238,7 @@ export const StepItemSelection: React.FC<StepItemSelectionProps> = ({ onFinalize
             };
 
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 240000); // 4 min timeout
+            const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 min timeout
             const response = await fetch(webhookUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -927,7 +927,7 @@ export const StepItemSelection: React.FC<StepItemSelectionProps> = ({ onFinalize
                     <div className="flex items-center justify-center gap-2 text-[var(--muted)] mb-6">
                         <Clock size={16} />
                         <span className="font-mono text-lg">{formatTime(elapsedTime)}</span>
-                        <span className="text-sm opacity-70"> / est. 3-4 min</span>
+                        <span className="text-sm opacity-70"> / est. 4 min</span>
                     </div>
 
                     {/* Progress Bar */}
