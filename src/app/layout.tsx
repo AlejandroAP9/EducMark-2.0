@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Script from 'next/script'
 import { Toaster } from 'sonner'
 import { AgentationWrapper } from '@/shared/components/AgentationWrapper'
+import PWARegister from '@/components/PWARegister'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -42,6 +43,9 @@ export default function RootLayout({
   return (
     <html lang="es">
       <head>
+        <meta name="theme-color" content="#0f0f1a" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -52,6 +56,7 @@ export default function RootLayout({
       <body>
         {children}
         <AgentationWrapper />
+        <PWARegister />
         <Toaster richColors position="top-right" />
 
         {/* Google Analytics */}

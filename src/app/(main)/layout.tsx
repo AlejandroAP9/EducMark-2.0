@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSubscriptionStore } from '@/features/auth/store/subscriptionStore';
+import { PushNotificationWrapper } from '@/features/notifications/components/PushNotificationWrapper';
 
 export default function MainLayout({
   children,
@@ -24,5 +25,10 @@ export default function MainLayout({
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <PushNotificationWrapper />
+    </>
+  );
 }
