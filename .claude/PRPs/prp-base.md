@@ -109,21 +109,57 @@ ALTER TABLE [tabla] ENABLE ROW LEVEL SECURITY;
 > IMPORTANTE: Solo definir FASES. Las subtareas se generan al entrar a cada fase
 > siguiendo el bucle agéntico (mapear contexto → generar subtareas → ejecutar)
 
+> **DEPENDENCY GRAPH**: Cada fase declara sus dependencias (`deps`).
+> Fases sin dependencias mutuas se ejecutan EN PARALELO con subagentes.
+> El bucle-agentico lee este grafo para decidir qué puede paralelizar.
+
 ### Fase 1: [Nombre]
 **Objetivo**: [Qué se logra al completar esta fase]
+**deps**: [] _(sin dependencias — puede arrancar inmediato)_
 **Validación**: [Cómo verificar que está completa]
 
 ### Fase 2: [Nombre]
 **Objetivo**: [Qué se logra]
+**deps**: [] _(sin dependencias — puede correr en paralelo con Fase 1)_
+**Validación**: [Cómo verificar]
+
+### Fase 3: [Nombre]
+**Objetivo**: [Qué se logra]
+**deps**: [1, 2] _(espera a que Fase 1 Y Fase 2 terminen)_
 **Validación**: [Cómo verificar]
 
 ### Fase N: Validación Final
 **Objetivo**: Sistema funcionando end-to-end
+**deps**: [todas las anteriores]
 **Validación**:
 - [ ] `npm run typecheck` pasa
 - [ ] `npm run build` exitoso
 - [ ] Playwright screenshot confirma UI
 - [ ] Criterios de éxito cumplidos
+
+### Ejemplo de Dependency Graph
+
+```
+Fase 1: Migración SQL          deps: []
+Fase 2: Componentes UI         deps: []
+Fase 3: Hooks + Services       deps: [1, 2]
+Fase 4: Integración + Testing  deps: [3]
+
+Ejecución:
+  ┌─── Fase 1 ───┐
+  │               ├──→ Fase 3 ──→ Fase 4
+  └─── Fase 2 ───┘
+       (paralelo)     (espera)    (espera)
+```
+
+### Reglas del Dependency Graph
+
+1. **deps: []** = fase independiente, puede arrancar inmediatamente
+2. **deps: [N]** = espera a que Fase N termine antes de arrancar
+3. **deps: [N, M]** = espera a que AMBAS fases terminen (join)
+4. Fases con deps: [] que no dependen entre sí → se lanzan en PARALELO
+5. La Fase de Validación Final SIEMPRE depende de todas las anteriores
+6. Si una fase falla, todas las fases que dependen de ella se marcan BLOQUEADAS
 
 ---
 

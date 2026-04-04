@@ -1,6 +1,6 @@
 ---
 name: bucle-agentico
-description: "Ejecutar features complejas por fases con mapeo de contexto real antes de cada fase. Activar cuando la tarea toca multiples archivos, requiere cambios en BD + codigo + UI coordinados, tiene fases que dependen una de otra, o cuando un PRP fue aprobado y hay que implementarlo."
+description: "Ejecutar features complejas por fases con dependency graph, ejecucion paralela y cascade failure. Activar cuando la tarea toca multiples archivos, requiere cambios en BD + codigo + UI coordinados, tiene fases que dependen una de otra, o cuando un PRP fue aprobado y hay que implementarlo."
 ---
 
 # Modo BLUEPRINT del Bucle Agentico
@@ -74,64 +74,101 @@ GENERAR subtareas de Fase 2
 
 ---
 
-## El Flujo BLUEPRINT: 5 Pasos
+## El Flujo BLUEPRINT: 6 Pasos
 
-### PASO 1: DELIMITAR Y DESCOMPONER EN FASES
+### PASO 1: CONSTRUIR DEPENDENCY GRAPH
 
 ```
 +-------------------------------------------------------------+
-|  PASO 1: DELIMITAR Y DESCOMPONER EN FASES                   |
+|  PASO 1: CONSTRUIR DEPENDENCY GRAPH                          |
 |                                                              |
 |  - Entender el problema FINAL completo                       |
-|  - Romper en FASES ordenadas cronologicamente                |
-|  - Identificar dependencias entre fases                      |
+|  - Romper en FASES con dependencias explicitas               |
+|  - Cada fase declara: deps: [N, M] o deps: []               |
+|  - Identificar fases PARALELAS (deps: [] sin conflicto)     |
 |  - NO generar subtareas todavia                              |
 |  - Usar TodoWrite para registrar las fases                   |
 +-------------------------------------------------------------+
 ```
 
-### PASO 2: ENTRAR EN FASE N - MAPEAR CONTEXTO
+Si existe un PRP aprobado, leer su Blueprint — el dependency graph ya esta definido ahi.
+Si no existe PRP, construir el grafo ahora.
 
-ANTES de generar subtareas, explorar:
-
-**Codebase:**
-- Que archivos/componentes existen relacionados?
-- Que patrones usa el proyecto actualmente?
-- Hay codigo que puedo reutilizar?
-
-**Base de Datos (Supabase MCP):**
-- Que tablas existen?
-- Que estructura tienen?
-- Hay RLS policies configuradas?
-
-**Dependencias:**
-- Que construi en fases anteriores?
-- Que puedo asumir que ya existe?
-- Que restricciones tengo?
-
-DESPUES de mapear, generar subtareas especificas y actualizar TodoWrite.
-
-### PASO 3: EJECUTAR SUBTAREAS DE LA FASE
+**Ejemplo de grafo:**
 
 ```
-WHILE subtareas pendientes en fase actual:
+Fase 1: Migracion SQL           deps: []
+Fase 2: Componentes UI base     deps: []
+Fase 3: Hooks + Services        deps: [1, 2]
+Fase 4: Integracion + Testing   deps: [3]
 
-  1. Marcar subtarea como in_progress en TodoWrite
+  ┌─── Fase 1 ───┐
+  │               ├──→ Fase 3 ──→ Fase 4
+  └─── Fase 2 ───┘
+       (paralelo)     (join)      (secuencial)
+```
 
-  2. Ejecutar la subtarea
+### PASO 2: RESOLVER ORDEN DE EJECUCION
 
-  3. [Dinamico] Usar MCPs si el juicio lo indica:
-     - Next.js MCP -> Ver errores en tiempo real
-     - Playwright -> Validar visualmente
-     - Supabase -> Consultar/modificar DB
+Leer el dependency graph y clasificar las fases en NIVELES:
 
-  4. Validar resultado
-     - Si hay error -> AUTO-BLINDAJE (ver paso 3.5)
-     - Si esta bien -> Marcar completed
+```
+Nivel 0: Fases con deps: []              → ejecutar en PARALELO
+Nivel 1: Fases que dependen del Nivel 0  → ejecutar cuando Nivel 0 termine
+Nivel 2: Fases que dependen del Nivel 1  → ejecutar cuando Nivel 1 termine
+...
+```
 
-  5. Siguiente subtarea
+**Reglas de resolucion:**
+- Fases en el MISMO nivel sin conflicto de archivos → PARALELO con Agent tool
+- Fases en el mismo nivel que tocan los MISMOS archivos → SECUENCIAL
+- Fases en niveles DIFERENTES → siempre SECUENCIAL (esperar dependencias)
 
-Fase completada cuando todas las subtareas done.
+### PASO 3: EJECUTAR NIVEL (PARALELO O SECUENCIAL)
+
+**Si el nivel tiene UNA fase** → ejecutar directamente (secuencial clasico):
+
+```
+1. MAPEAR contexto de la fase (codebase, BD, lo construido antes)
+2. GENERAR subtareas basadas en contexto REAL
+3. EJECUTAR subtareas una por una
+4. VALIDAR fase completa
+```
+
+**Si el nivel tiene MULTIPLES fases independientes** → ejecutar en PARALELO:
+
+```
+1. Lanzar cada fase como un Agent (subagente) independiente
+2. Cada subagente recibe:
+   - El objetivo de su fase
+   - El contexto del PRP
+   - Acceso a las mismas tools (Read, Write, Edit, Bash, MCPs)
+3. Esperar a que TODOS los subagentes terminen
+4. Recopilar resultados y verificar conflictos
+5. Si hay conflictos de archivos → resolver manualmente antes de continuar
+```
+
+**Template de prompt para subagente paralelo:**
+
+```
+Eres un agente ejecutando la Fase N de un PRP.
+
+CONTEXTO DEL PRP: [resumen del PRP]
+TU FASE: [nombre y objetivo de la fase]
+VALIDACION: [como verificar que tu fase esta completa]
+FASES YA COMPLETADAS: [lista de fases anteriores y que construyeron]
+
+PROCESO:
+1. Mapear contexto real (leer archivos relevantes, verificar BD)
+2. Generar subtareas especificas
+3. Ejecutar cada subtarea
+4. Validar resultado
+5. Reportar: que construiste, que archivos tocaste, errores encontrados
+
+REGLAS:
+- NO tocar archivos fuera del scope de tu fase
+- Si encuentras un error, arreglalo Y documentalo
+- Reportar archivos modificados al final (para detectar conflictos)
 ```
 
 ### PASO 3.5: AUTO-BLINDAJE (cuando hay errores)
@@ -160,20 +197,43 @@ El sistema se BLINDA con cada error. Cuando algo falla:
 | Aplica a multiples features | Skill relevante (`.claude/skills/*/SKILL.md`) |
 | Aplica a TODO el proyecto | `CLAUDE.md` (seccion No Hacer) |
 
-El conocimiento persiste. El mismo error NUNCA ocurre dos veces en este proyecto ni en proyectos futuros.
+### PASO 4: CASCADE FAILURE (cuando una fase falla)
 
-### PASO 4: TRANSICIONAR A SIGUIENTE FASE
+Si una fase falla y no se puede resolver:
 
-- Confirmar que fase actual esta REALMENTE completa
-- NO asumir que todo salio como se planeo
-- Volver a PASO 2 con la siguiente fase
-- El contexto ahora INCLUYE lo construido
+```
+1. Marcar fase como FALLIDA
+2. Buscar todas las fases que dependen de ella (directa o transitivamente)
+3. Marcar dependientes como BLOQUEADAS
+4. Reportar al usuario:
+   - Que fase fallo y por que
+   - Que fases estan bloqueadas
+   - Opciones: reintentar, skip, abortar
+5. Si el usuario elige reintentar → volver a ejecutar la fase
+6. Si elige skip → eliminar dependencia y continuar (bajo riesgo del usuario)
+7. Si elige abortar → detener ejecucion, guardar progreso
+```
 
-Repetir hasta completar todas las fases.
+**Estados de fase:**
 
-### PASO 5: VALIDACION FINAL
+```
+PENDIENTE → EN_PROGRESO → COMPLETADA
+                       → FALLIDA → BLOQUEADA (propagado a dependientes)
+```
+
+### PASO 5: TRANSICIONAR AL SIGUIENTE NIVEL
+
+- Confirmar que TODAS las fases del nivel actual estan COMPLETADAS
+- Si hubo ejecucion paralela, verificar conflictos de archivos
+- Avanzar al siguiente nivel del dependency graph
+- El contexto ahora INCLUYE todo lo construido en niveles anteriores
+
+Repetir PASO 3 para cada nivel hasta completar el grafo.
+
+### PASO 6: VALIDACION FINAL
 
 - Testing end-to-end del sistema completo
+- `npm run typecheck` + `npm run build`
 - Validacion visual con Playwright si aplica
 - Confirmar que el problema ORIGINAL esta resuelto
 - Reportar al usuario que se construyo
@@ -220,58 +280,55 @@ Supabase MCP:
 
 ```
 MAL:
-Fase 1: Auth base
-   -> 10 subtareas detalladas
-Fase 2: Roles
-   -> 8 subtareas detalladas (basadas en SUPOSICIONES)
-Fase 3: Permisos
-   -> 12 subtareas detalladas (basadas en SUPOSICIONES)
-```
+Fase 1: Auth base → 10 subtareas detalladas
+Fase 2: Roles → 8 subtareas (basadas en SUPOSICIONES)
 
-```
 BIEN:
-Fase 1: Auth base (sin subtareas)
-Fase 2: Roles (sin subtareas)
-Fase 3: Permisos (sin subtareas)
+Fase 1: Auth base    deps: []   (sin subtareas)
+Fase 2: UI base      deps: []   (sin subtareas)
+Fase 3: Integracion  deps: [1,2]
 
--> Entrar en Fase 1
--> MAPEAR contexto
--> GENERAR subtareas de Fase 1
--> Ejecutar
--> Entrar en Fase 2
--> MAPEAR contexto (ahora incluye lo que REALMENTE construi)
--> GENERAR subtareas de Fase 2
-...
+→ Resolver niveles → Ejecutar Fase 1 y 2 en paralelo
+→ MAPEAR contexto de Fase 3 (con lo que REALMENTE se construyo)
+→ Generar subtareas → Ejecutar
 ```
 
-### Error 2: MCPs como pasos obligatorios
+### Error 2: Todo secuencial cuando hay fases independientes
 
 ```
 MAL:
-1. Tomar screenshot
-2. Escribir codigo
-3. Tomar screenshot
-4. Verificar errores
-5. Tomar screenshot
-```
+Fase 1 → esperar → Fase 2 → esperar → Fase 3 → esperar → Fase 4
+(todo en serie, 4x mas lento)
 
-```
 BIEN:
-1. Implementar componente LoginForm
-2. Implementar validacion
-3. Conectar con auth service
-
-(Durante ejecucion, usar MCPs cuando el JUICIO lo indique)
+Nivel 0: Fase 1 + Fase 2 (paralelo, ambas deps: [])
+Nivel 1: Fase 3 (deps: [1,2], espera join)
+Nivel 2: Fase 4 (deps: [3])
+(2x mas rapido — Nivel 0 corre en paralelo)
 ```
 
-### Error 3: No re-mapear contexto entre fases
+### Error 3: No verificar conflictos despues de ejecucion paralela
 
 ```
 MAL:
-Fase 1 completada -> Pasar directo a ejecutar Fase 2
+Fase 1 (paralela) modifica layout.tsx
+Fase 2 (paralela) tambien modifica layout.tsx
+→ Conflicto silencioso, uno sobreescribe al otro
 
 BIEN:
-Fase 1 completada -> MAPEAR contexto de Fase 2 -> Generar subtareas -> Ejecutar
+Despues de paralelo, verificar archivos tocados por cada agente.
+Si hay overlap → resolver manualmente antes de continuar.
+```
+
+### Error 4: No propagar fallos a dependientes
+
+```
+MAL:
+Fase 1 falla → ignorar → ejecutar Fase 3 (deps: [1]) → falla peor
+
+BIEN:
+Fase 1 falla → CASCADE: marcar Fase 3 y Fase 4 como BLOQUEADAS
+→ Reportar al usuario → decidir: reintentar, skip, o abortar
 ```
 
 ---
@@ -295,14 +352,17 @@ Antes de transicionar a siguiente fase:
 
 ## Principios BLUEPRINT
 
-1. **Fases primero, subtareas despues**: Solo generar subtareas cuando entras a la fase
-2. **Mapeo obligatorio**: Siempre mapear contexto antes de generar subtareas
-3. **MCPs como herramientas**: Usar cuando el juicio lo indique, no como pasos fijos
-4. **TodoWrite activo**: Mantener actualizado el progreso para visibilidad
-5. **Validacion por fase**: Confirmar que cada fase esta completa antes de avanzar
-6. **Contexto acumulativo**: Cada fase hereda el contexto de las anteriores
+1. **Dependency graph primero**: Cada fase declara deps antes de ejecutar nada
+2. **Paralelo cuando sea posible**: Fases independientes corren simultaneamente con Agent tool
+3. **Mapeo just-in-time**: Subtareas se generan al entrar a la fase, no antes
+4. **Cascade failure**: Si una fase falla, sus dependientes se bloquean automaticamente
+5. **Conflicto-aware**: Despues de ejecucion paralela, verificar archivos tocados
+6. **TodoWrite activo**: Mantener estado de cada fase (PENDIENTE/EN_PROGRESO/COMPLETADA/FALLIDA/BLOQUEADA)
+7. **Contexto acumulativo**: Cada nivel hereda todo lo construido en niveles anteriores
+8. **Auto-blindaje persistente**: Errores se documentan, nunca se repiten
 
 ---
 
 *"La precision viene de mapear la realidad, no de imaginar el futuro."*
+*"Fases independientes son oportunidades de velocidad."*
 *"El sistema que se blinda solo es invencible."*

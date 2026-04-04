@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { FileText, Layers, Plus, Sparkles, ClipboardList, Camera, Download, ExternalLink, Trash2, Package, Lightbulb, BookKey, Users } from 'lucide-react';
+import { FileText, Layers, Plus, Sparkles, ClipboardList, Camera, Download, ExternalLink, Trash2, Package, Lightbulb, BookKey, Users, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
@@ -31,12 +31,13 @@ interface DashboardOverviewProps {
     onViewSpecs?: () => void;
     onOpenAnalytics?: () => void;
     onOpenScanner?: () => void;
+    onOpenQuickScan?: () => void;
     onOpenFeedback?: () => void;
     onOpenStudents?: () => void;
     onOpenTrash?: () => void;
 }
 
-export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onCreateTest, onOpenAnswerSheet, onOpenScanner, onOpenFeedback, onOpenStudents, onOpenTrash }) => {
+export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onCreateTest, onOpenAnswerSheet, onOpenScanner, onOpenQuickScan, onOpenFeedback, onOpenStudents, onOpenTrash }) => {
     const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
     const [loading, setLoading] = useState(true);
     const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
@@ -304,6 +305,26 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onCreateTe
                         </h3>
                         <p className="text-[var(--muted)] text-xs leading-relaxed">
                             Escanea hojas de respuestas con la cámara del dispositivo.
+                        </p>
+                    </div>
+                </motion.div>
+
+                {/* Corrección Rápida */}
+                <motion.div
+                    whileHover={{ y: -5, scale: 1.02 }}
+                    onClick={onOpenQuickScan}
+                    className="glass-card-premium p-6 flex flex-col justify-center relative overflow-hidden cursor-pointer group"
+                >
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl -mr-10 -mt-10 transition-all group-hover:bg-amber-500/10"></div>
+                    <div className="relative z-10">
+                        <div className="w-11 h-11 rounded-xl bg-[var(--input-bg)] border border-[var(--border)] flex items-center justify-center text-amber-500 mb-4 shadow-sm group-hover:scale-110 transition-transform duration-300">
+                            <Zap size={24} />
+                        </div>
+                        <h3 className="text-lg font-bold text-[var(--on-background)] mb-1.5 group-hover:text-amber-400 transition-colors">
+                            Corrección Rápida
+                        </h3>
+                        <p className="text-[var(--muted)] text-xs leading-relaxed">
+                            Corrige cualquier prueba sin crearla en EducMark. Define la pauta y escanea.
                         </p>
                     </div>
                 </motion.div>

@@ -12,6 +12,7 @@ import { OMRResultsView } from './AnswerSheet/OMRResultsView';
 import { AssessmentAnalytics } from './Analytics/AssessmentAnalytics';
 import { FeedbackDashboard } from './Analytics/FeedbackDashboard';
 import { WebOMRScanner } from './OMRScanner/WebOMRScanner';
+import { QuickScanFlow } from './QuickScan';
 import { Sidebar } from '@/features/dashboard/components/Sidebar';
 import { TrashBin } from '@/features/admin/components/TrashBin';
 import { StudentManagement } from '@/features/dashboard/components/StudentManagement';
@@ -313,7 +314,7 @@ const SpecificationView: React.FC<{ selectedEvalId: string | null }> = ({ select
     );
 };
 
-type ViewType = 'dashboard' | 'designer' | 'answersheet' | 'omr-results' | 'analytics' | 'specification' | 'items' | 'assessment' | 'omr-scanner' | 'feedback' | 'students' | 'trash';
+type ViewType = 'dashboard' | 'designer' | 'answersheet' | 'omr-results' | 'analytics' | 'specification' | 'items' | 'assessment' | 'omr-scanner' | 'quick-scan' | 'feedback' | 'students' | 'trash';
 
 function SummativeHeader({ setMobileOpen }: { setMobileOpen: (open: boolean) => void }) {
     const { planName, fullName, credits, classesLimit } = useSubscriptionStore();
@@ -416,6 +417,7 @@ export const SummativeAssessmentPage = () => {
                         }}
                         onOpenAnalytics={() => setActiveView('analytics')}
                         onOpenScanner={() => setActiveView('omr-scanner')}
+                        onOpenQuickScan={() => setActiveView('quick-scan')}
                         onOpenFeedback={() => setActiveView('feedback')}
                         onOpenStudents={() => setActiveView('students')}
                         onOpenTrash={() => setActiveView('trash')}
@@ -467,6 +469,10 @@ export const SummativeAssessmentPage = () => {
                                 setActiveView('feedback');
                             }}
                         />
+                    )}
+
+                    {activeView === 'quick-scan' && (
+                        <QuickScanFlow onBack={() => setActiveView('dashboard')} />
                     )}
 
                     {activeView === 'students' && (

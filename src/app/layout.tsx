@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
 import { Toaster } from 'sonner'
-import { AgentationWrapper } from '@/shared/components/AgentationWrapper'
 import PWARegister from '@/components/PWARegister'
 import './globals.css'
 
@@ -55,7 +54,6 @@ export default function RootLayout({
       </head>
       <body>
         {children}
-        <AgentationWrapper />
         <PWARegister />
         <Toaster richColors position="top-right" />
 
