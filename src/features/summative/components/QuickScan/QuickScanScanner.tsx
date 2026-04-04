@@ -138,6 +138,7 @@ export const QuickScanScanner: React.FC<QuickScanScannerProps> = ({
             streamRef.current = stream;
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
+                await videoRef.current.play().catch(() => {});
             }
             setPhase('camera');
         } catch (err) {

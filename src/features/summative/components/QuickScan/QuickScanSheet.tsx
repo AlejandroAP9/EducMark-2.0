@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FileDown, Printer, ArrowRight, ArrowLeft, SkipForward } from 'lucide-react';
+import { FileDown, Printer, ArrowRight, ArrowLeft, SkipForward, ImagePlus } from 'lucide-react';
 import { AnswerSheetPreview, generateDownloadableHTML } from '../AnswerSheet/AnswerSheetPreview';
 import { downloadHtmlAsPdf } from '@/shared/lib/htmlToPdf';
 import { toast } from 'sonner';
@@ -30,6 +30,8 @@ export const QuickScanSheet: React.FC<QuickScanSheetProps> = ({
     onBack,
 }) => {
     const [isDownloading, setIsDownloading] = useState(false);
+    const [logo, setLogo] = useState<string | null>(null);
+    const logoInputRef = useRef<HTMLInputElement>(null);
 
     const evaluationInfo = {
         id: 'quick-scan',
@@ -39,13 +41,23 @@ export const QuickScanSheet: React.FC<QuickScanSheetProps> = ({
         oa: '',
     };
 
+    const handleLogoUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            setLogo(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+    }, []);
+
     const handleDownload = useCallback(async () => {
         setIsDownloading(true);
         try {
             const html = await generateDownloadableHTML(
                 evaluationInfo,
                 correctAnswers,
-                null,
+                logo,
                 totalTF,
                 totalMC,
                 undefined,
@@ -68,7 +80,7 @@ export const QuickScanSheet: React.FC<QuickScanSheetProps> = ({
             const html = await generateDownloadableHTML(
                 evaluationInfo,
                 correctAnswers,
-                null,
+                logo,
                 totalTF,
                 totalMC,
                 undefined,
@@ -110,11 +122,43 @@ export const QuickScanSheet: React.FC<QuickScanSheetProps> = ({
                 </div>
             </div>
 
+            {/* Logo Upload */}
+            <div className="glass-card-premium p-4 flex items-center gap-4">
+                <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => logoInputRef.current?.click()}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--input-bg)] border border-[var(--border)] text-[var(--on-background)] text-sm font-medium hover:border-[var(--primary)] transition-colors"
+                >
+                    <ImagePlus size={16} />
+                    {logo ? 'Cambiar logo' : 'Agregar logo del colegio'}
+                </motion.button>
+                {logo && (
+                    <div className="flex items-center gap-2">
+                        <img src={logo} alt="Logo" className="w-8 h-8 object-contain rounded" />
+                        <button
+                            onClick={() => setLogo(null)}
+                            className="text-xs text-[var(--muted)] hover:text-rose-400 transition-colors"
+                        >
+                            Quitar
+                        </button>
+                    </div>
+                )}
+                <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleLogoUpload}
+                />
+            </div>
+
             {/* Preview */}
             <div className="glass-card-premium p-2 rounded-2xl overflow-hidden" style={{ height: '500px' }}>
                 <AnswerSheetPreview
                     evaluationInfo={evaluationInfo}
                     answers={correctAnswers}
+                    logo={logo}
                     trueFalseCount={totalTF}
                     multipleChoiceCount={totalMC}
                     mcOptions={mcOptions}
