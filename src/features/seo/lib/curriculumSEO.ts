@@ -256,6 +256,77 @@ export function generateIndicators(oa: CurriculumOA): string[] {
   ];
 }
 
+// ── Subject Grouping (for hub display) ──
+
+const SUBJECT_GROUPS: Record<string, string[]> = {
+  'Lenguaje y Comunicación': ['Lenguaje', 'Lenguaje y Comunicación', 'Lengua y Literatura', 'Lectura y Escritura Especializadas', 'Participación y argumentación en democracia'],
+  'Historia y Ciencias Sociales': ['Historia', 'Historia, Geografía y Ciencias Sociales', 'Comprensión Histórica del Presente', 'Economía y Sociedad', 'Educación Ciudadana'],
+  'Matemática': ['Matemática', 'Matemáticas', 'Límites, derivadas e integrales', 'Pensamiento Computacional y Programación'],
+  'Ciencias': ['Ciencias Naturales', 'Ciencias para la Ciudadanía', 'Biología', 'Biología de los ecosistemas', 'Física', 'Química'],
+  'Educación Física': ['Educación Física', 'Educación Física y Salud'],
+  'Filosofía': ['Filosofía', 'Seminario Filosofía', 'Estética'],
+};
+
+export interface SubjectGroup {
+  displayName: string;
+  subjects: { slug: string; name: string; grades: string[]; oaCount: number }[];
+  totalGrades: number;
+  totalOAs: number;
+}
+
+export function getGroupedSubjects(): SubjectGroup[] {
+  const data = loadCurriculum();
+  const allSubjects = new Map<string, { name: string; grades: string[]; oaCount: number }>();
+
+  for (const grade of Object.keys(data)) {
+    for (const subject of Object.keys(data[grade])) {
+      const slug = slugifySubject(subject);
+      if (!allSubjects.has(slug)) {
+        allSubjects.set(slug, { name: subject, grades: [], oaCount: 0 });
+      }
+      const entry = allSubjects.get(slug)!;
+      entry.grades.push(grade);
+      entry.oaCount += data[grade][subject].reduce((acc, u) => acc + u.oas.length, 0);
+    }
+  }
+
+  // Build groups
+  const grouped: SubjectGroup[] = [];
+  const assigned = new Set<string>();
+
+  for (const [displayName, members] of Object.entries(SUBJECT_GROUPS)) {
+    const subjects: SubjectGroup['subjects'] = [];
+    for (const [slug, info] of allSubjects) {
+      if (members.includes(info.name)) {
+        subjects.push({ slug, ...info });
+        assigned.add(slug);
+      }
+    }
+    if (subjects.length > 0) {
+      grouped.push({
+        displayName,
+        subjects,
+        totalGrades: new Set(subjects.flatMap(s => s.grades)).size,
+        totalOAs: subjects.reduce((acc, s) => acc + s.oaCount, 0),
+      });
+    }
+  }
+
+  // Ungrouped subjects (standalone)
+  for (const [slug, info] of allSubjects) {
+    if (!assigned.has(slug)) {
+      grouped.push({
+        displayName: info.name,
+        subjects: [{ slug, ...info }],
+        totalGrades: info.grades.length,
+        totalOAs: info.oaCount,
+      });
+    }
+  }
+
+  return grouped.sort((a, b) => b.totalOAs - a.totalOAs);
+}
+
 // ── Grade display helpers ──
 
 export function formatGradeDisplay(grade: string): string {

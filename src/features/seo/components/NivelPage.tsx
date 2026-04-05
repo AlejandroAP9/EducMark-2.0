@@ -39,16 +39,16 @@ export default function NivelPage({ asignaturaSlug, nivelSlug }: NivelPageProps)
   const shortName = formatSubjectShort(subjectName);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[var(--background)]">
       {/* Navbar */}
-      <nav className="border-b border-gray-200 bg-white sticky top-0 z-50">
+      <nav className="border-b border-white/[0.06] bg-[var(--card)]/50 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
-          <Link href="/" className="font-bold text-xl text-gray-900 hover:opacity-80 transition-opacity">
+          <Link href="/" className="font-bold text-xl text-foreground hover:opacity-80 transition-opacity">
             EducMark
           </Link>
           <Link
             href="/login"
-            className="inline-flex items-center px-5 py-2 rounded-full bg-[#8B5CF6] text-white text-sm font-semibold hover:bg-[#7C3AED] transition-colors"
+            className="inline-flex items-center px-5 py-2 rounded-full bg-gradient-to-r from-[#8B5CF6] to-[#06B6D4] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
           >
             Iniciar Sesion
           </Link>
@@ -57,28 +57,28 @@ export default function NivelPage({ asignaturaSlug, nivelSlug }: NivelPageProps)
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
         {/* Breadcrumb */}
-        <nav className="mb-8 text-sm text-gray-500 flex items-center gap-2 flex-wrap">
+        <nav className="mb-8 text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
           <Link href="/planificaciones" className="hover:text-[#8B5CF6] transition-colors">
             Planificaciones
           </Link>
-          <svg className="w-4 h-4 text-gray-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-4 h-4 text-white/20 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
           <Link href={`/planificaciones/${asignaturaSlug}`} className="hover:text-[#8B5CF6] transition-colors">
             {shortName}
           </Link>
-          <svg className="w-4 h-4 text-gray-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-4 h-4 text-white/20 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-900 font-medium">{gradeName}</span>
+          <span className="text-foreground font-medium">{gradeName}</span>
         </nav>
 
         {/* Hero */}
         <header className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-4">
-            Planificaciones de {shortName}
+          <h1 className="text-4xl md:text-5xl font-bold font-heading leading-tight mb-4">
+            <span className="text-foreground">Planificaciones de {shortName}</span>
             <br />
-            <span className="text-[#8B5CF6]">{gradeName}</span>
+            <span className="bg-gradient-to-r from-[#8B5CF6] to-[#06B6D4] bg-clip-text text-transparent">{gradeName}</span>
           </h1>
           <span className="inline-block bg-[#8B5CF6]/10 text-[#8B5CF6] px-4 py-1.5 rounded-full text-sm font-semibold border border-[#8B5CF6]/20 mt-4">
             {totalOAs} objetivos de aprendizaje
@@ -89,7 +89,7 @@ export default function NivelPage({ asignaturaSlug, nivelSlug }: NivelPageProps)
         <section className="mb-20 space-y-12">
           {units.map((unit, unitIndex) => (
             <div key={unitIndex}>
-              <h2 className="text-xl font-bold text-gray-900 mb-5 pb-3 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-foreground mb-5 pb-3 border-b border-white/[0.06]">
                 {unit.name}
               </h2>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -104,12 +104,12 @@ export default function NivelPage({ asignaturaSlug, nivelSlug }: NivelPageProps)
                     <Link
                       key={oaIndex}
                       href={`/planificaciones/${asignaturaSlug}/${nivelSlug}/${oaSlug}`}
-                      className="group rounded-xl border border-gray-200 bg-gray-50 p-5 hover:border-[#8B5CF6]/40 hover:shadow-md transition-all"
+                      className="group rounded-xl border border-white/[0.06] bg-[var(--card)]/50 p-5 hover:border-[#8B5CF6]/30 hover:bg-[var(--card)]/80 transition-all"
                     >
                       <span className="inline-block bg-[#8B5CF6]/10 text-[#8B5CF6] px-2.5 py-0.5 rounded-md text-xs font-bold mb-2">
                         {getOALabel(oa)}
                       </span>
-                      <p className="text-sm text-gray-600 leading-relaxed">
+                      <p className="text-sm text-muted-foreground leading-relaxed">
                         {truncatedDesc}
                       </p>
                       <div className="mt-3 text-[#8B5CF6] text-xs font-semibold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -127,30 +127,30 @@ export default function NivelPage({ asignaturaSlug, nivelSlug }: NivelPageProps)
         </section>
 
         {/* CTA */}
-        <section className="text-center py-12 px-6 rounded-3xl border border-[#8B5CF6]/20 bg-[#8B5CF6]/5">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+        <section className="text-center py-12 px-6 rounded-3xl border border-[#8B5CF6]/20 bg-[#8B5CF6]/[0.04]">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Genera estas planificaciones automaticamente
           </h2>
-          <p className="text-gray-600 mb-8 max-w-lg mx-auto">
+          <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
             Selecciona cualquier OA y EducMark genera planificacion + presentacion + quiz
             en minutos. Alineado a las Bases Curriculares.
           </p>
           <Link
             href="/login?tab=register"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-[#8B5CF6] text-white text-lg font-semibold hover:bg-[#7C3AED] transition-colors"
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-[#8B5CF6] to-[#06B6D4] text-white text-lg font-semibold hover:opacity-90 transition-opacity"
           >
             Probar Gratis
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
           </Link>
-          <p className="text-gray-400 text-sm mt-3">3 clases gratis · Sin tarjeta de credito</p>
+          <p className="text-muted-foreground/60 text-sm mt-3">3 clases gratis · Sin tarjeta de credito</p>
         </section>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 py-10 px-6 text-center">
-        <p className="text-gray-500 text-sm">
+      <footer className="border-t border-white/[0.06] py-10 px-6 text-center">
+        <p className="text-muted-foreground text-sm">
           © {new Date().getFullYear()} EducMark Chile ·{' '}
           <Link href={`/planificaciones/${asignaturaSlug}`} className="text-[#8B5CF6] hover:underline">{shortName}</Link>
           {' · '}
