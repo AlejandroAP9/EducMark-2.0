@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import {
     Users, CreditCard, BarChart3, ScrollText,
-    ShieldCheck, Zap, DollarSign, Activity, ArrowLeft
+    ShieldCheck, Zap, DollarSign, Activity, ArrowLeft, HeartPulse
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -119,6 +119,7 @@ export function AdminDashboard() {
         { icon: ScrollText, label: 'Admin Logs', desc: 'Historial de auditoría', path: '/dashboard/admin/logs', color: '#64748b', bg: 'rgba(100, 116, 139, 0.12)' },
         { icon: ShieldCheck, label: 'Config Institución', desc: 'Licencia, branding, periodos', path: '/dashboard/admin/institution', color: '#22c55e', bg: 'rgba(34, 197, 94, 0.12)' },
         { icon: Activity, label: 'Tickets Soporte', desc: 'Mesa de ayuda institucional', path: '/dashboard/admin/support', color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.12)' },
+        { icon: HeartPulse, label: 'Health Score', desc: 'Monitorea la salud de tus usuarios pioneros', path: '/dashboard/admin/health-score', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.12)' },
     ];
 
     const container = {

@@ -170,7 +170,20 @@ Ejecucion:
 
 > Esta seccion CRECE con cada error encontrado durante la implementacion.
 
-_(Vacia — se llena durante la implementacion)_
+### 2026-04-05: Assessment API requiere auth token
+- **Error**: QuickScan llamaba a la API sin Authorization header → "Token de autenticación requerido"
+- **Fix**: Obtener token de Supabase session y agregarlo como `Authorization: Bearer {token}` en cada request
+- **Aplicar en**: Cualquier nuevo componente que llame al Assessment API
+
+### 2026-04-05: Endpoint correcto es /api/v1/omr/process-base64
+- **Error**: Subagente inventó endpoint `/api/scan` que no existe → HTTP 404
+- **Fix**: Usar `/api/v1/omr/process-base64` con payload: `image_base64`, `total_questions`, `question_type`, `correct_answers_json`
+- **Aplicar en**: Siempre leer el código original del scanner antes de implementar calls al Assessment API
+
+### 2026-04-05: No delegar implementación de API calls a subagentes sin verificar
+- **Error**: El subagente generó el QuickScanScanner con endpoint y payload inventados. No se verificó antes de push
+- **Fix**: Siempre revisar manualmente los endpoints y payloads generados por subagentes contra el código original que funciona
+- **Aplicar en**: Cualquier feature que reutilice APIs existentes
 
 ---
 

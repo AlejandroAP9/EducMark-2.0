@@ -555,3 +555,8 @@
         display: none;
     }
 }
+
+/* Health Score row hover */
+.health-row-hover:hover {
+    background: rgba(139, 92, 246, 0.06);
+}
