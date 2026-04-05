@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { BookOpen, CheckCircle2, AlertTriangle, Download } from 'lucide-react';
 import { generateSemesterCoverageReport } from '@/shared/lib/generateReport';
+import { useInstitutionBranding } from '@/shared/hooks/useInstitutionBranding';
 
 interface TeacherCoverage {
     userId: string;
@@ -20,6 +21,8 @@ interface TeacherCoverage {
 
 export const CurriculumCoverage: React.FC = () => {
     const supabase = createClient();
+    const { logo, institutionName, primaryColor } = useInstitutionBranding();
+    const branding = { logo, institutionName, primaryColor };
     const [coverage, setCoverage] = useState<TeacherCoverage[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -127,7 +130,7 @@ export const CurriculumCoverage: React.FC = () => {
                 <button
                     onClick={() => {
                         const semester = `Semestre ${new Date().getMonth() < 7 ? '1' : '2'} - ${new Date().getFullYear()}`;
-                        generateSemesterCoverageReport('Instituci\u00f3n', semester, coverage);
+                        generateSemesterCoverageReport('Instituci\u00f3n', semester, coverage, branding);
                     }}
                     className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--border)] text-[var(--muted)] hover:text-[var(--on-background)] transition-colors"
                 >

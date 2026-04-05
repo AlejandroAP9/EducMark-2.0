@@ -13,6 +13,7 @@
  */
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import type { InstitutionBranding } from '@/shared/lib/institutionBranding';
 
 // ── Brand Colors ──
 const COLORS = {
@@ -70,7 +71,7 @@ interface ReportData {
  * AN-13: Export executive report as HTML slides for PPT-style presentations.
  * The output is a self-contained .html file that can be opened and presented in-browser.
  */
-export function downloadExecutivePresentationHTML(data: ReportData): void {
+export function downloadExecutivePresentationHTML(data: ReportData, branding?: InstitutionBranding): void {
     const safeTitle = (data.evaluationTitle || 'Reporte Ejecutivo').replace(/[<>]/g, '');
     const date = data.date || new Date().toLocaleDateString('es-CL');
 
@@ -165,6 +166,8 @@ export function downloadExecutivePresentationHTML(data: ReportData): void {
   </div>
   <div class="slides">
     <section class="slide">
+      ${branding?.logo ? `<img src="${branding.logo}" alt="Logo" style="max-height:60px;margin-bottom:8px;" />` : ''}
+      ${branding?.institutionName ? `<p style="color:var(--muted);font-size:16px;margin:0 0 6px;">${branding.institutionName.replace(/[<>]/g, '')}</p>` : ''}
       <h1>Reporte Ejecutivo de Resultados</h1>
       <p class="subtitle">${safeTitle} \u00b7 ${data.subject} \u00b7 ${data.grade} \u00b7 ${date}</p>
       <div class="kpis">
@@ -287,9 +290,18 @@ function drawKPICard(doc: jsPDF, x: number, y: number, width: number, label: str
 }
 
 /**
+ * Helper: Parse hex color string to RGB tuple
+ */
+function hexToRgb(hex: string): [number, number, number] | null {
+    const match = hex.replace('#', '').match(/^([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+    if (!match) return null;
+    return [parseInt(match[1], 16), parseInt(match[2], 16), parseInt(match[3], 16)];
+}
+
+/**
  * Main PDF Generator
  */
-export async function generateExecutiveReport(data: ReportData): Promise<void> {
+export async function generateExecutiveReport(data: ReportData, branding?: InstitutionBranding): Promise<void> {
     const doc = new jsPDF('p', 'mm', 'letter');
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -297,15 +309,19 @@ export async function generateExecutiveReport(data: ReportData): Promise<void> {
     const contentWidth = pageWidth - margin * 2;
     let y = margin;
 
-    // Load logo
-    const logoBase64 = await loadImageAsBase64('/images/logo-full.png');
+    // Load logo — use branding logo if provided, otherwise default EducMark logo
+    const logoSrc = branding?.logo || '/images/logo-full.png';
+    const logoBase64 = await loadImageAsBase64(logoSrc);
 
     // ═══════════════════════════════════════════
     //  HEADER
     // ═══════════════════════════════════════════
-    // Background bar
-    doc.setFillColor(...COLORS.primary);
-    doc.rect(0, 0, pageWidth, 36, 'F');
+    // Background bar — use branding primary color if available
+    const headerColor: [number, number, number] = branding?.primaryColor
+        ? hexToRgb(branding.primaryColor) ?? COLORS.primary
+        : COLORS.primary;
+    doc.setFillColor(...headerColor);
+    doc.rect(0, 0, pageWidth, branding?.institutionName ? 42 : 36, 'F');
 
     // Logo
     if (logoBase64) {
@@ -328,12 +344,20 @@ export async function generateExecutiveReport(data: ReportData): Promise<void> {
     doc.text(`${data.subject} \u2014 ${data.grade}`, titleX, 22);
     doc.text(`${data.evaluationTitle}`, titleX, 28);
 
+    // Institution name subtitle (if branding)
+    if (branding?.institutionName) {
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'italic');
+        doc.text(branding.institutionName, titleX, 34);
+    }
+
     // Date on the right
     doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
     doc.text(data.date, pageWidth - margin, 15, { align: 'right' });
     doc.text('Generado por EducMark AI', pageWidth - margin, 21, { align: 'right' });
 
-    y = 44;
+    y = branding?.institutionName ? 50 : 44;
 
     // ═══════════════════════════════════════════
     //  KPI CARDS
@@ -753,14 +777,19 @@ interface StudentReportData {
     consecutiveDropAlert?: string | null;
 }
 
-export function generateStudentReport(data: StudentReportData): void {
+export function generateStudentReport(data: StudentReportData, branding?: InstitutionBranding): void {
     const doc = new jsPDF('p', 'mm', 'letter');
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 16;
 
-    doc.setFillColor(...COLORS.primary);
-    doc.rect(0, 0, pageWidth, 28, 'F');
+    const headerColor: [number, number, number] = branding?.primaryColor
+        ? hexToRgb(branding.primaryColor) ?? COLORS.primary
+        : COLORS.primary;
+    const headerH = branding?.institutionName ? 34 : 28;
+
+    doc.setFillColor(...headerColor);
+    doc.rect(0, 0, pageWidth, headerH, 'F');
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(14);
     doc.setTextColor(...COLORS.white);
@@ -770,7 +799,13 @@ export function generateStudentReport(data: StudentReportData): void {
     doc.text(`${data.studentName}${data.studentId ? ` \u00b7 ${data.studentId}` : ''}`, margin, 18);
     doc.text(`${data.subject} \u00b7 ${data.grade} \u00b7 ${data.evaluationTitle}`, margin, 23);
 
-    let y = 36;
+    if (branding?.institutionName) {
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'italic');
+        doc.text(branding.institutionName, margin, 29);
+    }
+
+    let y = headerH + 8;
     const cardW = (pageWidth - margin * 2 - 6) / 3;
     drawKPICard(doc, margin, y, cardW, 'Logro', `${data.score.percentage}%`, `${data.score.correct}/${data.score.total} correctas`, COLORS.primary);
     drawKPICard(doc, margin + cardW + 3, y, cardW, 'Incorrectas', `${data.score.incorrect}`, 'items con error', COLORS.danger);
@@ -958,12 +993,19 @@ export function generateSemesterCoverageReport(
     institution: string,
     semester: string,
     coverage: CoverageEntry[],
+    branding?: InstitutionBranding,
 ): void {
     const doc = new jsPDF('p', 'mm', 'letter');
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 16;
 
-    doc.setFillColor(...COLORS.primary);
+    const headerColor: [number, number, number] = branding?.primaryColor
+        ? hexToRgb(branding.primaryColor) ?? COLORS.primary
+        : COLORS.primary;
+    // Use branding institution name if available, otherwise fall back to the `institution` param
+    const displayInstitution = branding?.institutionName || institution;
+
+    doc.setFillColor(...headerColor);
     doc.rect(0, 0, pageWidth, 30, 'F');
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(14);
@@ -971,7 +1013,7 @@ export function generateSemesterCoverageReport(
     doc.text('Reporte Consolidado de Cobertura Curricular', margin, 13);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.text(`${institution} \u2022 ${semester}`, margin, 20);
+    doc.text(`${displayInstitution} \u2022 ${semester}`, margin, 20);
     doc.text(`Generado: ${new Date().toLocaleDateString('es-CL')}`, margin, 25);
 
     let y = 38;

@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { downloadAnswerKey } from '@/shared/lib/generateAnswerKey';
 import type { AnswerKeyItem } from '@/shared/lib/generateAnswerKey';
 import { downloadUrlAsHtml, buildHtmlFilename } from '@/shared/lib/htmlToPdf';
+import { useInstitutionBranding } from '@/shared/hooks/useInstitutionBranding';
 
 const supabase = createClient();
 
@@ -38,6 +39,8 @@ interface DashboardOverviewProps {
 }
 
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onCreateTest, onOpenAnswerSheet, onOpenScanner, onOpenQuickScan, onOpenFeedback, onOpenStudents, onOpenTrash }) => {
+    const { logo, institutionName, primaryColor } = useInstitutionBranding();
+    const branding = { logo, institutionName, primaryColor };
     const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
     const [loading, setLoading] = useState(true);
     const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
@@ -207,7 +210,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onCreateTe
         setDownloadingPdf(key);
         try {
             const filename = buildHtmlFilename(type, { subject: ev.subject, grade: ev.grade });
-            await downloadUrlAsHtml(url, filename);
+            await downloadUrlAsHtml(url, filename, branding);
             toast.success('Descarga iniciada');
         } catch (err) {
             console.error('Error downloading HTML:', err);

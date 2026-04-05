@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { ClassInsights } from './ClassInsights';
 import { OAEvolution } from './OAEvolution';
 import { generateExecutiveReport, downloadExecutivePresentationHTML } from '@/shared/lib/generateReport';
+import { useInstitutionBranding } from '@/shared/hooks/useInstitutionBranding';
 import { getAssessmentApiUrl, assessmentFetch } from '@/shared/lib/apiConfig';
 import { toast } from 'sonner';
 
@@ -69,6 +70,8 @@ interface FeedbackDashboardProps {
 }
 
 export const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ initialEvalId }) => {
+    const { logo, institutionName, primaryColor } = useInstitutionBranding();
+    const branding = { logo, institutionName, primaryColor };
     const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
     const [selectedEvalId, setSelectedEvalId] = useState<string | null>(initialEvalId ?? null);
     const [results, setResults] = useState<OMRResult[]>([]);
@@ -338,7 +341,7 @@ export const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ initialEva
                 date: new Date().toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' }),
                 insights: insights?.success ? insights : undefined,
                 evolution: evolution?.success ? evolution : undefined,
-            });
+            }, branding);
         } catch (err) {
             console.error('Error exporting PDF:', err);
             toast.error('Error al generar el reporte. Intenta de nuevo.');
@@ -375,7 +378,7 @@ export const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ initialEva
                 date: new Date().toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' }),
                 insights: insights?.success ? insights : undefined,
                 evolution: evolution?.success ? evolution : undefined,
-            });
+            }, branding);
             toast.success('Presentación HTML descargada.');
         } catch (err) {
             console.error('Error exporting slides:', err);

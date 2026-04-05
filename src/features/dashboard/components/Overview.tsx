@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { UsageCard } from './UsageTracker';
 import { Tour } from './Tour';
 import { downloadUrlAsHtml, buildHtmlFilename } from '@/shared/lib/htmlToPdf';
+import { useInstitutionBranding } from '@/shared/hooks/useInstitutionBranding';
 import { trackEvent } from '@/shared/lib/analytics';
 import { MINUTES_PER_CLASS, CLP_PER_HOUR, STUDENTS_PER_CLASS } from '@/shared/constants/metrics';
 import { useRouter } from 'next/navigation';
@@ -42,6 +43,8 @@ interface GeneratedClass {
 
 export function Overview() {
     const supabase = createClient();
+    const { logo, institutionName, primaryColor } = useInstitutionBranding();
+    const branding = { logo, institutionName, primaryColor };
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [stats, setStats] = useState({ total: 0, timeSaved: 0 });
     const [weeklyStats, setWeeklyStats] = useState({ timeSaved: 0, count: 0 });
@@ -63,7 +66,7 @@ export function Overview() {
         setDownloadingPdf(key);
         try {
             const filename = buildHtmlFilename(type, { subject: item.asignatura || undefined, grade: item.curso || undefined });
-            await downloadUrlAsHtml(url, filename);
+            await downloadUrlAsHtml(url, filename, branding);
             toast.success('Descarga iniciada');
         } catch {
             toast.error('Error al descargar. Abriendo en nueva pestaña...');

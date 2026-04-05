@@ -7,6 +7,7 @@ import { AnswerSheetPreview, generateDownloadableHTML } from './AnswerSheetPrevi
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { downloadHtmlAsPdf } from '@/shared/lib/htmlToPdf';
+import { useInstitutionBranding } from '@/shared/hooks/useInstitutionBranding';
 
 const supabase = createClient();
 
@@ -43,6 +44,8 @@ export const AnswerSheetGenerator: React.FC<AnswerSheetGeneratorProps> = ({
     evaluationData,
     onBack,
 }) => {
+    const { logo: brandingLogo, institutionName, primaryColor } = useInstitutionBranding();
+    const branding = { logo: brandingLogo, institutionName, primaryColor };
     const [logo, setLogo] = useState<string | null>(null);
     const [isDownloading, setIsDownloading] = useState(false);
     const [showSideBySide, setShowSideBySide] = useState(false);
@@ -278,7 +281,7 @@ export const AnswerSheetGenerator: React.FC<AnswerSheetGeneratorProps> = ({
             const html = await generateDownloadableHTML(
                 evalInfo,
                 answers,
-                logo,
+                logo ?? brandingLogo,
                 trueFalseCount,
                 multipleChoiceCount,
                 idealScore,
@@ -325,7 +328,7 @@ export const AnswerSheetGenerator: React.FC<AnswerSheetGeneratorProps> = ({
             const html = await generateDownloadableHTML(
                 evalInfo,
                 answers,
-                logo,
+                logo ?? brandingLogo,
                 trueFalseCount,
                 multipleChoiceCount,
                 idealScore,
@@ -355,7 +358,7 @@ export const AnswerSheetGenerator: React.FC<AnswerSheetGeneratorProps> = ({
             const html = await generateDownloadableHTML(
                 evalInfo,
                 answers,
-                logo,
+                logo ?? brandingLogo,
                 trueFalseCount,
                 multipleChoiceCount,
                 idealScore,
@@ -368,7 +371,7 @@ export const AnswerSheetGenerator: React.FC<AnswerSheetGeneratorProps> = ({
             const cleanGrade = grade.replace(/[^a-zA-Z0-9°áéíóúñÁÉÍÓÚÑ]/g, '_');
             const filename = `HojaRespuestas_${cleanSubject}_${cleanGrade}.pdf`;
 
-            await downloadHtmlAsPdf(html, filename, { format: 'legal' });
+            await downloadHtmlAsPdf(html, filename, { format: 'legal' }, branding);
             toast.success('PDF descargado.');
         } catch (error) {
             console.error('Error downloading PDF:', error);
@@ -774,7 +777,7 @@ export const AnswerSheetGenerator: React.FC<AnswerSheetGeneratorProps> = ({
                                         <AnswerSheetPreview
                                             evaluationInfo={evalInfo}
                                             answers={answers}
-                                            logo={logo}
+                                            logo={logo ?? brandingLogo}
                                             trueFalseCount={trueFalseCount}
                                             multipleChoiceCount={multipleChoiceCount}
                                             idealScore={idealScore}
@@ -802,7 +805,7 @@ export const AnswerSheetGenerator: React.FC<AnswerSheetGeneratorProps> = ({
                                                     <AnswerSheetPreview
                                                         evaluationInfo={fila.info}
                                                         answers={fila.ans}
-                                                        logo={logo}
+                                                        logo={logo ?? brandingLogo}
                                                         trueFalseCount={trueFalseCount}
                                                         multipleChoiceCount={multipleChoiceCount}
                                                         idealScore={idealScore}

@@ -9,6 +9,7 @@
  */
 import html2pdf from 'html2pdf.js';
 import { getAssessmentApiUrl, assessmentFetch } from '@/shared/lib/apiConfig';
+import type { InstitutionBranding } from '@/shared/lib/institutionBranding';
 
 /* ── Shared html2pdf options ─────────────────────────────────────────── */
 
@@ -43,19 +44,41 @@ function buildOptions(filename: string, opts: PdfExportOptions = {}) {
     };
 }
 
+/* ── Branding header block builder ──────────────────────────────────── */
+
+function buildBrandingHeader(branding: InstitutionBranding): string {
+    const parts: string[] = [];
+    parts.push('<div style="text-align:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #e2e8f0;">');
+    if (branding.logo) {
+        parts.push(`<img src="${branding.logo}" alt="Logo" style="max-height:60px;margin-bottom:8px;" />`);
+    }
+    if (branding.institutionName) {
+        const color = branding.primaryColor || '#1e293b';
+        parts.push(`<div style="font-size:16px;font-weight:700;color:${color};font-family:system-ui,sans-serif;">${branding.institutionName}</div>`);
+    }
+    parts.push('</div>');
+    return parts.join('\n');
+}
+
 /* ── Core: render HTML string inside a hidden container and convert ─── */
 
 export async function downloadHtmlAsPdf(
     html: string,
     filename: string,
     opts: PdfExportOptions = {},
+    branding?: InstitutionBranding,
 ): Promise<void> {
+    // Prepend branding header if provided
+    const finalHtml = branding && (branding.logo || branding.institutionName)
+        ? buildBrandingHeader(branding) + html
+        : html;
+
     const container = document.createElement('div');
     container.style.position = 'fixed';
     container.style.left = '-9999px';
     container.style.top = '0';
     container.style.width = '215.9mm'; // Letter width
-    container.innerHTML = html;
+    container.innerHTML = finalHtml;
     document.body.appendChild(container);
 
     try {
@@ -83,9 +106,10 @@ export async function downloadUrlAsPdf(
     url: string,
     filename: string,
     opts: PdfExportOptions = {},
+    branding?: InstitutionBranding,
 ): Promise<void> {
     const html = await fetchHtmlViaProxy(url);
-    return downloadHtmlAsPdf(html, filename, opts);
+    return downloadHtmlAsPdf(html, filename, opts, branding);
 }
 
 /* ── Download as HTML with embedded PDF button ───────────────────── */
@@ -132,10 +156,22 @@ function injectPdfBarAndDownload(html: string, filename: string): void {
 export async function downloadUrlAsHtml(
     url: string,
     filename: string,
+    branding?: InstitutionBranding,
 ): Promise<void> {
     // Strategy 1: proxy fetch -> inject PDF button -> blob download
     try {
-        const html = await fetchHtmlViaProxy(url);
+        let html = await fetchHtmlViaProxy(url);
+        // Prepend branding header if provided
+        if (branding && (branding.logo || branding.institutionName)) {
+            const brandingBlock = buildBrandingHeader(branding);
+            const bodyIdx = html.search(/<body[^>]*>/i);
+            if (bodyIdx !== -1) {
+                const closeTag = html.indexOf('>', bodyIdx) + 1;
+                html = html.slice(0, closeTag) + brandingBlock + html.slice(closeTag);
+            } else {
+                html = brandingBlock + html;
+            }
+        }
         injectPdfBarAndDownload(html, filename);
         return;
     } catch (proxyErr) {

@@ -14,7 +14,10 @@ import {
     WidthType,
     AlignmentType,
     BorderStyle,
+    ImageRun,
+    Header,
 } from 'docx';
+import type { InstitutionBranding } from '@/shared/lib/institutionBranding';
 
 interface PlanningBlocks {
     objective?: string;
@@ -40,10 +43,49 @@ interface ExportDocxParams {
     };
 }
 
-export async function exportPlanningToDocx(params: ExportDocxParams): Promise<void> {
+/**
+ * Fetch a URL/data-URL and return an ArrayBuffer for docx ImageRun.
+ */
+async function fetchImageBuffer(src: string): Promise<ArrayBuffer | null> {
+    try {
+        const res = await fetch(src);
+        if (!res.ok) return null;
+        return await res.arrayBuffer();
+    } catch {
+        return null;
+    }
+}
+
+export async function exportPlanningToDocx(params: ExportDocxParams, branding?: InstitutionBranding): Promise<void> {
     const { subject, grade, topic, planningBlocks, exitTicket } = params;
 
     const children: Paragraph[] = [];
+
+    // ── Institution branding header (optional) ──
+    const headerChildren: Paragraph[] = [];
+    if (branding?.logo) {
+        const imgBuf = await fetchImageBuffer(branding.logo);
+        if (imgBuf) {
+            headerChildren.push(
+                new Paragraph({
+                    children: [
+                        new ImageRun({ data: imgBuf, transformation: { width: 80, height: 80 }, type: 'png' }),
+                    ],
+                    alignment: AlignmentType.CENTER,
+                    spacing: { after: 80 },
+                })
+            );
+        }
+    }
+    if (branding?.institutionName) {
+        headerChildren.push(
+            new Paragraph({
+                children: [new TextRun({ text: branding.institutionName, bold: true, size: 24, font: 'Calibri' })],
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 60 },
+            })
+        );
+    }
 
     // Title
     children.push(
@@ -201,10 +243,19 @@ export async function exportPlanningToDocx(params: ExportDocxParams): Promise<vo
         })
     );
 
+    const sectionOptions: Record<string, unknown> = {
+        children: [metaTable, ...children],
+    };
+
+    // Add institution branding as document header if provided
+    if (headerChildren.length > 0) {
+        sectionOptions.headers = {
+            default: new Header({ children: headerChildren }),
+        };
+    }
+
     const doc = new Document({
-        sections: [{
-            children: [metaTable, ...children],
-        }],
+        sections: [sectionOptions as { children: Paragraph[]; headers?: { default: Header } }],
     });
 
     const blob = await Packer.toBlob(doc);

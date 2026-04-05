@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useSubscriptionStore } from '@/features/auth/store/subscriptionStore';
 import { toast } from 'sonner';
 import {
     FlaskConical, Calculator, BookOpen, Scroll, Palette, Music, Monitor, Trophy,
     Camera, Save, Lock, User, Mail, Building2, BookUser, CheckCircle2, Crown,
-    Presentation, Timer, Files, X, ChevronDown
+    Presentation, Timer, Files, X, ChevronDown, Upload, Eye, Trash2,
+    Image as ImageIcon
 } from 'lucide-react';
 
 // Subject-themed Avatars using Lucide Icons
@@ -43,6 +44,13 @@ export function Profile() {
     const [newSubject, setNewSubject] = useState('');
     const [stats, setStats] = useState({ timeSaved: 0, kitsGenerated: 0, subjectCount: 0 });
     const { planName } = useSubscriptionStore();
+
+    // Branding state
+    const [institutionLogoUrl, setInstitutionLogoUrl] = useState<string | null>(null);
+    const [institutionDisplayName, setInstitutionDisplayName] = useState('');
+    const [logoUploading, setLogoUploading] = useState(false);
+    const [isDraggingLogo, setIsDraggingLogo] = useState(false);
+    const logoInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         getProfile().catch(() => toast.error('Error al cargar perfil'));
@@ -116,6 +124,12 @@ export function Profile() {
             ...prev,
             ...dbProfile
         }));
+
+        // Load branding fields
+        if (data) {
+            setInstitutionLogoUrl(data.institution_logo_url || null);
+            setInstitutionDisplayName(data.institution_display_name || '');
+        }
     };
 
     const updateProfile = async () => {
@@ -134,6 +148,8 @@ export function Profile() {
             avatar_url: profile.avatar_id,
             role: profile.title, // Save title to role column
             email: session.user.email, // Required for upsert if row missing
+            institution_logo_url: institutionLogoUrl,
+            institution_display_name: institutionDisplayName || null,
             updated_at: new Date()
         };
 
@@ -182,6 +198,77 @@ export function Profile() {
             ...prev,
             subjects: prev.subjects.filter(s => s !== subjectToRemove)
         }));
+    };
+
+    // --- Logo upload handlers ---
+    const handleLogoFile = async (file: File) => {
+        if (!file.type.startsWith('image/')) {
+            toast.error('Por favor selecciona una imagen válida (PNG, JPG, etc.)');
+            return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            toast.error('El archivo es muy grande. Máximo 2MB.');
+            return;
+        }
+
+        setLogoUploading(true);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) { toast.error('Sesión expirada'); return; }
+
+            const ext = file.name.split('.').pop() || 'png';
+            const path = `${session.user.id}/logo.${ext}`;
+
+            // Upload (upsert to overwrite previous)
+            const { error: uploadError } = await supabase.storage
+                .from('institution-logos')
+                .upload(path, file, { upsert: true, contentType: file.type });
+
+            if (uploadError) {
+                console.error('Upload error:', uploadError);
+                toast.error('Error al subir el logo: ' + uploadError.message);
+                return;
+            }
+
+            // Get public URL
+            const { data: urlData } = supabase.storage
+                .from('institution-logos')
+                .getPublicUrl(path);
+
+            // Append cache-buster so the browser shows the new image
+            const publicUrl = urlData.publicUrl + '?t=' + Date.now();
+            setInstitutionLogoUrl(publicUrl);
+            toast.success('Logo subido correctamente');
+        } catch (err) {
+            console.error(err);
+            toast.error('Error inesperado al subir el logo');
+        } finally {
+            setLogoUploading(false);
+        }
+    };
+
+    const handleLogoInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) handleLogoFile(file);
+    };
+
+    const handleLogoDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDraggingLogo(false);
+        const file = e.dataTransfer.files?.[0];
+        if (file) handleLogoFile(file);
+    };
+
+    const handleRemoveLogo = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        // Try to remove from storage (best effort)
+        await supabase.storage.from('institution-logos').remove([`${session.user.id}/logo.png`, `${session.user.id}/logo.jpg`, `${session.user.id}/logo.jpeg`, `${session.user.id}/logo.webp`]);
+
+        setInstitutionLogoUrl(null);
+        if (logoInputRef.current) logoInputRef.current.value = '';
+        toast.success('Logo eliminado');
     };
 
     // Helper to get current avatar object
@@ -361,6 +448,127 @@ export function Profile() {
                                 Presiona <kbd className="font-sans bg-[var(--card)] border border-[var(--border)] rounded px-1">Enter</kbd> para agregar una nueva asignatura.
                             </p>
                         </div>
+                    </section>
+
+                    {/* Branding Institucional */}
+                    <section className="bg-[var(--card)]/80 backdrop-blur-sm border border-[var(--border)] rounded-2xl p-6 md:p-8 relative overflow-hidden">
+                        <h2 className="text-xl font-bold text-[var(--on-background)] mb-1 flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                                <Building2 size={20} />
+                            </div>
+                            Branding Institucional
+                        </h2>
+                        <p className="text-sm text-[var(--muted)] mb-6 ml-10">
+                            Tu logo y nombre aparecerán en todos los documentos exportados
+                        </p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Logo Upload */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-[var(--muted)] ml-1">Logo Institucional (opcional)</label>
+
+                                {institutionLogoUrl ? (
+                                    <div className="relative w-32 h-32 border-2 border-[var(--border)] rounded-xl overflow-hidden bg-white/5 group/logo">
+                                        <img
+                                            src={institutionLogoUrl}
+                                            alt="Logo institucional"
+                                            className="w-full h-full object-contain p-2"
+                                        />
+                                        <button
+                                            onClick={handleRemoveLogo}
+                                            className="absolute top-1.5 right-1.5 p-1.5 bg-red-500/90 text-white rounded-full opacity-0 group-hover/logo:opacity-100 hover:bg-red-600 transition-all shadow-lg"
+                                            title="Eliminar logo"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div
+                                        onDrop={handleLogoDrop}
+                                        onDragOver={(e) => { e.preventDefault(); setIsDraggingLogo(true); }}
+                                        onDragLeave={() => setIsDraggingLogo(false)}
+                                        onClick={() => logoInputRef.current?.click()}
+                                        className={`
+                                            w-32 h-32 border-2 border-dashed rounded-xl
+                                            flex flex-col items-center justify-center cursor-pointer
+                                            transition-all duration-200
+                                            ${isDraggingLogo
+                                                ? 'border-[var(--primary)] bg-[var(--primary-bg)]'
+                                                : 'border-[var(--border)] hover:border-[var(--muted)] bg-[var(--input-bg)]'
+                                            }
+                                            ${logoUploading ? 'opacity-50 pointer-events-none' : ''}
+                                        `}
+                                    >
+                                        {logoUploading ? (
+                                            <div className="animate-spin w-6 h-6 border-2 border-[var(--primary)] border-t-transparent rounded-full" />
+                                        ) : (
+                                            <>
+                                                <Upload size={22} className="text-[var(--muted)] mb-1.5" />
+                                                <span className="text-xs text-[var(--muted)] text-center px-2">
+                                                    Arrastra o haz clic
+                                                </span>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+
+                                <input
+                                    ref={logoInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleLogoInputChange}
+                                    className="hidden"
+                                />
+                                <p className="text-xs text-[var(--muted)] ml-1">PNG, JPG hasta 2MB</p>
+                            </div>
+
+                            {/* Institution Display Name */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-[var(--muted)] ml-1">Nombre para documentos</label>
+                                <div className="relative group input-group">
+                                    <Building2 size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted)] group-focus-within:text-[var(--primary)] transition-colors" />
+                                    <input
+                                        type="text"
+                                        value={institutionDisplayName}
+                                        onChange={(e) => setInstitutionDisplayName(e.target.value)}
+                                        placeholder="Ej: Colegio San José de la Providencia"
+                                        className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-xl pl-11 pr-4 py-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition-all"
+                                    />
+                                </div>
+                                <p className="text-xs text-[var(--muted)] ml-1">
+                                    Si no lo defines, se usará el nombre de tu institución del perfil.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Vista previa */}
+                        {(institutionLogoUrl || institutionDisplayName || profile.institution) && (
+                            <div className="mt-6 pt-6 border-t border-[var(--border)]">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Eye size={16} className="text-[var(--muted)]" />
+                                    <span className="text-sm font-medium text-[var(--muted)]">Vista previa en documentos</span>
+                                </div>
+                                <div className="bg-white rounded-xl p-4 inline-flex items-center gap-4 shadow-sm border border-gray-100">
+                                    {institutionLogoUrl ? (
+                                        <img
+                                            src={institutionLogoUrl}
+                                            alt="Logo"
+                                            className="w-12 h-12 object-contain rounded"
+                                        />
+                                    ) : (
+                                        <div className="w-12 h-12 rounded bg-gray-100 flex items-center justify-center">
+                                            <ImageIcon size={20} className="text-gray-300" />
+                                        </div>
+                                    )}
+                                    <div>
+                                        <p className="text-sm font-semibold text-gray-800">
+                                            {institutionDisplayName || profile.institution || 'Nombre de tu institución'}
+                                        </p>
+                                        <p className="text-xs text-gray-400">Evaluación Sumativa — Historia 7° Básico</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </section>
                 </div>
 

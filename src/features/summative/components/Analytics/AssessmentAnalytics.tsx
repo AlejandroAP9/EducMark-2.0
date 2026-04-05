@@ -5,6 +5,7 @@ import { ArrowLeft, RefreshCw, TrendingUp, Users, Target, BarChart3, AlertTriang
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { generateStudentReport } from '@/shared/lib/generateReport';
+import { useInstitutionBranding } from '@/shared/hooks/useInstitutionBranding';
 import { getAssessmentApiUrl, assessmentFetch } from '@/shared/lib/apiConfig';
 
 const API_BASE_URL = getAssessmentApiUrl();
@@ -138,6 +139,8 @@ function getQuestionDifficulty(results: OMRResult[], correctAnswers: CorrectAnsw
 }
 
 export const AssessmentAnalytics: React.FC<AssessmentAnalyticsProps> = ({ onBack, evaluationId }) => {
+    const { logo, institutionName, primaryColor } = useInstitutionBranding();
+    const branding = { logo, institutionName, primaryColor };
     const [results, setResults] = useState<OMRResult[]>([]);
     const [correctAnswers, setCorrectAnswers] = useState<CorrectAnswers>({ tf: [], mc: [] });
     const [blueprintRows, setBlueprintRows] = useState<BlueprintKeyRow[]>([]);
@@ -530,7 +533,7 @@ export const AssessmentAnalytics: React.FC<AssessmentAnalyticsProps> = ({ onBack
                 percentage: point.percentage,
             })),
             consecutiveDropAlert,
-        });
+        }, branding);
     };
 
     return (
