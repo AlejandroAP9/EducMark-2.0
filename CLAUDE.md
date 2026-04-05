@@ -477,7 +477,7 @@ Cada decision debe pasar este filtro:
 
 ---
 
-## Aprendizajes (13 blindajes: Tecnico 9, Negocio 2, Datos 2)
+## Aprendizajes (19 blindajes: Tecnico 15, Negocio 2, Datos 2)
 
 ### 2025-01-09: Usar npm run dev, no next dev
 
@@ -556,6 +556,42 @@ Cada decision debe pasar este filtro:
 - **Fix**: Siempre verificar formato real del favicon con `file` command. Usar SVG
 - **Aplicar en**: Migraciones de assets
 
+### 2026-04-05: No refactorizar componentes en produccion sin tests
+
+- **Error**: Refactor de WebOMRScanner.tsx (2151 → 787 lineas) compilaba sin errores pero rompio la camara en runtime. Closures y refs se comportaron diferente al extraerlos.
+- **Fix**: Revertir al archivo original. Agregar codigo nuevo en archivos separados, no reestructurar lo existente.
+- **Aplicar en**: Cualquier componente >500 lineas que funciona en produccion
+
+### 2026-04-05: Assessment API requiere auth token + endpoint correcto
+
+- **Error**: QuickScan usaba endpoint inventado `/api/scan` (404) y sin header Authorization (401). El real es `/api/v1/omr/process-base64` con Bearer token de Supabase.
+- **Fix**: Copiar el patron exacto del scanner original: endpoint, payload (image_base64, total_questions, question_type, correct_answers_json), y auth header.
+- **Aplicar en**: Cualquier componente nuevo que llame al Assessment API
+
+### 2026-04-05: Verificar output de subagentes antes de deploy
+
+- **Error**: Subagente genero QuickScanScanner con endpoint, payload y auth incorrectos. No se verifico antes de push. Costo 3 commits de fix.
+- **Fix**: Despues de que un subagente genere codigo que llama a APIs existentes, hacer grep del endpoint/auth real en el codigo original y comparar.
+- **Aplicar en**: Siempre que un subagente genere codigo que interactua con APIs existentes
+
+### 2026-04-05: curriculumData.json tiene OAs con 'id' en vez de 'label'
+
+- **Error**: 866 de 2438 OAs usan campo `id` en vez de `label`. Build fallaba con .replace on undefined.
+- **Fix**: Crear helper `getOALabel(oa)` que lee `oa.label || oa.id || 'OA'`. Usarlo en todos los componentes.
+- **Aplicar en**: Cualquier codigo que procese curriculumData.json
+
+### 2026-04-05: Supabase Storage buckets no se crean automaticamente
+
+- **Error**: Subagente asumio que Supabase auto-crea buckets al subir. Error "Bucket not found" en produccion.
+- **Fix**: Crear bucket explicitamente via SQL: `INSERT INTO storage.buckets (id, name, public) VALUES ('institution-logos', 'institution-logos', true)`. Agregar policies RLS.
+- **Aplicar en**: Cualquier feature que use Supabase Storage
+
+### 2026-04-05: Siempre confirmar ruta del proyecto antes de ejecutar
+
+- **Error**: Se aplico reorganizacion completa en Landing-EducMark (v1) en vez de educmark (v2). Todo el trabajo se tuvo que revertir.
+- **Fix**: Preguntar al usuario la ruta correcta si hay ambiguedad. Verificar con `git remote -v` que es el repo correcto.
+- **Aplicar en**: Inicio de cada sesion con proyectos multiples
+
 ## Infraestructura EducMark
 
 | Servicio       | URL                                               | Tipo                                               |
@@ -572,6 +608,25 @@ Cada decision debe pasar este filtro:
 **Flujo evaluaciones:** Frontend → assessment-api (directo)
 **Deploy:** git push → GitHub webhook → Easypanel auto-rebuild
 **Repo:** https://github.com/AlejandroAP9/EducMark-2.0
+
+### Automatizaciones Nocturnas
+
+| Job | Horario | Que hace |
+|---|---|---|
+| `nightly-educmark-metrics` | 23:55 | Captura 30 KPIs en daily_metrics (pg_cron) |
+| `health-score-nightly` | 00:05 | Calcula health score por usuario + alertas Telegram (pg_cron → Edge Function) |
+
+### Edge Functions
+
+| Funcion | Endpoint | Proposito |
+|---|---|---|
+| `notify-health-alert` | `/functions/v1/notify-health-alert` | Envia alerta de churn a Telegram cuando usuario tiene 7+ dias inactivo |
+
+### Supabase Storage Buckets
+
+| Bucket | Publico | Uso |
+|---|---|---|
+| `institution-logos` | Si | Logos de colegios subidos por profes desde su perfil |
 
 ---
 
