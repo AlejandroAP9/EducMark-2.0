@@ -225,13 +225,12 @@ export const QuickScanScanner: React.FC<QuickScanScannerProps> = ({
 
             for (const base of candidates) {
                 try {
-                    const url = joinBaseAndPath(base, '/api/scan');
-                    const payload = JSON.stringify({
-                        image: compressed,
-                        total_tf: totalTF,
-                        total_mc: totalMC,
-                        correct_answers: correctAnswers,
-                        mc_options: mcOptions,
+                    const url = joinBaseAndPath(base, '/api/v1/omr/process-base64');
+                    const jsonPayload = JSON.stringify({
+                        image_base64: compressed,
+                        total_questions: totalTF + totalMC,
+                        question_type: 'mc',
+                        correct_answers_json: JSON.stringify(correctAnswers),
                     });
 
                     const response = await fetchWithTimeout(
@@ -239,7 +238,7 @@ export const QuickScanScanner: React.FC<QuickScanScannerProps> = ({
                         {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: payload,
+                            body: jsonPayload,
                         },
                         60000
                     );
@@ -247,9 +246,9 @@ export const QuickScanScanner: React.FC<QuickScanScannerProps> = ({
                     const text = await response.text();
 
                     if (!response.ok) {
-                        const parsed = parseJsonText<{ error?: string }>(text, 'error-response');
+                        const parsed = parseJsonText<{ detail?: string }>(text, 'error-response');
                         throw new Error(
-                            parsed.error || `HTTP ${response.status}: ${response.statusText}`
+                            parsed.detail || `HTTP ${response.status}: ${response.statusText}`
                         );
                     }
 
