@@ -31,9 +31,11 @@ export interface GeneratedClassRow {
   asignatura: string;
   curso: string;
   objetivo_clase: string | null;
-  planning_blocks: PlanningBlock[] | null;
+  planning_blocks: PlanningBlock[] | Record<string, never> | null;
   status: string;
   created_at: string;
+  topic?: string | null;
+  planificacion?: string | null;
   oa_label?: string;
   skills?: string;
   attitudes?: string;

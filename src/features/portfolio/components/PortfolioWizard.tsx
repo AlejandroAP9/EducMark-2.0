@@ -91,7 +91,7 @@ function ClassCard({
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <p className="text-sm text-[#F8F9FA] font-medium truncate">
-            {cls.objetivo_clase ?? '(Sin objetivo)'}
+            {cls.topic ?? cls.objetivo_clase ?? '(Sin tema)'}
           </p>
           <p className="text-xs text-white/40 mt-1">{fecha}</p>
           {cls.oa_label && (

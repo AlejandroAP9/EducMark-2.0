@@ -21,7 +21,9 @@ function formatDate(dateStr: string): string {
 function extractActivities(
   blocks: GeneratedClassRow['planning_blocks']
 ): string {
-  if (!blocks || blocks.length === 0) return '(sin actividades registradas)';
+  // planning_blocks puede ser {} (objeto vacío), null, o un array
+  if (!blocks || !Array.isArray(blocks) || blocks.length === 0)
+    return '(actividades detalladas en la planificación adjunta)';
   return blocks
     .map((b, i) => {
       const parts: string[] = [];
@@ -41,14 +43,16 @@ export function useDraftGenerator() {
       const experiencias = classes
         .map((c, i) => {
           const num = i + 1;
-          const objetivo = c.objetivo_clase ?? '(sin objetivo registrado)';
+          // Usar topic como título principal (es el campo que siempre tiene datos)
+          const tema = c.topic ?? c.objetivo_clase ?? '(sin tema registrado)';
+          const objetivo = c.objetivo_clase ?? tema;
           const fecha = formatDate(c.created_at);
           const actividades = extractActivities(c.planning_blocks);
           const oa = c.oa_label ? `OA: ${c.oa_label}` : '';
           const habilidades = c.skills ? `Habilidades: ${c.skills}` : '';
 
           return [
-            `EXPERIENCIA ${num}`,
+            `EXPERIENCIA ${num}: ${tema}`,
             `Fecha: ${fecha}`,
             `Objetivo de aprendizaje: ${objetivo}`,
             oa,

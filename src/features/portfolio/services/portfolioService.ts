@@ -40,7 +40,7 @@ export async function fetchClassesByPeriod(
 ): Promise<GeneratedClassRow[]> {
   const { data, error } = await supabase
     .from('generated_classes')
-    .select('id, user_id, asignatura, curso, objetivo_clase, planning_blocks, status, created_at, topic')
+    .select('id, user_id, asignatura, curso, objetivo_clase, planning_blocks, status, created_at, topic, planificacion')
     .eq('user_id', userId)
     .eq('asignatura', asignatura)
     .eq('curso', curso)
