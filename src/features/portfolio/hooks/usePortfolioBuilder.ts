@@ -7,6 +7,7 @@ import {
   fetchEvaluations,
   fetchEvaluationItems,
   fetchOMRResults,
+  fetchUserSubjectsCourses,
 } from '../services/portfolioService';
 import type {
   GeneratedClassRow,
@@ -25,6 +26,8 @@ interface PortfolioBuilderData {
   loading: boolean;
   error: string | null;
   userId: string | null;
+  availableAsignaturas: string[];
+  availableCursos: string[];
 }
 
 export function usePortfolioBuilder() {
@@ -49,16 +52,29 @@ export function usePortfolioBuilder() {
     loading: false,
     error: null,
     userId: null,
+    availableAsignaturas: [],
+    availableCursos: [],
   });
 
-  // Obtener userId al montar
+  // Obtener userId + opciones disponibles al montar
   useEffect(() => {
     const getUser = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
       if (session?.user) {
-        setData((prev) => ({ ...prev, userId: session.user.id }));
+        const userId = session.user.id;
+        setData((prev) => ({ ...prev, userId }));
+        try {
+          const { asignaturas, cursos } = await fetchUserSubjectsCourses(userId);
+          setData((prev) => ({
+            ...prev,
+            availableAsignaturas: asignaturas,
+            availableCursos: cursos,
+          }));
+        } catch {
+          // No bloquear si falla — el usuario verá dropdowns vacíos
+        }
       }
     };
     getUser();

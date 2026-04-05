@@ -12,6 +12,25 @@ import type {
 
 const supabase = createClient();
 
+// --- Opciones disponibles (asignaturas + cursos reales del usuario) ---
+
+export async function fetchUserSubjectsCourses(
+  userId: string
+): Promise<{ asignaturas: string[]; cursos: string[] }> {
+  const { data, error } = await supabase
+    .from('generated_classes')
+    .select('asignatura, curso')
+    .eq('user_id', userId)
+    .eq('status', 'completed');
+
+  if (error) throw new Error(`Error cargando opciones: ${error.message}`);
+
+  const asignaturas = [...new Set((data ?? []).map((r) => r.asignatura))].sort();
+  const cursos = [...new Set((data ?? []).map((r) => r.curso))].sort();
+
+  return { asignaturas, cursos };
+}
+
 // --- Clases generadas ---
 
 export async function fetchClassesByPeriod(

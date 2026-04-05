@@ -7,39 +7,7 @@ import { useDraftGenerator } from '../hooks/useDraftGenerator';
 import { usePortfolioStore } from '../store/usePortfolioStore';
 import type { GeneratedClassRow, EvaluationRow } from '../types/portfolio';
 
-const ASIGNATURAS = [
-  'Historia, Geografía y Ciencias Sociales',
-  'Lenguaje y Comunicación',
-  'Matemática',
-  'Ciencias Naturales',
-  'Inglés',
-  'Educación Física y Salud',
-  'Artes Visuales',
-  'Música',
-  'Tecnología',
-  'Orientación',
-  'Filosofía',
-  'Educación Ciudadana',
-  'Ciencias para la Ciudadanía',
-  'Física',
-  'Química',
-  'Biología',
-];
-
-const CURSOS = [
-  '1° Básico',
-  '2° Básico',
-  '3° Básico',
-  '4° Básico',
-  '5° Básico',
-  '6° Básico',
-  '7° Básico',
-  '8° Básico',
-  '1° Medio',
-  '2° Medio',
-  '3° Medio',
-  '4° Medio',
-];
+// Las asignaturas y cursos se cargan dinámicamente desde las clases del usuario
 
 const STEP_LABELS = [
   'Selección',
@@ -309,7 +277,7 @@ export default function PortfolioWizard() {
                   <option value="" className="bg-[#0a0a0f]">
                     Seleccionar...
                   </option>
-                  {ASIGNATURAS.map((a) => (
+                  {data.availableAsignaturas.map((a) => (
                     <option key={a} value={a} className="bg-[#0a0a0f]">
                       {a}
                     </option>
@@ -329,7 +297,7 @@ export default function PortfolioWizard() {
                   <option value="" className="bg-[#0a0a0f]">
                     Seleccionar...
                   </option>
-                  {CURSOS.map((c) => (
+                  {data.availableCursos.map((c) => (
                     <option key={c} value={c} className="bg-[#0a0a0f]">
                       {c}
                     </option>
