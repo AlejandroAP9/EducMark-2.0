@@ -11,7 +11,8 @@ import {
     LogOut,
     Users,
     Layers,
-    LifeBuoy
+    LifeBuoy,
+    ClipboardCheck
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useSubscriptionStore } from '@/features/auth/store/subscriptionStore';
@@ -36,6 +37,7 @@ export function Sidebar({ mobileOpen, setMobileOpen }: { mobileOpen: boolean, se
         { id: 'history', icon: Library, label: 'Biblioteca', path: '/dashboard/history' },
         { id: 'profile', icon: UserCircle, label: 'Mi Perfil', path: '/dashboard/profile' },
         { id: 'subscription', icon: CreditCard, label: 'Suscripción', path: '/dashboard/subscription' },
+        { id: 'portfolio', icon: ClipboardCheck, label: 'Portafolio', path: '/dashboard/portfolio' },
         { id: 'help', icon: LifeBuoy, label: 'Ayuda', path: '/dashboard/help' },
         { id: 'utp', icon: BarChart3, label: 'Panel UTP', path: '/dashboard/utp', role: 'utp' },
         { id: 'director', icon: BarChart3, label: 'Panel Director', path: '/dashboard/director', role: 'director' },
