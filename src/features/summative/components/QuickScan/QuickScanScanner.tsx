@@ -221,6 +221,12 @@ export const QuickScanScanner: React.FC<QuickScanScannerProps> = ({
                 );
             }
 
+            // Get Supabase auth token (same as original scanner)
+            const supabase = createClient();
+            const { data: sessionData } = await supabase.auth.getSession();
+            const token = sessionData.session?.access_token;
+            const authHeader: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
             let lastError: Error | null = null;
 
             for (const base of candidates) {
@@ -237,7 +243,7 @@ export const QuickScanScanner: React.FC<QuickScanScannerProps> = ({
                         url,
                         {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 'Content-Type': 'application/json', ...authHeader },
                             body: jsonPayload,
                         },
                         60000
