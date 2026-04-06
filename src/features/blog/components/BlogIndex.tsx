@@ -15,6 +15,14 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
     {
+        slug: 'como-preparar-portafolio-docentemas-2025',
+        title: 'Cómo preparar el Portafolio Docentemás 2025 sin perder tus fines de semana',
+        excerpt: 'Guía paso a paso del Módulo 1 del Portafolio de Carrera Docente 2025 con los documentos oficiales de CPEIP. Tareas 1, 2 y 3 explicadas con claves para Competente/Destacado.',
+        date: '2026-04-06',
+        readTime: '9 min',
+        category: 'Carrera Docente',
+    },
+    {
         slug: 'planificar-clase-en-6-minutos',
         title: 'Cómo planificar una clase en 6 minutos con IA',
         excerpt: 'Descubre el método paso a paso que usan cientos de profesores chilenos para crear planificaciones alineadas al currículo MINEDUC en una fracción del tiempo.',

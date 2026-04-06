@@ -24,6 +24,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/blog/planificar-clase-en-6-minutos',
     '/blog/5-errores-planificar-sin-alineacion-mineduc',
     '/blog/neuroeducacion-en-el-aula',
+    '/blog/como-preparar-portafolio-docentemas-2025',
   ]
 
   const staticEntries: MetadataRoute.Sitemap = staticPages.map((path) => ({

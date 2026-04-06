@@ -11,6 +11,15 @@ const navSections = [
   { label: 'FAQ', href: '#faq' },
 ];
 
+const recursos = [
+  { label: 'Planificaciones MINEDUC', href: '/planificaciones-mineduc' },
+  { label: 'Portafolio Carrera Docente', href: '/portafolio-carrera-docente' },
+  { label: 'Evaluaciones Automaticas', href: '/evaluaciones-automaticas' },
+  { label: 'Generador de Clases Chile', href: '/generador-clases-chile' },
+  { label: 'Para Colegios', href: '/colegios' },
+  { label: 'Blog', href: '/blog' },
+];
+
 export const Footer: React.FC = () => {
   const [activeModal, setActiveModal] = useState<'terms' | 'privacy' | null>(null);
 
@@ -23,7 +32,7 @@ export const Footer: React.FC = () => {
     <footer className="border-t border-white/[0.06] bg-background relative">
       <div className="container mx-auto px-4 py-16">
         {/* Main footer grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8 mb-12">
           {/* Brand column */}
           <div>
             <div className="flex items-center gap-3 mb-4">
@@ -44,6 +53,23 @@ export const Footer: React.FC = () => {
                   <a
                     href={item.href}
                     onClick={(e) => { e.preventDefault(); handleNavClick(item.href); }}
+                    className="text-sm text-muted-foreground hover:text-white transition-colors font-light"
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Recursos column */}
+          <div>
+            <h4 className="text-sm font-semibold text-foreground/60 uppercase tracking-wider mb-4">Recursos</h4>
+            <ul className="space-y-3">
+              {recursos.map(item => (
+                <li key={item.href}>
+                  <a
+                    href={item.href}
                     className="text-sm text-muted-foreground hover:text-white transition-colors font-light"
                   >
                     {item.label}

@@ -174,7 +174,7 @@ const PlanificacionesMINEDUC: React.FC = () => {
                     <h2 className="text-2xl font-bold text-foreground mb-6 text-center">Recursos Relacionados</h2>
                     <div className="grid md:grid-cols-3 gap-4">
                         {[
-                            { title: 'EducMark vs ChatGPT', desc: 'Compara EducMark con ChatGPT para planificación docente en Chile.', href: '/educmark-vs-chatgpt' },
+                            { title: 'Portafolio Carrera Docente', desc: 'Genera los borradores del Módulo 1 del Portafolio Docentemás 2025 con IA.', href: '/portafolio-carrera-docente' },
                             { title: 'Generador de Clases Chile', desc: 'El primer generador de clases con IA diseñado para el sistema educativo chileno.', href: '/generador-clases-chile' },
                             { title: 'Planifica tu clase en 6 minutos', desc: 'Descubre cómo EducMark automatiza la planificación de clases completas.', href: '/blog/planificar-clase-en-6-minutos' },
                         ].map((link, i) => (
