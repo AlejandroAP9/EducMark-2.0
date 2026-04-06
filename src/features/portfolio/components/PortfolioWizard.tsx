@@ -5,14 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { usePortfolioBuilder } from '../hooks/usePortfolioBuilder';
 import { usePortfolioStore } from '../store/usePortfolioStore';
-import type { GeneratedClassRow, EvaluationRow } from '../types/portfolio';
+import type { GeneratedClassRow } from '../types/portfolio';
 
 // Las asignaturas y cursos se cargan dinámicamente desde las clases del usuario
 
 const STEP_LABELS = [
-  'Selección',
-  'Experiencias',
-  'Evaluación',
+  'Asignatura y curso',
+  'Seleccionar clases',
 ];
 
 function StepIndicator({ currentStep }: { currentStep: number }) {
@@ -118,64 +117,6 @@ function ClassCard({
   );
 }
 
-function EvaluationCard({
-  evaluation,
-  selected,
-  onSelect,
-  hasOMR,
-}: {
-  evaluation: EvaluationRow;
-  selected: boolean;
-  onSelect: () => void;
-  hasOMR?: boolean;
-}) {
-  const fecha = new Date(evaluation.created_at).toLocaleDateString('es-CL', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`w-full text-left p-4 rounded-xl border transition-all ${
-        selected
-          ? 'bg-[#8B5CF6]/10 border-[#8B5CF6] ring-1 ring-[#8B5CF6]/50'
-          : 'bg-white/5 border-white/10 hover:border-white/20'
-      }`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <p className="text-sm text-[#F8F9FA] font-medium truncate">
-            {evaluation.title}
-          </p>
-          <p className="text-xs text-white/40 mt-1">{fecha}</p>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {hasOMR && (
-            <span className="text-[10px] bg-[#06B6D4]/20 text-[#06B6D4] px-2 py-0.5 rounded-full">
-              OMR
-            </span>
-          )}
-          <div
-            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-              selected
-                ? 'border-[#8B5CF6] bg-[#8B5CF6]'
-                : 'border-white/20'
-            }`}
-          >
-            {selected && (
-              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-            )}
-          </div>
-        </div>
-      </div>
-    </button>
-  );
-}
 
 export default function PortfolioWizard() {
   const {
@@ -185,7 +126,6 @@ export default function PortfolioWizard() {
     prevStep,
     setAsignaturaCurso,
     setSelectedClasses,
-    setSelectedEvaluation,
     getSelectedClassObjects,
   } = usePortfolioBuilder();
 
@@ -227,15 +167,14 @@ export default function PortfolioWizard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           classes: selectedClasses,
-          evaluationItems: data.evaluationItems,
-          omrResults: data.omrResults,
           asignatura: wizardState.asignatura,
           curso: wizardState.curso,
         }),
       });
 
       if (!res.ok) {
-        throw new Error('Error en la API');
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Error ${res.status}`);
       }
 
       const drafts = await res.json();
@@ -244,14 +183,12 @@ export default function PortfolioWizard() {
       toast.success('Borradores generados exitosamente');
     } catch (err) {
       console.error('Error generando borradores:', err);
-      toast.error('Error al generar borradores. Intenta nuevamente.');
+      toast.error(err instanceof Error ? err.message : 'Error al generar borradores');
     } finally {
       setGenerating(false);
     }
   }, [
     getSelectedClassObjects,
-    data.evaluationItems,
-    data.omrResults,
     wizardState.asignatura,
     wizardState.curso,
     store,
@@ -401,106 +338,6 @@ export default function PortfolioWizard() {
             <p className="text-xs text-white/30 text-center">
               {wizardState.selectedClasses.length}/3 seleccionadas
             </p>
-
-            <div className="flex gap-3">
-              <button
-                onClick={prevStep}
-                className="flex-1 border border-white/10 hover:bg-white/5 text-[#F8F9FA] font-medium py-3 px-6 rounded-xl transition-all"
-              >
-                Volver
-              </button>
-              <button
-                onClick={nextStep}
-                disabled={!canContinueStep2}
-                className="flex-1 bg-[#8B5CF6] hover:bg-[#8B5CF6]/90 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl transition-all"
-              >
-                Continuar
-              </button>
-            </div>
-          </motion.div>
-        )}
-
-        {/* STEP 3: Seleccionar evaluacion + generar */}
-        {wizardState.step === 3 && (
-          <motion.div
-            key="step3"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-            className="space-y-6"
-          >
-            <div>
-              <h3 className="text-lg font-semibold text-[#F8F9FA] mb-1">
-                Selecciona una evaluacion
-              </h3>
-              <p className="text-sm text-white/50">
-                Se usara para la Tarea 2 (monitoreo). Si tiene datos OMR se
-                incluiran automaticamente.
-              </p>
-            </div>
-
-            {data.loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="w-6 h-6 border-2 border-[#8B5CF6] border-t-transparent rounded-full animate-spin" />
-                <span className="ml-3 text-sm text-white/50">
-                  Cargando evaluaciones...
-                </span>
-              </div>
-            ) : data.evaluations.length === 0 ? (
-              <div className="text-center py-8 bg-white/5 border border-white/10 rounded-xl">
-                <p className="text-white/50 text-sm">
-                  No se encontraron evaluaciones activas.
-                </p>
-                <p className="text-white/30 text-xs mt-1">
-                  Puedes continuar sin evaluacion — la Tarea 2 tendra solo
-                  plantilla.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {data.evaluations.map((ev) => (
-                  <EvaluationCard
-                    key={ev.id}
-                    evaluation={ev}
-                    selected={wizardState.selectedEvaluation === ev.id}
-                    onSelect={() =>
-                      setSelectedEvaluation(
-                        wizardState.selectedEvaluation === ev.id
-                          ? null
-                          : ev.id
-                      )
-                    }
-                    hasOMR={
-                      wizardState.selectedEvaluation === ev.id &&
-                      data.hasOMR
-                    }
-                  />
-                ))}
-              </div>
-            )}
-
-            {data.hasOMR && wizardState.selectedEvaluation && (
-              <div className="flex items-center gap-2 bg-[#06B6D4]/10 border border-[#06B6D4]/20 rounded-xl px-4 py-3">
-                <svg
-                  className="w-4 h-4 text-[#06B6D4] flex-shrink-0"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <p className="text-xs text-[#06B6D4]">
-                  Datos OMR detectados — se incluiran resultados en el
-                  borrador T2
-                </p>
-              </div>
-            )}
 
             <div className="flex gap-3">
               <button
