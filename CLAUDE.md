@@ -604,6 +604,20 @@ Cada decision debe pasar este filtro:
 - **Fix**: Usar topic como dato principal. Alimentar la IA con lo que hay y dejarla generar el resto.
 - **Aplicar en**: Cualquier feature que lea generated_classes — verificar que campos realmente tienen datos
 
+### 2026-04-06: planning_sequences — tabla dedicada para datos reales de planificación
+
+- **Contexto**: Para que el dashboard de Carrera Docente genere borradores con datos reales (no inventados), se creó tabla dedicada `planning_sequences` (JSONB) poblada por el workflow n8n "EducMark Pro Max IP".
+- **Columnas**: `user_id`, `secuencia_planificacion` (obj_clase/inicio/desarrollo/cierre), `secuencia_evaluacion` (tipo/instrumento/detalle), `secuencia_nee` (diagnóstico/barrera/DUA), `paci_data`, `created_at`.
+- **API**: `src/app/api/portfolio/generate/route.ts` usa `SUPABASE_SERVICE_ROLE_KEY` para leer las 3 secuencias más recientes del user_id y pasarlas como contexto a OpenAI gpt-4o-mini.
+- **Aplicar en**: Cualquier feature que necesite datos estructurados de planificación — usar `planning_sequences`, NO `generated_classes.planning_blocks`
+
+### 2026-04-06: n8n ejecuta ramas paralelas en DFS, no en paralelo real
+
+- **Error**: Nodo "Registrar Planificación" (Supabase INSERT) conectado como 2da rama paralela desde "Datos Profesor y Curso" nunca ejecutaba. La ejecución bajaba por la 1ra rama (cadena larga: Upload → RAG → OpenAI → parsers → email) y si algo fallaba o se cancelaba antes, la 2da rama quedaba sin correr.
+- **Fix 1**: Invertir orden de conexiones salientes — poner la rama "hoja rápida" (INSERT) ANTES de la cadena larga. n8n ejecuta outputs en el orden del array.
+- **Fix 2**: En el INSERT, no usar `$json.xxx` cuando aguas arriba hay nodos Google Drive — esos sobrescriben `$json` con metadata del archivo. Referenciar siempre los parsers por nombre: `$('Parser Análisis + Secuencia').item.json.secuencia_data`.
+- **Aplicar en**: Cualquier workflow n8n con ramas paralelas + INSERTs críticos a BD
+
 ## Infraestructura EducMark
 
 | Servicio       | URL                                               | Tipo                                               |

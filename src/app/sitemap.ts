@@ -10,6 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/signup',
     '/features/generador-planificaciones',
     '/planificaciones-mineduc',
+    '/portafolio-carrera-docente',
     '/generador-clases-chile',
     '/evaluaciones-automaticas',
     '/colegios',
