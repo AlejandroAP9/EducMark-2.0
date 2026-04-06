@@ -72,6 +72,74 @@ Concepto central + ramas con flechas + iconos en nodos
 
 ---
 
+## Prompt Maestro 80/20 (Consistencia visual entre slides)
+
+> **Regla de oro:** Cuando generes un carrusel, el 80% del prompt es FIJO entre todas las slides.
+> Solo cambia lo que esta en [corchetes]. Esto garantiza que todas las imagenes se vean hermanas.
+
+```
+Una imagen estatica para Instagram en estilo sketch / cuaderno de profe. Fondo
+beige texturizado #F5F0E8 que parece papel de cuaderno con lineas tenues.
+Este slide es [TIPO LAYOUT: con ilustracion central / solo texto].
+[Si lleva ilustracion: En el centro, dibujo a mano alzada en trazo violeta
+#8B5CF6 de DESCRIPCION CONCEPTO, con sombreado a lapiz y acentos cian #06B6D4.
+Borde irregular tipo recorte de papel.]
+Sobre la composicion hay [N: 2 o 3] tiras horizontales de papel blanco
+rasgado con borde irregular, sombra suave, conteniendo texto en ESPANOL
+chileno: tipografia sans-serif bold negra, [CONTENIDO TEXTUAL].
+Sombras sutiles tipo scrapbook, sensacion tactil. Formato cuadrado 1:1.
+Estilo: cuaderno de profe + diseno limpio EducMark. NO usar ningun otro
+color fuera de violeta #8B5CF6, cian #06B6D4, beige #F5F0E8, blanco y negro.
+```
+
+### Variables por slide del framework de 7 (ver carousel-creator)
+
+| Slide | Layout | N tiras | Contenido |
+|-------|--------|---------|-----------|
+| 1 — Hook | con ilustracion | 2 | top: [DOLOR], bottom: [DOLOR amplificado] |
+| 2 — Dato | solo texto | 3 | top, middle, bottom: [DATO + CONTEXTO] |
+| 3 — Why | con ilustracion | 2 | top: [POR QUE], bottom: [VALIDACION] |
+| 4 — Problem | solo texto | 3 | top, middle, bottom: [QUE ESTAS HACIENDO MAL] |
+| 5 — Solution | con ilustracion | 2 | top: [EDUCMARK], bottom: [BENEFICIO] |
+| 6 — Prueba | con ilustracion | 2 | top: [TESTIMONIO/NUMERO], bottom: [VALIDACION] |
+| 7 — CTA | con ilustracion | 2 | top: [CTA del usuario], bottom: [URGENCIA/beneficio] |
+
+**Importante:** El contenido textual en espanol se valida visualmente. Si la IA comete errores con tildes/n/numeros, retocar en Canva — NO regenerar (rompe consistencia con el resto).
+
+---
+
+## Variantes de Logo EducMark
+
+| Archivo | Uso | Estilo |
+|---------|-----|--------|
+| `public/images/logo-educmark-icon.png` | App icon, favicon, perfil IG, OG image | Squircle iOS negro #05050A con barras glow violeta→cian estilo neón |
+| `public/images/logo-educmark-watermark.png` | **Watermark en carruseles sketch** (uso por defecto del overlay) | 3 barras planas violeta sólido #8B5CF6, sin squircle, sin glow, transparente |
+| `public/images/logo-educmark-wordmark.png` | Headers de landing, footer, bio links | Lockup horizontal: barras glow + "EDUCMARK" en sans-serif bold blanco |
+
+**Regla clave:** NUNCA usar el icon (con squircle negro) como watermark sobre fondos beige. Choca visualmente. El watermark plano es la única variante diseñada para superposición.
+
+---
+
+## Watermark Logo EducMark (post-procesado)
+
+Para asegurar branding consistente sin depender de la IA: generar imagen base limpia y superponer el watermark con el script `scripts/overlay_logo.py`.
+
+```bash
+python3 .claude/skills/image-creator/scripts/overlay_logo.py \
+  imagen_base.png \
+  imagen_final.png
+```
+
+- Por defecto usa `public/images/logo-educmark-watermark.png` (variante plana sin glow)
+- Coloca el logo en esquina inferior derecha (margen 2%, 12% del ancho)
+- Mantiene transparencia
+- NO regenera la imagen — mas barato y consistente que pedirle a la IA que ponga el logo
+
+Cuando uses este flujo, el prompt de generacion debe terminar con:
+> "IMPORTANTE: En la esquina inferior derecha deja el fondo limpio — NO pongas texto ni elementos alli, ese espacio es para el logo."
+
+---
+
 ## Prompt Base para Generacion
 
 Usar con el skill image-generation (Nano Banana 2 via OpenRouter):

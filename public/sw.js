@@ -31,8 +31,8 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(payload.title || 'Notificacion', {
       body: payload.body || '',
-      icon: payload.icon || '/images/logo.png',
-      badge: payload.badge || '/images/logo.png',
+      icon: payload.icon || '/images/logo-educmark-icon.png',
+      badge: payload.badge || '/images/logo-educmark-icon.png',
       data: payload.data || {},
       tag: payload.tag,
       requireInteraction: payload.requireInteraction || false,

@@ -192,6 +192,7 @@ _(Se expande conforme crezca el equipo)_
 8. **AI Takes First Cut** — Dejar que Claude genere opciones/analisis primero, luego reaccionar con juicio de 20 anos de docencia. No empezar de la hoja en blanco.
 9. **Confianza por Velocidad** — Lanzar como Beta Pioneros, no como producto perfecto. La confianza se construye iterando rapido y mostrando que el feedback se usa. Perder trust = lanzar y no iterar.
 10. **Saber Decir No** — Que puedas construir algo en una noche no significa que debas. Los casos de uso se descubren observando, no disenando. Registrar usos inesperados en `.claude/feedback/casos-descubiertos.md`.
+11. **Respaldar en Obsidian Siempre** — Toda sesion con trabajo significativo (features, fixes, lanzamientos, debugging, decisiones) debe quedar registrada en el vault `educmark-brain/` ademas de CLAUDE.md y memoria global. El vault es el segundo cerebro Karpathy: si no se mantiene, pierde valor como infraestructura conectada (backlinks, grafico, busqueda visual). Actualizar `wiki/educmark/<feature>.md` con la implementacion + entrada en `log.md` con fecha y contexto. Sin esto, no le sacamos el partido a la aplicacion.
 
 ---
 

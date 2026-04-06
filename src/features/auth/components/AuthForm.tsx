@@ -287,9 +287,8 @@ export function AuthForm({ initialMode = 'login' }: AuthFormProps) {
                 <canvas ref={canvasRef} className="neural-network-bg absolute inset-0 pointer-events-none opacity-30"></canvas>
 
                 <div className="z-10 w-full max-w-md">
-                    <div className="flex items-center justify-center gap-3 mb-8">
-                        <img src="/images/logo.png" alt="EducMark" width="40" height="40" className="w-10 h-10 rounded-full bg-white p-1" />
-                        <span className="text-2xl font-bold font-heading text-white">EducMark</span>
+                    <div className="flex items-center justify-center mb-8">
+                        <img src="/images/logo-educmark-wordmark.png" alt="EducMark" width="200" height="56" className="h-14 w-auto object-contain" />
                     </div>
 
                     <div className="bg-card border border-white/10 rounded-2xl p-8 shadow-2xl backdrop-blur-sm relative overflow-hidden">
@@ -387,7 +386,7 @@ export function AuthForm({ initialMode = 'login' }: AuthFormProps) {
             {/* MOBILE VALUE PROP BANNER */}
             <div className="md:hidden relative z-10 px-4 pt-4 pb-2">
                 <div className="flex items-center gap-3 text-sm text-muted-foreground bg-card/60 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-3">
-                    <img src="/images/logo.png" alt="EducMark" width="32" height="32" className="w-8 h-8 rounded-lg bg-white p-0.5" />
+                    <img src="/images/logo-educmark-icon.png" alt="EducMark" width="32" height="32" className="w-8 h-8 rounded-lg" />
                     <div>
                         <p className="text-white font-semibold text-sm">EducMark</p>
                         <p className="text-xs text-muted-foreground">Planifica 10 clases en 1 hora · 3 gratis</p>
@@ -399,7 +398,7 @@ export function AuthForm({ initialMode = 'login' }: AuthFormProps) {
             <div className="marketing-panel hidden md:flex relative z-10 bg-transparent">
                 <div className="marketing-content">
                     <div className="marketing-header">
-                        <img src="/images/logo.png" alt="EducMark" width="64" height="64" className="w-16 h-16 rounded-2xl bg-white p-2 shadow-[0_20px_40px_rgba(164,143,255,0.3)] mb-10" />
+                        <img src="/images/logo-educmark-icon.png" alt="EducMark" width="64" height="64" className="w-16 h-16 rounded-2xl shadow-[0_20px_40px_rgba(139,92,246,0.4)] mb-10" />
                     </div>
 
                     <h1 className="marketing-title">

@@ -258,7 +258,7 @@ export const Header: React.FC = () => {
       <nav className="pill-nav-container">
         <div className="pill-nav">
           <a href="#" className="pill-logo" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
-            <img src="/images/logo.png" alt="EducMark - Sistema Operativo de Gestion Pedagogica para el Docente Chileno" width="44" height="44" className="w-full h-full object-contain" />
+            <img src="/images/logo-educmark-wordmark.png" alt="EducMark - Sistema Operativo de Gestion Pedagogica para el Docente Chileno" width="160" height="44" className="h-10 w-auto object-contain" />
           </a>
 
           {/* Desktop Menu */}

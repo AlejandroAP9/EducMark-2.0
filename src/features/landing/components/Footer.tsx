@@ -35,9 +35,8 @@ export const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8 mb-12">
           {/* Brand column */}
           <div>
-            <div className="flex items-center gap-3 mb-4">
-              <img src="/images/logo.png" alt="EducMark" width="36" height="36" className="w-9 h-9 rounded-full bg-white p-1" />
-              <span className="font-heading font-bold text-lg text-white">EducMark</span>
+            <div className="mb-4">
+              <img src="/images/logo-educmark-wordmark.png" alt="EducMark" width="180" height="48" className="h-12 w-auto object-contain" />
             </div>
             <p className="text-sm text-muted-foreground font-light leading-relaxed max-w-xs">
               El Sistema Operativo de Gestion Pedagogica para el docente chileno. Planifica, evalua y analiza con respaldo neuroeducativo.

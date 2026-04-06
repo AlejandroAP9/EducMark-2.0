@@ -63,7 +63,7 @@ export function Sidebar({ mobileOpen, setMobileOpen }: { mobileOpen: boolean, se
             <aside className={`sidebar ${mobileOpen ? 'active' : ''}`} id="sidebar">
                 <div className="sidebar-header">
                     <a href="/" className="logo">
-                        <img src="/images/logo.png" alt="EducMark" width="32" height="32" className="w-8 h-8 rounded-full bg-white p-0.5" /> EducMark
+                        <img src="/images/logo-educmark-icon.png" alt="EducMark" width="32" height="32" className="w-8 h-8 rounded-lg" /> EducMark
                     </a>
                 </div>
 

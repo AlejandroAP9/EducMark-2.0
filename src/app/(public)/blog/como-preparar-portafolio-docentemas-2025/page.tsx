@@ -22,7 +22,7 @@ const articleSchema = {
         name: 'EducMark',
         logo: {
             '@type': 'ImageObject',
-            url: 'https://educmark.cl/images/logo.png',
+            url: 'https://educmark.cl/images/logo-educmark-icon.png',
         },
     },
     mainEntityOfPage: {

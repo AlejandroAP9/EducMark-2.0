@@ -58,6 +58,32 @@ Se genera con el skill image-creator.
 4. **Flujo de lectura**: arriba a abajo, izquierda a derecha
 5. **Slide final siempre CTA**
 6. **7-8 slides optimo**
+7. **CTA viene del usuario** — NUNCA inventar el CTA. Si el usuario no lo dio, preguntar antes de generar
+8. **Stage = review hasta aprobacion** — todo carrusel queda en review en el calendario hasta que Alejandro confirme. Solo entonces pasar a "listo para publicar"
+9. **Consistencia visual obligatoria** — TODAS las slides deben verse hermanas: misma paleta, mismo grano, mismos elementos. Usar el "Prompt Maestro 80/20" del skill image-creator (80% del prompt fijo, solo cambia el contenido en [corchetes])
+
+---
+
+## Framework Storytelling EducMark — 7 Slides (Hormozi adaptado)
+
+Estructura por defecto cuando el carrusel busca conversion (no solo valor). Adaptado al avatar profe chileno con dolor cuantificable.
+
+| Slide | Funcion | Que va | Layout |
+|-------|---------|--------|--------|
+| 1 | **Hook / Dolor** | Frase punzante que el profe siente en el hueso ("Pasaste el domingo planificando otra vez") | Portada con ilustracion + 2 bloques de texto |
+| 2 | **Dato duro** | Estadistica o numero que valida el dolor (horas semanales, % burnout, costo Carrera Docente) | Solo texto, 3 bloques |
+| 3 | **Why — el sistema** | Por que pasa esto (no es culpa del profe, es el sistema chileno) | Ilustracion + 2 bloques |
+| 4 | **Problem — lo que estas haciendo mal** | El loop actual: planificar manual, copiar de internet, recalentar | Solo texto, 3 bloques |
+| 5 | **Solution — EducMark** | El nuevo flujo: clase completa en minutos, alineada al curriculum MINEDUC | Ilustracion + 2 bloques |
+| 6 | **Prueba** | Testimonio breve, output UTP-Ready, o numero del producto (51 clases generadas, etc.) | Ilustracion + 2 bloques |
+| 7 | **CTA del usuario** | Lead magnet (3 clases gratis / ebook) — el usuario lo entrega | Ilustracion + 2 bloques |
+
+**Cuando NO usar este framework:**
+- Listicle puro ("5 errores...") — estructura propia del listicle
+- Paso a paso instruccional — secuencia de pasos
+- Storytelling personal — arco narrativo propio
+
+Para cualquier otro carrusel orientado a venta: este framework por defecto.
 
 ---
 
