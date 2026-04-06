@@ -85,15 +85,16 @@ export const Header: React.FC = () => {
         .pill-logo {
           width: 44px;
           height: 44px;
-          border-radius: 50%;
-          background: #ffffff;
+          border-radius: 12px;
+          background: transparent;
           display: flex;
           align-items: center;
           justify-content: center;
           text-decoration: none;
           flex-shrink: 0;
           margin-right: 4px;
-          padding: 6px;
+          padding: 0;
+          overflow: hidden;
           transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
