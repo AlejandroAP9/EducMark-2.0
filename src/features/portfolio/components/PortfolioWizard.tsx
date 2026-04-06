@@ -2,8 +2,8 @@
 
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import { usePortfolioBuilder } from '../hooks/usePortfolioBuilder';
-import { useDraftGenerator } from '../hooks/useDraftGenerator';
 import { usePortfolioStore } from '../store/usePortfolioStore';
 import type { GeneratedClassRow, EvaluationRow } from '../types/portfolio';
 
@@ -189,13 +189,12 @@ export default function PortfolioWizard() {
     getSelectedClassObjects,
   } = usePortfolioBuilder();
 
-  const { generateDraftT1, generateDraftT2, generateDraftT3 } =
-    useDraftGenerator();
   const store = usePortfolioStore();
 
   const [localAsignatura, setLocalAsignatura] = useState('');
   const [localCurso, setLocalCurso] = useState('');
   const [localPeriodo, setLocalPeriodo] = useState('');
+  const [generating, setGenerating] = useState(false);
 
   const handleStep1Continue = useCallback(() => {
     if (!localAsignatura || !localCurso) return;
@@ -215,25 +214,46 @@ export default function PortfolioWizard() {
     [wizardState.selectedClasses, setSelectedClasses]
   );
 
-  const handleGenerateDrafts = useCallback(() => {
+  const handleGenerateDrafts = useCallback(async () => {
     const selectedClasses = getSelectedClassObjects();
-    const t1 = generateDraftT1(selectedClasses, store.guidedAnswers);
-    const t2 = generateDraftT2(
-      data.evaluationItems,
-      data.omrResults,
-      store.guidedAnswers
-    );
-    const t3 = generateDraftT3();
+    if (selectedClasses.length === 0) return;
 
-    store.setDraft(t1, t2, t3);
-    store.setWizardCompleted(true);
+    setGenerating(true);
+    toast.info('Generando borradores con IA... esto puede tomar 30 segundos');
+
+    try {
+      const res = await fetch('/api/portfolio/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          classes: selectedClasses,
+          evaluationItems: data.evaluationItems,
+          omrResults: data.omrResults,
+          asignatura: wizardState.asignatura,
+          curso: wizardState.curso,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Error en la API');
+      }
+
+      const drafts = await res.json();
+      store.setDraft(drafts.t1 || '', drafts.t2 || '', drafts.t3 || '');
+      store.setWizardCompleted(true);
+      toast.success('Borradores generados exitosamente');
+    } catch (err) {
+      console.error('Error generando borradores:', err);
+      toast.error('Error al generar borradores. Intenta nuevamente.');
+    } finally {
+      setGenerating(false);
+    }
   }, [
     getSelectedClassObjects,
-    generateDraftT1,
-    generateDraftT2,
-    generateDraftT3,
     data.evaluationItems,
     data.omrResults,
+    wizardState.asignatura,
+    wizardState.curso,
     store,
   ]);
 
@@ -491,10 +511,20 @@ export default function PortfolioWizard() {
               </button>
               <button
                 onClick={handleGenerateDrafts}
-                disabled={!canGenerate}
+                disabled={!canGenerate || generating}
                 className="flex-1 bg-gradient-to-r from-[#8B5CF6] to-[#06B6D4] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl transition-all"
               >
-                Generar Borradores
+                {generating ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Generando con IA...
+                  </span>
+                ) : (
+                  'Generar Borradores con IA'
+                )}
               </button>
             </div>
           </motion.div>
