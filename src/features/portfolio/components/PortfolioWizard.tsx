@@ -169,6 +169,7 @@ export default function PortfolioWizard() {
           classes: selectedClasses,
           asignatura: wizardState.asignatura,
           curso: wizardState.curso,
+          userId: data.userId,
         }),
       });
 
@@ -191,6 +192,7 @@ export default function PortfolioWizard() {
     getSelectedClassObjects,
     wizardState.asignatura,
     wizardState.curso,
+    data.userId,
     store,
   ]);
 

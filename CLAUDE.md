@@ -592,6 +592,18 @@ Cada decision debe pasar este filtro:
 - **Fix**: Preguntar al usuario la ruta correcta si hay ambiguedad. Verificar con `git remote -v` que es el repo correcto.
 - **Aplicar en**: Inicio de cada sesion con proyectos multiples
 
+### 2026-04-05: Portfolio Carrera Docente — datos reales vs asumidos
+
+- **Error**: PRP original asumia 8 entregables en formato PDF. La realidad: 5 tareas en 3 modulos, texto en docentemas.cl. T2 es monitoreo formativo (dentro de la clase), no prueba sumativa.
+- **Fix**: Reescribir PRP con estructura real del Manual Portafolio 2025. Wizard de 2 pasos (sin paso de evaluacion sumativa). IA genera texto completo, no templates.
+- **Aplicar en**: Cualquier feature que dependa de documentos oficiales — leer la fuente primaria antes de disenar
+
+### 2026-04-05: planning_blocks vacio en generated_classes
+
+- **Error**: Se asumio que planning_blocks tenia datos estructurados (objective, inicio, desarrollo, cierre). En realidad es {} para la mayoria de las clases — el contenido se guarda como PDF en Google Drive.
+- **Fix**: Usar topic como dato principal. Alimentar la IA con lo que hay y dejarla generar el resto.
+- **Aplicar en**: Cualquier feature que lea generated_classes — verificar que campos realmente tienen datos
+
 ## Infraestructura EducMark
 
 | Servicio       | URL                                               | Tipo                                               |

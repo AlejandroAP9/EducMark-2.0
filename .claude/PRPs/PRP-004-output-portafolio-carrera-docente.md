@@ -22,7 +22,7 @@ Agregar un modo "Portafolio Carrera Docente" que genere **borradores de texto ed
 
 **Valor de negocio**:
 - Diferenciador brutal vs ChatGPT (no conoce las rúbricas 2025 de docentemas.cl)
-- Hook de conversión: "¿Este año te toca Carrera Docente? Tu Módulo 1 ya está 80% listo"
+- Hook de conversión: "¿Este año te toca Carrera Docente? Genera tu borrador de portafolio en minutos con los datos de tus clases"
 - Aumenta retención: profes que usan EducMark para el portafolio no cancelan hasta después de la evaluación
 - Mercado: ~50,000 profes evaluados por año en Chile
 
