@@ -8,6 +8,7 @@ import '@/features/admin/styles/admin.css';
 import { createClient } from '@/lib/supabase/client';
 import { useSubscriptionStore } from '@/features/auth/store/subscriptionStore';
 import { Sidebar } from '@/features/dashboard/components/Sidebar';
+import { ReferralButton } from '@/features/dashboard/components/ReferralProgram';
 import { Modal, Button } from '@/shared/components/ui/UIComponents';
 import { toast } from 'sonner';
 import { Menu, Search, X, ArrowRight, Moon, Loader2, Wand2 } from 'lucide-react';
@@ -262,6 +263,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
 
                     <div className="header-actions">
                         <CreditsBadge />
+                        <ReferralButton />
                         <button className="header-btn" onClick={() => document.body.classList.toggle('light-mode')} title="Cambiar Tema">
                             <Moon size={20} />
                         </button>
