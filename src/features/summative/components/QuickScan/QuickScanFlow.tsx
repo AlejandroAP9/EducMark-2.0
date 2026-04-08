@@ -77,7 +77,7 @@ export const QuickScanFlow: React.FC<QuickScanFlowProps> = ({ onBack }) => {
     }, []);
 
     return (
-        <div className="max-w-4xl mx-auto px-4 py-6 animate-fade-in">
+        <div className={`mx-auto px-4 py-6 animate-fade-in ${step === 'sheet' ? 'max-w-400' : 'max-w-4xl'}`}>
             {/* Header */}
             <div className="flex items-center gap-3 mb-6">
                 <button
