@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ClipboardCheck, FileText, ScanLine, CheckCircle2 } from 'lucide-react';
 import type { CorrectAnswers } from '../../types/omrScanner';
 import { QuickScanSetup } from './QuickScanSetup';
-import { QuickScanSheet } from './QuickScanSheet';
 import { QuickScanScanner } from './QuickScanScanner';
+import { AnswerSheetGenerator } from '../AnswerSheet/AnswerSheetGenerator';
 
 type QuickScanStep = 'setup' | 'sheet' | 'scanner' | 'results';
 
@@ -167,16 +167,28 @@ export const QuickScanFlow: React.FC<QuickScanFlowProps> = ({ onBack }) => {
                         exit={{ opacity: 0, x: 20 }}
                         transition={{ duration: 0.2 }}
                     >
-                        <QuickScanSheet
-                            title={title}
-                            totalTF={totalTF}
-                            totalMC={totalMC}
-                            correctAnswers={correctAnswers}
-                            mcOptions={mcOptions}
-                            onContinue={() => setStep('scanner')}
-                            onSkip={() => setStep('scanner')}
-                            onBack={() => setStep('setup')}
-                        />
+                        <div className="space-y-4">
+                            <AnswerSheetGenerator
+                                evaluationData={{
+                                    id: 'quick-scan',
+                                    subject: title || 'Corrección Rápida',
+                                    grade: '',
+                                    unit: '',
+                                    oa: '',
+                                    answers: correctAnswers,
+                                }}
+                                onBack={() => setStep('setup')}
+                            />
+                            <div className="flex justify-end gap-3 px-6 pb-6">
+                                <button
+                                    onClick={() => setStep('scanner')}
+                                    className="px-6 py-3 bg-linear-to-r from-violet-600 to-cyan-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
+                                >
+                                    Continuar a escanear
+                                    <ScanLine className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
                     </motion.div>
                 )}
 
