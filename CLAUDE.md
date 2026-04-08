@@ -478,7 +478,7 @@ Cada decision debe pasar este filtro:
 
 ---
 
-## Aprendizajes (19 blindajes: Tecnico 15, Negocio 2, Datos 2)
+## Aprendizajes (21 blindajes: Tecnico 17, Negocio 2, Datos 2)
 
 ### 2025-01-09: Usar npm run dev, no next dev
 
@@ -612,6 +612,20 @@ Cada decision debe pasar este filtro:
 - **API**: `src/app/api/portfolio/generate/route.ts` usa `SUPABASE_SERVICE_ROLE_KEY` para leer las 3 secuencias más recientes del user_id y pasarlas como contexto a OpenAI gpt-4o-mini.
 - **Aplicar en**: Cualquier feature que necesite datos estructurados de planificación — usar `planning_sequences`, NO `generated_classes.planning_blocks`
 
+### 2026-04-06: Easypanel cancela builds si llega un segundo commit antes de terminar
+
+- **Error**: Pusheados `c3c8c21` (ReferralButton) y `6c6cf6a` (NotificationBell) con <2 min entre medio. Ambos deploys quedaron rojos con `### Killed` a los 86 segundos durante la fase export layers. Build local con `npm run build` pasaba limpio (2514 páginas SSG OK)
+- **Causa**: El webhook del segundo commit canceló el build del primero cuando estaba exporting. El kill signal externo dejó ambos deploys fallidos
+- **Fix**: Después de pushear a `main`, ESPERAR confirmación visual verde en Easypanel (~3-5 min) antes de pushear el próximo commit. Si accidentalmente ya pasó, click manual en el botón "Implementar" para rebuild del HEAD actual — NO pushear commits vacíos para forzarlo
+- **Excepción**: cambios solo a docs (CLAUDE.md, memory, wiki) no requieren esperar — Easypanel los incluye en el próximo rebuild normal
+- **Aplicar en**: Cualquier sesión que requiera múltiples commits funcionales al src/
+
+### 2026-04-06: Verificar export name antes de concluir "código muerto"
+
+- **Error**: `grep -r ReferralProgram` devolvió solo el archivo `ReferralProgram.tsx` sin imports. Asumí que era código huérfano. Pero el export real era `export function ReferralButton()` — por eso nadie lo importaba por el nombre del archivo
+- **Fix**: Antes de concluir que un componente está huérfano, correr `grep "^export" <archivo>` para conocer el nombre real del export. Buscar también por id DOM si se usa con CSS selectors (tours, Driver.js)
+- **Aplicar en**: Cualquier investigación de código muerto durante migraciones. React permite que archivo y export tengan nombres distintos
+
 ### 2026-04-06: n8n ejecuta ramas paralelas en DFS, no en paralelo real
 
 - **Error**: Nodo "Registrar Planificación" (Supabase INSERT) conectado como 2da rama paralela desde "Datos Profesor y Curso" nunca ejecutaba. La ejecución bajaba por la 1ra rama (cadena larga: Upload → RAG → OpenAI → parsers → email) y si algo fallaba o se cancelaba antes, la 2da rama quedaba sin correr.
@@ -654,6 +668,24 @@ Cada decision debe pasar este filtro:
 | Bucket | Publico | Uso |
 |---|---|---|
 | `institution-logos` | Si | Logos de colegios subidos por profes desde su perfil |
+
+### Sistema de Notificaciones EducMark (2026-04-06)
+
+Tres sistemas paralelos:
+1. **Push PWA** — `PushNotificationWrapper` en `(main)/layout.tsx`, service worker en `public/sw.js`
+2. **In-app bell** — `NotificationBell` + `ReferralButton` montados en topbar de `(main)/dashboard/layout.tsx`. Tabla `notifications` con Supabase Realtime
+3. **Toast (sonner)** — feedback inmediato de acciones
+
+**Productores automáticos** (6 activos via triggers `notif_*` + Edge Function `notify-health-alert` v3):
+- #1-2 Suscripciones (pago activo/rechazado/cancelado)
+- #3 Clase generada lista (link al kit-result)
+- #4 Referido nuevo (helper para referrer)
+- #5 Health Score → churn (cron nightly 00:05, Telegram + in-app)
+- #6 Quota thresholds 80% y 100%
+
+Helper SQL `notify_user()` centraliza INSERT con `EXCEPTION WHEN OTHERS` → nunca rompe transacciones principales. Todos los triggers son aditivos, cero modificación de triggers legacy.
+
+Detalle completo en Obsidian: `wiki/educmark/notificaciones.md`
 
 ---
 

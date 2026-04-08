@@ -364,7 +364,7 @@ export const generateAnswerSheetPageHTML = (data: AnswerSheetData): string => {
             </div>
         </div>
 
-        <div style="position: absolute; left: 22mm; right: 22mm; top: 102mm; height: 0.6mm; background: linear-gradient(90deg, #8B5CF6 0%, #06B6D4 100%);"></div>
+        <div style="position: absolute; left: 22mm; right: 22mm; top: 94mm; height: 0.6mm; background: linear-gradient(90deg, #8B5CF6 0%, #06B6D4 100%);"></div>
 
         ${tfHeaderHTML}
         ${mc1HeaderHTML}
