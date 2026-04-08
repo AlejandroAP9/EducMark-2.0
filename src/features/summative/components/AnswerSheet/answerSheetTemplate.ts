@@ -293,12 +293,18 @@ export const generateAnswerSheetPageHTML = (data: AnswerSheetData): string => {
     </div>`;
 
   const logoSection = institutionLogo
-    ? `<div style="width: 22mm; height: 22mm; display: flex; align-items: center; justify-content: center;">
+    ? `<div style="width: 26mm; height: 26mm; display: flex; align-items: center; justify-content: center;">
                <img src="${institutionLogo}" alt="Logo" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
            </div>`
-    : `<div style="width: 22mm; height: 22mm; border: 0.4mm dashed #999; display: flex; align-items: center; justify-content: center;">
+    : `<div style="width: 26mm; height: 26mm; border: 0.4mm dashed #999; display: flex; align-items: center; justify-content: center;">
                <span style="font-size: 6pt; color: #999; text-align: center; font-weight: 700;">LOGO</span>
            </div>`;
+
+  // Build subtitle parts conditionally — sin guiones huérfanos ni pipes vacíos
+  const subtitleLine1Parts = [evaluationInfo.subject, evaluationInfo.grade].filter(p => p && p.trim());
+  const subtitleLine1 = subtitleLine1Parts.join(' · ');
+  const subtitleLine2Parts = [evaluationInfo.unit, evaluationInfo.oa].filter(p => p && p.trim());
+  const subtitleLine2 = subtitleLine2Parts.join(' · ');
 
   const blueprintJSON = JSON.stringify(blueprint);
 
@@ -310,16 +316,13 @@ export const generateAnswerSheetPageHTML = (data: AnswerSheetData): string => {
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 ${logoSection}
 
-                <div style="text-align: center; flex: 1; padding: 1mm 8mm 0 8mm;">
-                    <div style="font-size: 20pt; font-weight: 900; letter-spacing: 0.8mm; text-transform: uppercase; color: #000;">
+                <div style="text-align: center; flex: 1; padding: 2mm 8mm 0 8mm;">
+                    <div style="font-size: 20pt; font-weight: 900; letter-spacing: 0.8mm; text-transform: uppercase; color: #0F0F1A;">
                         HOJA DE RESPUESTAS
                     </div>
-                    <div style="font-size: 14pt; color: #111; margin-top: 1.2mm;">
-                        ${evaluationInfo.subject} - ${evaluationInfo.grade}
-                    </div>
-                    <div style="font-size: 13pt; color: #333; margin-top: 0.6mm;">
-                        ${evaluationInfo.oa} | ${evaluationInfo.unit}
-                    </div>
+                    <div style="width: 38mm; height: 0.9mm; background: #8B5CF6; margin: 1.6mm auto 1.4mm auto; border-radius: 0.5mm;"></div>
+                    ${subtitleLine1 ? `<div style="font-size: 13pt; font-weight: 700; color: #1a1a2e; margin-top: 0.3mm;">${subtitleLine1}</div>` : ''}
+                    ${subtitleLine2 ? `<div style="font-size: 11pt; color: #4a4a5e; margin-top: 0.6mm;">${subtitleLine2}</div>` : ''}
                 </div>
 
                 <div style="width: 24mm; height: 24mm; border: 0.8mm solid #000; padding: 0.8mm; background: #fff;">
@@ -328,40 +331,40 @@ export const generateAnswerSheetPageHTML = (data: AnswerSheetData): string => {
             </div>
         </div>
 
-        <div style="position: absolute; left: 22mm; top: 60mm; width: 112mm; border: 0.5mm solid #000;">
-            <div style="height: 14mm; border-bottom: 0.4mm solid #000; display: flex; align-items: center; padding: 0 3mm; gap: 2mm;">
-                <span style="font-size: 10.5pt; font-weight: 800; letter-spacing: 0.1mm;">NOMBRE:</span>
+        <div style="position: absolute; left: 22mm; top: 64mm; width: 112mm; height: 24mm; border: 0.3mm solid #c0c0d0; border-radius: 1mm; background: #fff;">
+            <div style="height: 12mm; border-bottom: 0.3mm solid #e0e0ea; display: flex; align-items: center; padding: 0 3.5mm; gap: 2.5mm;">
+                <span style="font-size: 9.5pt; font-weight: 800; letter-spacing: 0.15mm; color: #4a4a5e; text-transform: uppercase;">Nombre</span>
                 ${studentName
-      ? `<span style="flex: 1; font-size: 10.5pt; border-bottom: 0.35mm dotted #000; line-height: 1.3;">${studentName}</span>`
-      : `<div style="flex: 1; border-bottom: 0.35mm dotted #000; height: 3.8mm;"></div>`
+      ? `<span style="flex: 1; font-size: 11pt; font-weight: 600; line-height: 1.3; color: #0F0F1A;">${studentName}</span>`
+      : `<div style="flex: 1; border-bottom: 0.3mm dotted #8a8a9a; height: 3.8mm;"></div>`
     }
             </div>
-            <div style="height: 14mm; display: grid; grid-template-columns: 1fr 1fr;">
-                <div style="border-right: 0.4mm solid #000; display: flex; align-items: center; padding: 0 3mm; gap: 2mm;">
-                    <span style="font-size: 10.5pt; font-weight: 800; letter-spacing: 0.1mm;">CURSO:</span>
-                    <span style="font-size: 10.5pt; line-height: 1.3;">${evaluationInfo.grade}</span>
+            <div style="height: 12mm; display: grid; grid-template-columns: 1fr 1fr;">
+                <div style="border-right: 0.3mm solid #e0e0ea; display: flex; align-items: center; padding: 0 3.5mm; gap: 2.5mm;">
+                    <span style="font-size: 9.5pt; font-weight: 800; letter-spacing: 0.15mm; color: #4a4a5e; text-transform: uppercase;">Curso</span>
+                    <span style="flex: 1; font-size: 11pt; font-weight: 600; line-height: 1.3; color: #0F0F1A; border-bottom: 0.3mm dotted #8a8a9a; height: 3.8mm; display: flex; align-items: center;">${evaluationInfo.grade || ''}</span>
                 </div>
-                <div style="display: flex; align-items: center; padding: 0 3mm; gap: 2mm;">
+                <div style="display: flex; align-items: center; padding: 0 3.5mm; gap: 2.5mm;">
                     ${studentRut
-      ? `<span style="font-size: 10.5pt; font-weight: 800;">RUT:</span><span style="font-size: 10.5pt;">${studentRut}</span>`
-      : `<span style="font-size: 10.5pt; font-weight: 800;">FECHA:</span><span style="font-size: 10.5pt;">___ / ___ / 202_</span>`
+      ? `<span style="font-size: 9.5pt; font-weight: 800; color: #4a4a5e; text-transform: uppercase;">RUT</span><span style="flex: 1; font-size: 11pt; font-weight: 600; color: #0F0F1A; border-bottom: 0.3mm dotted #8a8a9a; height: 3.8mm; display: flex; align-items: center;">${studentRut}</span>`
+      : `<span style="font-size: 9.5pt; font-weight: 800; color: #4a4a5e; text-transform: uppercase;">Fecha</span><span style="flex: 1; font-size: 11pt; font-weight: 600; color: #0F0F1A; border-bottom: 0.3mm dotted #8a8a9a; height: 3.8mm; display: flex; align-items: center;">___ / ___ / 202_</span>`
     }
                 </div>
             </div>
         </div>
 
-        <div style="position: absolute; left: 139mm; top: 60mm; width: 55mm; height: 28mm; border: 0.5mm solid #000;">
+        <div style="position: absolute; left: 139mm; top: 64mm; width: 55mm; height: 24mm; border: 0.3mm solid #c0c0d0; border-radius: 1mm; overflow: hidden; background: #fff;">
             <div style="display: grid; grid-template-columns: 1fr 1.2fr 0.9fr;">
-                <div style="height: 8mm; border-right: 0.4mm solid #000; border-bottom: 0.4mm solid #000; display: flex; align-items: center; justify-content: center; padding: 0 1mm; font-size: 8.4pt; line-height: 1.05; font-weight: 800; text-align: center;">P. IDEAL</div>
-                <div style="height: 8mm; border-right: 0.4mm solid #000; border-bottom: 0.4mm solid #000; display: flex; align-items: center; justify-content: center; padding: 0 1mm; font-size: 8.2pt; line-height: 1.0; font-weight: 800; text-align: center;">P. OBTENIDO</div>
-                <div style="height: 8mm; border-bottom: 0.4mm solid #000; display: flex; align-items: center; justify-content: center; padding: 0 1mm; font-size: 8.4pt; line-height: 1.05; font-weight: 800; text-align: center;">NOTA</div>
-                <div style="height: 20mm; border-right: 0.4mm solid #000; display: flex; align-items: center; justify-content: center; font-size: 16pt; font-weight: 900;">/ ${displayIdealScore}</div>
-                <div style="height: 20mm; border-right: 0.4mm solid #000;"></div>
-                <div style="height: 20mm; border: 0.6mm solid #000;"></div>
+                <div style="height: 6.5mm; border-right: 0.3mm solid #e0e0ea; border-bottom: 0.3mm solid #c0c0d0; background: #f3eefe; display: flex; align-items: center; justify-content: center; padding: 0 1mm; font-size: 7.6pt; line-height: 1.05; font-weight: 800; text-align: center; color: #5b21b6; letter-spacing: 0.05mm;">P. IDEAL</div>
+                <div style="height: 6.5mm; border-right: 0.3mm solid #e0e0ea; border-bottom: 0.3mm solid #c0c0d0; background: #f3eefe; display: flex; align-items: center; justify-content: center; padding: 0 1mm; font-size: 7.6pt; line-height: 1.0; font-weight: 800; text-align: center; color: #5b21b6; letter-spacing: 0.05mm;">P. OBTENIDO</div>
+                <div style="height: 6.5mm; border-bottom: 0.3mm solid #c0c0d0; background: #f3eefe; display: flex; align-items: center; justify-content: center; padding: 0 1mm; font-size: 7.6pt; line-height: 1.05; font-weight: 800; text-align: center; color: #5b21b6; letter-spacing: 0.05mm;">NOTA</div>
+                <div style="height: 17.5mm; border-right: 0.3mm solid #e0e0ea; display: flex; align-items: center; justify-content: center; font-size: 17pt; font-weight: 900; color: #8B5CF6;">/ ${displayIdealScore}</div>
+                <div style="height: 17.5mm; border-right: 0.3mm solid #e0e0ea;"></div>
+                <div style="height: 17.5mm;"></div>
             </div>
         </div>
 
-        <div style="position: absolute; left: 22mm; right: 22mm; top: 103mm; height: 0.75mm; background: #000;"></div>
+        <div style="position: absolute; left: 22mm; right: 22mm; top: 102mm; height: 0.6mm; background: linear-gradient(90deg, #8B5CF6 0%, #06B6D4 100%);"></div>
 
         ${tfHeaderHTML}
         ${mc1HeaderHTML}
@@ -369,21 +372,25 @@ export const generateAnswerSheetPageHTML = (data: AnswerSheetData): string => {
         ${mc1HTML}
         ${mc2HTML}
 
-        <div style="position: absolute; bottom: 22mm; left: 22mm; right: 22mm;">
-            <div style="border-top: 0.55mm dashed #000; padding-top: 4mm; margin-bottom: 1.5mm;"></div>
-            <p style="font-size: 10.2pt; text-align: center; line-height: 1.28; color: #111;">
-                <span style="font-weight: 800;">INSTRUCCIONES:</span>
+        <div style="position: absolute; bottom: 30mm; left: 22mm; right: 22mm;">
+            <div style="border-top: 0.45mm dashed #8a8a9a; height: 0;"></div>
+        </div>
+        <div style="position: absolute; bottom: 14mm; left: 22mm; right: 22mm;">
+            <p style="font-size: 9.6pt; text-align: center; line-height: 1.32; color: #2a2a3e;">
+                <span style="font-weight: 800; color: #5b21b6;">INSTRUCCIONES:</span>
                 Use lápiz pasta negro o mina oscuro. Rellene el óvalo completamente sin salirse de los bordes. Evite arrugar o manchar la hoja fuera de los espacios asignados.
             </p>
-            <div style="display: flex; gap: 10mm; justify-content: center; margin-top: 3.5mm;">
-                <div style="display: flex; align-items: center; gap: 1.5mm;">
+            <div style="display: flex; gap: 12mm; justify-content: center; margin-top: 3mm; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 1.8mm;">
                     <div style="width: 4.5mm; height: 4.5mm; border-radius: 50%; background: #000;"></div>
-                    <span style="font-size: 9pt; font-weight: 800; text-transform: uppercase;">CORRECTO</span>
+                    <span style="font-size: 8.6pt; font-weight: 800; text-transform: uppercase; color: #2a2a3e;">Correcto</span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 1.5mm;">
+                <div style="display: flex; align-items: center; gap: 1.8mm;">
                     <div style="width: 4.5mm; height: 4.5mm; border-radius: 50%; border: 0.35mm solid #000; display: flex; align-items: center; justify-content: center; font-size: 8pt; font-weight: 700;">✕</div>
-                    <span style="font-size: 9pt; text-transform: uppercase;">INCORRECTO</span>
+                    <span style="font-size: 8.6pt; text-transform: uppercase; color: #2a2a3e;">Incorrecto</span>
                 </div>
+                <div style="width: 0.3mm; height: 5mm; background: #c0c0d0;"></div>
+                <span style="font-size: 8pt; font-weight: 700; color: #8B5CF6; letter-spacing: 0.15mm; text-transform: uppercase;">EducMark</span>
             </div>
         </div>
     </div>`;
