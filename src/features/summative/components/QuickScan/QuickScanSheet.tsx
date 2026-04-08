@@ -6,6 +6,7 @@ import { FileDown, Printer, ArrowRight, ArrowLeft, SkipForward, ImagePlus } from
 import { AnswerSheetPreview, generateDownloadableHTML } from '../AnswerSheet/AnswerSheetPreview';
 import { downloadHtmlAsPdf } from '@/shared/lib/htmlToPdf';
 import { toast } from 'sonner';
+import { useInstitutionBranding } from '@/shared/hooks/useInstitutionBranding';
 import type { CorrectAnswers } from '../../types/omrScanner';
 
 interface QuickScanSheetProps {
@@ -30,8 +31,16 @@ export const QuickScanSheet: React.FC<QuickScanSheetProps> = ({
     onBack,
 }) => {
     const [isDownloading, setIsDownloading] = useState(false);
+    const { logo: profileLogo } = useInstitutionBranding();
     const [logo, setLogo] = useState<string | null>(null);
     const logoInputRef = useRef<HTMLInputElement>(null);
+
+    // Autocompletar con el logo institucional del Perfil (editable: el profe puede reemplazarlo)
+    useEffect(() => {
+        if (profileLogo && !logo) {
+            setLogo(profileLogo);
+        }
+    }, [profileLogo, logo]);
 
     const evaluationInfo = {
         id: 'quick-scan',
