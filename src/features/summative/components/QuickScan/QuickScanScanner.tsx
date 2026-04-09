@@ -31,14 +31,17 @@ import {
     PROCESSING_STEPS,
     analyzeImageQuality,
 } from '../../services/omrProcessing';
+import { answerKeyFingerprint } from '../../lib/quickScanFingerprint';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { Save } from 'lucide-react';
+import { StudentAutocomplete } from './StudentAutocomplete';
 
 type ScannerPhase = 'idle' | 'camera' | 'preview' | 'processing' | 'results';
 
 interface QuickScanScannerProps {
     title: string;
+    grade: string;
     totalTF: number;
     totalMC: number;
     correctAnswers: CorrectAnswers;
@@ -49,6 +52,7 @@ interface QuickScanScannerProps {
 
 export const QuickScanScanner: React.FC<QuickScanScannerProps> = ({
     title,
+    grade,
     totalTF,
     totalMC,
     correctAnswers,
@@ -67,8 +71,24 @@ export const QuickScanScanner: React.FC<QuickScanScannerProps> = ({
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
 
+    // Save modal state (asks for student name before writing to DB)
+    const [savePanelOpen, setSavePanelOpen] = useState(false);
+    const [studentName, setStudentName] = useState('');
+    const [studentId, setStudentId] = useState<string | null>(null);
+
+    const openSavePanel = useCallback(() => {
+        setStudentName('');
+        setStudentId(null);
+        setSavePanelOpen(true);
+    }, []);
+
     const saveResultToDB = useCallback(async () => {
         if (!result?.data?.score || saving) return;
+        const trimmedName = studentName.trim();
+        if (!trimmedName) {
+            toast.error('Ingresa el nombre del alumno');
+            return;
+        }
         setSaving(true);
         try {
             const supabase = createClient();
@@ -76,28 +96,40 @@ export const QuickScanScanner: React.FC<QuickScanScannerProps> = ({
             const userId = userData?.user?.id;
             if (!userId) throw new Error('No autenticado');
 
+            const fingerprint = answerKeyFingerprint(correctAnswers);
+            const metadata = {
+                title: title || null,
+                grade: grade || null,
+                mc_options: mcOptions,
+                fingerprint,
+                // name_image is the base64 crop the backend returns. Optional.
+                name_image: result.data.name_image || null,
+            };
+
             const { error: insertError } = await supabase.from('omr_results').insert({
                 user_id: userId,
                 scan_type: 'quick',
                 evaluation_id: null,
-                student_name: '',
-                student_id: null,
+                student_name: trimmedName,
+                student_id: studentId,
                 answers: result.data.answers,
                 score: result.data.score,
                 answer_key: correctAnswers,
                 debug_info: result.data.debug_info || null,
+                metadata,
             });
 
             if (insertError) throw insertError;
             setSaved(true);
-            toast.success('Resultado guardado correctamente');
+            setSavePanelOpen(false);
+            toast.success(`Resultado de ${trimmedName} guardado`);
         } catch (err) {
             console.error('[QuickScan] Error saving:', err);
             toast.error('Error al guardar resultado');
         } finally {
             setSaving(false);
         }
-    }, [result, saving, correctAnswers]);
+    }, [result, saving, correctAnswers, studentName, studentId, title, grade, mcOptions]);
 
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
@@ -299,6 +331,9 @@ export const QuickScanScanner: React.FC<QuickScanScannerProps> = ({
         setQualityWarning(null);
         setResult(null);
         setSaved(false);
+        setSavePanelOpen(false);
+        setStudentName('');
+        setStudentId(null);
         setPhase('idle');
         onStepChange('scanner');
     }, [onStepChange]);
@@ -830,19 +865,92 @@ export const QuickScanScanner: React.FC<QuickScanScannerProps> = ({
                             )}
                         </div>
 
-                        {/* Save Button */}
-                        {!saved ? (
+                        {/* Save Flow */}
+                        {!saved && !savePanelOpen && (
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                onClick={saveResultToDB}
-                                disabled={saving}
-                                className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 text-white font-bold shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-shadow disabled:opacity-50"
+                                onClick={openSavePanel}
+                                className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 text-white font-bold shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-shadow"
                             >
                                 <Save size={18} />
-                                {saving ? 'Guardando...' : 'Guardar resultado'}
+                                Guardar resultado
                             </motion.button>
-                        ) : (
+                        )}
+
+                        {!saved && savePanelOpen && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="glass-card-premium p-5 md:p-6 space-y-4 border-emerald-500/30"
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <div>
+                                        <h3 className="text-base font-bold text-[var(--on-background)]">
+                                            Identificar al alumno
+                                        </h3>
+                                        <p className="text-xs text-[var(--muted)] mt-0.5">
+                                            Antes de guardar, dinos de quien es esta hoja.
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => setSavePanelOpen(false)}
+                                        className="p-1.5 rounded-lg text-[var(--muted)] hover:text-[var(--on-background)] transition-colors"
+                                    >
+                                        <XCircle size={18} />
+                                    </button>
+                                </div>
+
+                                {/* Show name crop from OCR if available */}
+                                {result?.data?.name_image && (
+                                    <div className="p-3 rounded-xl bg-[var(--input-bg)] border border-[var(--border)]">
+                                        <p className="text-[10px] uppercase tracking-wide text-[var(--muted)] font-semibold mb-2">
+                                            Nombre detectado en la hoja
+                                        </p>
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img
+                                            src={`data:image/jpeg;base64,${result.data.name_image}`}
+                                            alt="Nombre escrito en la hoja"
+                                            className="w-full h-auto rounded bg-white"
+                                        />
+                                    </div>
+                                )}
+
+                                <StudentAutocomplete
+                                    grade={grade}
+                                    value={studentName}
+                                    selectedId={studentId}
+                                    onChange={({ name, studentId: sid }) => {
+                                        setStudentName(name);
+                                        setStudentId(sid);
+                                    }}
+                                    placeholder="Ej: Maximo Morales"
+                                    autoFocus
+                                />
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={() => setSavePanelOpen(false)}
+                                        disabled={saving}
+                                        className="px-4 py-3 rounded-xl bg-[var(--input-bg)] border border-[var(--border)] text-[var(--muted)] font-semibold hover:text-[var(--on-background)] transition-colors disabled:opacity-50"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <motion.button
+                                        whileHover={{ scale: saving ? 1 : 1.02 }}
+                                        whileTap={{ scale: saving ? 1 : 0.98 }}
+                                        onClick={saveResultToDB}
+                                        disabled={saving || !studentName.trim()}
+                                        className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 text-white font-bold shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-shadow disabled:opacity-40"
+                                    >
+                                        <Save size={16} />
+                                        {saving ? 'Guardando...' : 'Guardar'}
+                                    </motion.button>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {saved && (
                             <div className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-semibold">
                                 <CheckCircle2 size={18} />
                                 Resultado guardado

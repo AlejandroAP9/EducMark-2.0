@@ -24,6 +24,7 @@ const STEPS = [
 export const QuickScanFlow: React.FC<QuickScanFlowProps> = ({ onBack }) => {
     const [step, setStep] = useState<QuickScanStep>('setup');
     const [title, setTitle] = useState('');
+    const [grade, setGrade] = useState('');
     const [totalTF, setTotalTF] = useState(0);
     const [totalMC, setTotalMC] = useState(20);
     const [mcOptions, setMcOptions] = useState<4 | 5>(4);
@@ -34,12 +35,14 @@ export const QuickScanFlow: React.FC<QuickScanFlowProps> = ({ onBack }) => {
     const handleSetupComplete = useCallback(
         (data: {
             title: string;
+            grade: string;
             totalTF: number;
             totalMC: number;
             mcOptions: 4 | 5;
             correctAnswers: CorrectAnswers;
         }) => {
             setTitle(data.title);
+            setGrade(data.grade);
             setTotalTF(data.totalTF);
             setTotalMC(data.totalMC);
             setMcOptions(data.mcOptions);
@@ -52,12 +55,14 @@ export const QuickScanFlow: React.FC<QuickScanFlowProps> = ({ onBack }) => {
     const handleSkipToScanner = useCallback(
         (data: {
             title: string;
+            grade: string;
             totalTF: number;
             totalMC: number;
             mcOptions: 4 | 5;
             correctAnswers: CorrectAnswers;
         }) => {
             setTitle(data.title);
+            setGrade(data.grade);
             setTotalTF(data.totalTF);
             setTotalMC(data.totalMC);
             setMcOptions(data.mcOptions);
@@ -70,6 +75,7 @@ export const QuickScanFlow: React.FC<QuickScanFlowProps> = ({ onBack }) => {
     const handleNewAnswerKey = useCallback(() => {
         setStep('setup');
         setTitle('');
+        setGrade('');
         setTotalTF(0);
         setTotalMC(20);
         setMcOptions(4);
@@ -202,6 +208,7 @@ export const QuickScanFlow: React.FC<QuickScanFlowProps> = ({ onBack }) => {
                     >
                         <QuickScanScanner
                             title={title}
+                            grade={grade}
                             totalTF={totalTF}
                             totalMC={totalMC}
                             correctAnswers={correctAnswers}

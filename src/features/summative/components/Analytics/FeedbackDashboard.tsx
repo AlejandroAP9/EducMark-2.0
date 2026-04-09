@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Activity, AlertCircle, CheckCircle, BrainCircuit, Sparkles, ChevronDown, Users, TrendingUp, XCircle, FileText, BarChart3, Download, Loader2, Presentation, Mail, Send } from 'lucide-react';
+import Link from 'next/link';
+import { Activity, AlertCircle, CheckCircle, BrainCircuit, Sparkles, ChevronDown, Users, TrendingUp, XCircle, FileText, BarChart3, Download, Loader2, Presentation, Mail, Send, Zap, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { ClassInsights } from './ClassInsights';
@@ -81,6 +82,7 @@ export const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ initialEva
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [exporting, setExporting] = useState(false);
     const [exportingSlides, setExportingSlides] = useState(false);
+    const [quickScanCount, setQuickScanCount] = useState<number>(0);
 
     // Remedial Plan State
     const [remedialModalOpen, setRemedialModalOpen] = useState(false);
@@ -111,6 +113,14 @@ export const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ initialEva
                         setSelectedEvalId(data[0].id);
                     }
                 }
+
+                // Count QuickScan results (scan_type='quick') for this user — for banner
+                const { count: qsCount } = await supabase
+                    .from('omr_results')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('user_id', user.id)
+                    .eq('scan_type', 'quick');
+                setQuickScanCount(qsCount || 0);
             } catch (err) {
                 console.error('Error fetching evaluations in FeedbackDashboard:', err);
             } finally {
@@ -118,7 +128,7 @@ export const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ initialEva
             }
         };
         fetchEvals();
-    }, []);
+    }, [initialEvalId]);
 
     // Fetch results + blueprint when evaluation changes
     useEffect(() => {
@@ -670,6 +680,41 @@ export const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ initialEva
                     </div>
                 </div>
             </div>
+
+            {/* QuickScan banner: visible whenever the user has any scan_type='quick' results */}
+            {quickScanCount > 0 && (
+                <Link
+                    href="/dashboard/feedback/quickscan"
+                    className="block group"
+                >
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="glass-card-premium p-4 md:p-5 border-cyan-500/25 bg-linear-to-r from-cyan-500/5 to-violet-500/5 relative overflow-hidden"
+                    >
+                        <div className="absolute -right-10 -top-10 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+                        <div className="relative flex items-center justify-between gap-4 flex-wrap">
+                            <div className="flex items-center gap-4 min-w-0">
+                                <div className="w-12 h-12 rounded-xl bg-cyan-500/15 border border-cyan-500/25 flex items-center justify-center text-cyan-400 shrink-0">
+                                    <Zap size={22} />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-sm md:text-base font-bold text-[var(--on-background)]">
+                                        Tenés {quickScanCount} correcci{quickScanCount === 1 ? 'ón' : 'ones'} rápida{quickScanCount === 1 ? '' : 's'} sin asociar
+                                    </p>
+                                    <p className="text-xs md:text-sm text-[var(--muted)] mt-0.5">
+                                        Hojas escaneadas con Corrección Rápida OMR. Vé el análisis agrupado por pauta y día.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-sm font-semibold group-hover:bg-cyan-500/20 transition-colors">
+                                Ver QuickScan Feedback
+                                <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                            </div>
+                        </div>
+                    </motion.div>
+                </Link>
+            )}
 
             {/* Loading / Empty State */}
             {loading ? (

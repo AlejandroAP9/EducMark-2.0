@@ -8,6 +8,7 @@ import type { CorrectAnswers } from '../../types/omrScanner';
 interface QuickScanSetupProps {
     onContinue: (data: {
         title: string;
+        grade: string;
         totalTF: number;
         totalMC: number;
         mcOptions: 4 | 5;
@@ -15,6 +16,7 @@ interface QuickScanSetupProps {
     }) => void;
     onSkipToScanner: (data: {
         title: string;
+        grade: string;
         totalTF: number;
         totalMC: number;
         mcOptions: 4 | 5;
@@ -27,6 +29,7 @@ export const QuickScanSetup: React.FC<QuickScanSetupProps> = ({
     onSkipToScanner,
 }) => {
     const [title, setTitle] = useState('');
+    const [grade, setGrade] = useState('');
     const [totalTF, setTotalTF] = useState(0);
     const [totalMC, setTotalMC] = useState(20);
     const [mcOptions, setMcOptions] = useState<4 | 5>(4);
@@ -48,11 +51,12 @@ export const QuickScanSetup: React.FC<QuickScanSetupProps> = ({
 
     const getData = useCallback(() => ({
         title,
+        grade: grade.trim(),
         totalTF,
         totalMC,
         mcOptions,
         correctAnswers,
-    }), [title, totalTF, totalMC, mcOptions, correctAnswers]);
+    }), [title, grade, totalTF, totalMC, mcOptions, correctAnswers]);
 
     return (
         <motion.div
@@ -88,17 +92,36 @@ export const QuickScanSetup: React.FC<QuickScanSetupProps> = ({
 
             {/* Title + Config */}
             <div className="glass-card-premium p-6 md:p-8 space-y-5">
-                <div>
-                    <label className="text-sm text-[var(--muted)] font-medium block mb-2">
-                        Nombre de la evaluacion (opcional)
-                    </label>
-                    <input
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="Ej: Prueba de Historia U2"
-                        className="w-full px-4 py-2.5 bg-[var(--input-bg)] border border-[var(--border)] rounded-xl text-[var(--on-background)] focus:outline-none focus:border-[var(--primary)] transition-colors"
-                    />
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4">
+                    <div>
+                        <label className="text-sm text-[var(--muted)] font-medium block mb-2">
+                            Nombre de la evaluacion (opcional)
+                        </label>
+                        <input
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            placeholder="Ej: Prueba de Historia U2"
+                            className="w-full px-4 py-2.5 bg-[var(--input-bg)] border border-[var(--border)] rounded-xl text-[var(--on-background)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+                        />
+                    </div>
+                    <div className="sm:w-40">
+                        <label className="text-sm text-[var(--muted)] font-medium block mb-2">
+                            Curso <span className="text-[var(--muted)]/60 font-normal">(opcional)</span>
+                        </label>
+                        <input
+                            value={grade}
+                            onChange={(e) => setGrade(e.target.value)}
+                            placeholder="Ej: 8° Basico"
+                            className="w-full px-4 py-2.5 bg-[var(--input-bg)] border border-[var(--border)] rounded-xl text-[var(--on-background)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+                        />
+                    </div>
                 </div>
+                {grade.trim() && (
+                    <p className="-mt-1 text-xs text-emerald-400/80 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        Se autocompletaran los alumnos de &quot;{grade}&quot; al guardar cada escaneo.
+                    </p>
+                )}
 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
