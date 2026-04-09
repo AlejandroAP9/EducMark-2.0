@@ -42,17 +42,21 @@ interface OMRResultRow {
     user_id: string;
     scan_type: string;
     student_name: string | null;
-    student_id: string | null;
     answers: { tf: (string | null)[]; mc: (string | null)[] };
     score: OMRScore;
     answer_key: CorrectAnswers | null;
     captured_at: string;
+    // All QuickScan-specific fields live in metadata (student_id, title, grade,
+    // mc_options, fingerprint, name_image, debug_info) because the base
+    // omr_results table lacks those columns.
     metadata: {
         title?: string | null;
         grade?: string | null;
         mc_options?: number | null;
         fingerprint?: string | null;
         name_image?: string | null;
+        student_id?: string | null;
+        debug_info?: string | null;
     } | null;
 }
 
@@ -259,7 +263,7 @@ export const QuickScanFeedback: React.FC = () => {
                 const { data, error: qErr } = await supabase
                     .from('omr_results')
                     .select(
-                        'id, user_id, scan_type, student_name, student_id, answers, score, answer_key, captured_at, metadata'
+                        'id, user_id, scan_type, student_name, answers, score, answer_key, captured_at, metadata'
                     )
                     .eq('user_id', userId)
                     .eq('scan_type', 'quick')

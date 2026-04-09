@@ -97,12 +97,17 @@ export const QuickScanScanner: React.FC<QuickScanScannerProps> = ({
             if (!userId) throw new Error('No autenticado');
 
             const fingerprint = answerKeyFingerprint(correctAnswers);
+            // NOTE: omr_results has NO student_id or debug_info columns (checked in prod
+            // on 2026-04-08 — both were silently rejected by PostgREST as 400 from day 1
+            // and nothing was ever persisted despite the green toast). We keep both inside
+            // metadata to avoid a schema migration.
             const metadata = {
                 title: title || null,
                 grade: grade || null,
                 mc_options: mcOptions,
                 fingerprint,
-                // name_image is the base64 crop the backend returns. Optional.
+                student_id: studentId, // null if texto libre
+                debug_info: result.data.debug_info || null,
                 name_image: result.data.name_image || null,
             };
 
@@ -111,21 +116,23 @@ export const QuickScanScanner: React.FC<QuickScanScannerProps> = ({
                 scan_type: 'quick',
                 evaluation_id: null,
                 student_name: trimmedName,
-                student_id: studentId,
                 answers: result.data.answers,
                 score: result.data.score,
                 answer_key: correctAnswers,
-                debug_info: result.data.debug_info || null,
                 metadata,
             });
 
-            if (insertError) throw insertError;
+            if (insertError) {
+                console.error('[QuickScan] Supabase insert error:', insertError);
+                throw insertError;
+            }
             setSaved(true);
             setSavePanelOpen(false);
             toast.success(`Resultado de ${trimmedName} guardado`);
         } catch (err) {
             console.error('[QuickScan] Error saving:', err);
-            toast.error('Error al guardar resultado');
+            const msg = err instanceof Error ? err.message : 'Error desconocido';
+            toast.error(`Error al guardar: ${msg}`);
         } finally {
             setSaving(false);
         }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ClipboardCheck, FileText, ScanLine, CheckCircle2 } from 'lucide-react';
 import type { CorrectAnswers } from '../../types/omrScanner';
@@ -21,6 +21,59 @@ const STEPS = [
     { key: 'results' as const, label: 'Resultados', icon: CheckCircle2 },
 ];
 
+// localStorage: persist the last configured pauta so the profe does not have to
+// re-tipear it for every scan or after a browser reload.
+const PAUTA_STORAGE_KEY = 'educmark:quickscan:pauta';
+
+interface PersistedPauta {
+    title: string;
+    grade: string;
+    totalTF: number;
+    totalMC: number;
+    mcOptions: 4 | 5;
+    correctAnswers: CorrectAnswers;
+    savedAt: string; // ISO
+}
+
+function loadPersistedPauta(): PersistedPauta | null {
+    if (typeof window === 'undefined') return null;
+    try {
+        const raw = localStorage.getItem(PAUTA_STORAGE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as PersistedPauta;
+        if (
+            typeof parsed !== 'object' ||
+            parsed == null ||
+            typeof parsed.totalMC !== 'number' ||
+            !parsed.correctAnswers
+        ) {
+            return null;
+        }
+        return parsed;
+    } catch {
+        return null;
+    }
+}
+
+function savePersistedPauta(p: Omit<PersistedPauta, 'savedAt'>): void {
+    if (typeof window === 'undefined') return;
+    try {
+        const payload: PersistedPauta = { ...p, savedAt: new Date().toISOString() };
+        localStorage.setItem(PAUTA_STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+        // ignore quota errors
+    }
+}
+
+function clearPersistedPauta(): void {
+    if (typeof window === 'undefined') return;
+    try {
+        localStorage.removeItem(PAUTA_STORAGE_KEY);
+    } catch {
+        // ignore
+    }
+}
+
 export const QuickScanFlow: React.FC<QuickScanFlowProps> = ({ onBack }) => {
     const [step, setStep] = useState<QuickScanStep>('setup');
     const [title, setTitle] = useState('');
@@ -29,6 +82,23 @@ export const QuickScanFlow: React.FC<QuickScanFlowProps> = ({ onBack }) => {
     const [totalMC, setTotalMC] = useState(20);
     const [mcOptions, setMcOptions] = useState<4 | 5>(4);
     const [correctAnswers, setCorrectAnswers] = useState<CorrectAnswers>({ tf: [], mc: [] });
+    const [hasHydrated, setHasHydrated] = useState(false);
+
+    // Hydrate from localStorage on mount. If there is a saved pauta, jump
+    // straight to 'scanner' so the profe can start scanning immediately.
+    useEffect(() => {
+        const saved = loadPersistedPauta();
+        if (saved) {
+            setTitle(saved.title);
+            setGrade(saved.grade);
+            setTotalTF(saved.totalTF);
+            setTotalMC(saved.totalMC);
+            setMcOptions(saved.mcOptions);
+            setCorrectAnswers(saved.correctAnswers);
+            setStep('scanner');
+        }
+        setHasHydrated(true);
+    }, []);
 
     const currentStepIndex = STEPS.findIndex((s) => s.key === step);
 
@@ -47,6 +117,7 @@ export const QuickScanFlow: React.FC<QuickScanFlowProps> = ({ onBack }) => {
             setTotalMC(data.totalMC);
             setMcOptions(data.mcOptions);
             setCorrectAnswers(data.correctAnswers);
+            savePersistedPauta(data);
             setStep('sheet');
         },
         []
@@ -67,12 +138,14 @@ export const QuickScanFlow: React.FC<QuickScanFlowProps> = ({ onBack }) => {
             setTotalMC(data.totalMC);
             setMcOptions(data.mcOptions);
             setCorrectAnswers(data.correctAnswers);
+            savePersistedPauta(data);
             setStep('scanner');
         },
         []
     );
 
     const handleNewAnswerKey = useCallback(() => {
+        clearPersistedPauta();
         setStep('setup');
         setTitle('');
         setGrade('');
@@ -81,6 +154,10 @@ export const QuickScanFlow: React.FC<QuickScanFlowProps> = ({ onBack }) => {
         setMcOptions(4);
         setCorrectAnswers({ tf: [], mc: [] });
     }, []);
+
+    // Show "pauta restaurada" banner only after hydration and only if there's
+    // actually a non-empty saved pauta (meaning: we jumped past setup on mount).
+    const showRestoredBanner = hasHydrated && step !== 'setup' && (totalTF + totalMC > 0);
 
     return (
         <div className={`mx-auto px-4 py-6 animate-fade-in ${step === 'sheet' ? 'max-w-400' : 'max-w-4xl'}`}>
@@ -101,6 +178,30 @@ export const QuickScanFlow: React.FC<QuickScanFlowProps> = ({ onBack }) => {
                     </p>
                 </div>
             </div>
+
+            {showRestoredBanner && (
+                <div className="mb-4 p-3 rounded-xl bg-violet-500/10 border border-violet-500/25 flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-2 text-sm text-violet-200 min-w-0">
+                        <ClipboardCheck size={16} className="text-violet-400 shrink-0" />
+                        <span className="truncate">
+                            Pauta restaurada:{' '}
+                            <strong className="text-[var(--on-background)]">
+                                {title || 'Correccion Rapida'}
+                            </strong>
+                            {grade && <span className="text-[var(--muted)]"> · {grade}</span>}
+                            <span className="text-[var(--muted)]">
+                                {' '}· {totalTF} V/F + {totalMC} SM
+                            </span>
+                        </span>
+                    </div>
+                    <button
+                        onClick={handleNewAnswerKey}
+                        className="text-xs font-semibold text-violet-300 hover:text-violet-200 underline underline-offset-2"
+                    >
+                        Cambiar pauta
+                    </button>
+                </div>
+            )}
 
             {/* Stepper */}
             <div className="flex items-center justify-between mb-8 px-2">
