@@ -254,11 +254,21 @@ export const QuickScanScanner: React.FC<QuickScanScannerProps> = ({
         try {
             const compressed = await compressDataUrl(capturedImage);
 
-            // ── Pre-flight validation: decodificar QR y comparar conteo de preguntas ──
-            // Si el QR indica que la hoja fue generada con N preguntas distintas a la
-            // pauta activa, el engine leería posiciones equivocadas y los resultados
-            // saldrían desfasados. Avisamos antes de procesar. BarcodeDetector no
-            // existe en iOS Safari/Firefox — si no está disponible, skip silencioso.
+            // ── QR como fuente de verdad del layout de la hoja ──
+            // El backend infiere la geometría de bubbles a partir del length de
+            // correct_answers_json. Si la pauta activa tiene menos preguntas que
+            // la hoja física, el engine leería posiciones equivocadas y las
+            // últimas filas saldrían desfasadas. Solución: leer el QR de la hoja
+            // (contiene answers.tf/mc.length = conteo real impreso), y mandarle
+            // al backend una pauta "padded" con ese conteo para que el engine lea
+            // exactamente las N burbujas que existen. Después recalculateScore
+            // compara solo las primeras M preguntas que tiene la pauta real.
+            //
+            // BarcodeDetector no existe en iOS Safari/Firefox → skip silencioso,
+            // y el flujo continúa asumiendo que pauta = layout (como antes).
+            let sheetTotalTF = totalTF;
+            let sheetTotalMC = totalMC;
+            let payloadCorrectAnswers: CorrectAnswers = correctAnswers;
             try {
                 const detectorCtor = (window as typeof window & {
                     BarcodeDetector?: new (opts: { formats: string[] }) => {
@@ -275,18 +285,23 @@ export const QuickScanScanner: React.FC<QuickScanScannerProps> = ({
                         if (raw) {
                             const qrData = decryptQRData(raw);
                             if (qrData?.answers) {
-                                const sheetTf = qrData.answers.tf?.length ?? 0;
-                                const sheetMc = qrData.answers.mc?.length ?? 0;
-                                if (sheetTf !== totalTF || sheetMc !== totalMC) {
-                                    clearInterval(stepInterval);
-                                    bitmap.close();
-                                    setError(
-                                        `Esta hoja fue generada con ${sheetTf} V/F + ${sheetMc} SM, ` +
-                                        `pero tu pauta actual tiene ${totalTF} V/F + ${totalMC} SM. ` +
-                                        `Reimprime la hoja desde "Hoja" o ajusta la pauta en "Pauta" para que coincida.`
-                                    );
-                                    setPhase('preview');
-                                    return;
+                                const qrTf = qrData.answers.tf?.length ?? 0;
+                                const qrMc = qrData.answers.mc?.length ?? 0;
+                                if (qrTf > 0 || qrMc > 0) {
+                                    sheetTotalTF = qrTf;
+                                    sheetTotalMC = qrMc;
+                                    // Padding: si la pauta tiene menos preguntas que
+                                    // la hoja, rellenamos con 'A' (placeholder — se
+                                    // descarta en recalculateScore porque solo itera
+                                    // sobre correctAnswers originales).
+                                    const padTf = [...correctAnswers.tf];
+                                    while (padTf.length < qrTf) padTf.push('V');
+                                    const padMc = [...correctAnswers.mc];
+                                    while (padMc.length < qrMc) padMc.push('A');
+                                    payloadCorrectAnswers = {
+                                        tf: padTf.slice(0, qrTf),
+                                        mc: padMc.slice(0, qrMc),
+                                    };
                                 }
                             }
                         }
@@ -319,12 +334,14 @@ export const QuickScanScanner: React.FC<QuickScanScannerProps> = ({
                     const url = joinBaseAndPath(base, '/api/v1/omr/process-base64');
                     const jsonPayload = JSON.stringify({
                         image_base64: compressed,
-                        total_questions: totalTF + totalMC,
+                        total_questions: sheetTotalTF + sheetTotalMC,
                         // 'mixed' cuando hay TF + MC. Si mandamos 'mc' el backend
                         // resetea inferred_tf_count = 0 y descarta toda la sección TF
                         // (main.py:353-356 en assessment-api).
-                        question_type: totalTF > 0 && totalMC > 0 ? 'mixed' : (totalTF > 0 ? 'tf' : 'mc'),
-                        correct_answers_json: JSON.stringify(correctAnswers),
+                        question_type: sheetTotalTF > 0 && sheetTotalMC > 0 ? 'mixed' : (sheetTotalTF > 0 ? 'tf' : 'mc'),
+                        // payloadCorrectAnswers puede ser la pauta real O una padded
+                        // si la hoja tiene más preguntas (ver bloque QR arriba).
+                        correct_answers_json: JSON.stringify(payloadCorrectAnswers),
                     });
 
                     const response = await fetchWithTimeout(
