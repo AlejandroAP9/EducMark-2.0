@@ -37,19 +37,32 @@ export const OMR_GEOMETRY = {
   tf_col_width: 10,      // mm between V and F centers
   tf_label_offset: 10,   // mm left of first bubble for "1." label
 
-  // MC Section — Column 1
+  // MC Section — Column 1 (2-col layout, legacy)
   mc1_origin_x: 104,     // mm from left edge
   mc1_origin_y: 116,     // mm from top edge
   mc_row_height: 7,      // mm between row centers
   mc_col_width: 8,       // mm between A B C D E centers
 
-  // MC Section — Column 2
+  // MC Section — Column 2 (2-col layout, legacy)
   mc2_origin_x: 156,     // mm from left
   mc2_origin_y: 116,     // mm from top
+
+  // ── 3-COL LAYOUT (nuevo, fijo 15 TF + 45 MC × 5 opts) ──
+  // Se activa automáticamente cuando mc_count > 40.
+  // Anchos reducidos (col_width 7mm vs 8mm) para que quepan 3 columnas
+  // con 5 opciones (A-E) cada una en página Legal.
+  // Las hojas antiguas (mc_count ≤ 40) siguen usando mc1/mc2 de arriba.
+  mc1_3col_origin_x: 67,  // Col 1: bubbles 67-95mm
+  mc2_3col_origin_x: 110, // Col 2: bubbles 110-138mm
+  mc3_3col_origin_x: 153, // Col 3: bubbles 153-181mm
+  mc_3col_col_width: 7,   // Ancho reducido para caber 3 cols en legal
 
   // Section headers
   header_y: 106,         // mm from top — section title baseline
 } as const;
+
+// Umbral para activar el layout de 3 columnas
+export const MC_3COL_THRESHOLD = 40;
 
 export interface AnswerSheetData {
   institutionLogo?: string;
@@ -85,6 +98,7 @@ export interface BubbleCoord {
 
 export interface OMRBlueprint {
   version: 2;
+  layout: '2col' | '3col';
   page_size: { width: number; height: number };
   anchors: {
     top_left: { x: number; y: number; size: number };
@@ -98,19 +112,38 @@ export interface OMRBlueprint {
     tf: { origin_x: number; origin_y: number; row_height: number; col_width: number; rows: number; labels: string[] };
     mc1: { origin_x: number; origin_y: number; row_height: number; col_width: number; rows: number; labels: string[] };
     mc2: { origin_x: number; origin_y: number; row_height: number; col_width: number; rows: number; labels: string[] };
+    mc3?: { origin_x: number; origin_y: number; row_height: number; col_width: number; rows: number; labels: string[] };
   };
   bubbles: BubbleCoord[];
 }
 
 export function generateOMRBlueprint(tfCount: number, mcCount: number, mcOptionCount: 4 | 5 = 5): OMRBlueprint {
   const G = OMR_GEOMETRY;
-  const halfMC = Math.ceil(mcCount / 2);
-  const mc2Count = mcCount - halfMC;
+  const use3Col = mcCount > MC_3COL_THRESHOLD;
+
+  // Column distribution
+  let mc1Count: number, mc2Count: number, mc3Count: number;
+  if (use3Col) {
+    mc1Count = Math.ceil(mcCount / 3);
+    mc2Count = Math.ceil((mcCount - mc1Count) / 2);
+    mc3Count = mcCount - mc1Count - mc2Count;
+  } else {
+    mc1Count = Math.ceil(mcCount / 2);
+    mc2Count = mcCount - mc1Count;
+    mc3Count = 0;
+  }
+
+  // Per-layout MC column origins + col width
+  const mc1X = use3Col ? G.mc1_3col_origin_x : G.mc1_origin_x;
+  const mc2X = use3Col ? G.mc2_3col_origin_x : G.mc2_origin_x;
+  const mc3X = G.mc3_3col_origin_x;
+  const mcColW = use3Col ? G.mc_3col_col_width : G.mc_col_width;
 
   const bubbles: BubbleCoord[] = [];
+  const tfLabels = ['V', 'F'];
+  const mcLabels = ['A', 'B', 'C', 'D', 'E'].slice(0, mcOptionCount);
 
   // TF bubbles
-  const tfLabels = ['V', 'F'];
   for (let row = 0; row < tfCount; row++) {
     for (let col = 0; col < tfLabels.length; col++) {
       bubbles.push({
@@ -124,14 +157,13 @@ export function generateOMRBlueprint(tfCount: number, mcCount: number, mcOptionC
   }
 
   // MC Col 1
-  const mcLabels = ['A', 'B', 'C', 'D', 'E'].slice(0, mcOptionCount);
-  for (let row = 0; row < halfMC; row++) {
+  for (let row = 0; row < mc1Count; row++) {
     for (let col = 0; col < mcLabels.length; col++) {
       bubbles.push({
         question: row + 1,
         type: 'mc',
         option: mcLabels[col],
-        x_mm: G.mc1_origin_x + col * G.mc_col_width,
+        x_mm: mc1X + col * mcColW,
         y_mm: G.mc1_origin_y + row * G.mc_row_height,
       });
     }
@@ -141,17 +173,70 @@ export function generateOMRBlueprint(tfCount: number, mcCount: number, mcOptionC
   for (let row = 0; row < mc2Count; row++) {
     for (let col = 0; col < mcLabels.length; col++) {
       bubbles.push({
-        question: halfMC + row + 1,
+        question: mc1Count + row + 1,
         type: 'mc',
         option: mcLabels[col],
-        x_mm: G.mc2_origin_x + col * G.mc_col_width,
+        x_mm: mc2X + col * mcColW,
         y_mm: G.mc2_origin_y + row * G.mc_row_height,
       });
     }
   }
 
+  // MC Col 3 (solo en 3-col mode)
+  if (use3Col) {
+    for (let row = 0; row < mc3Count; row++) {
+      for (let col = 0; col < mcLabels.length; col++) {
+        bubbles.push({
+          question: mc1Count + mc2Count + row + 1,
+          type: 'mc',
+          option: mcLabels[col],
+          x_mm: mc3X + col * mcColW,
+          y_mm: G.mc2_origin_y + row * G.mc_row_height,
+        });
+      }
+    }
+  }
+
+  const sections: OMRBlueprint['sections'] = {
+    tf: {
+      origin_x: G.tf_origin_x,
+      origin_y: G.tf_origin_y,
+      row_height: G.tf_row_height,
+      col_width: G.tf_col_width,
+      rows: tfCount,
+      labels: tfLabels,
+    },
+    mc1: {
+      origin_x: mc1X,
+      origin_y: G.mc1_origin_y,
+      row_height: G.mc_row_height,
+      col_width: mcColW,
+      rows: mc1Count,
+      labels: mcLabels,
+    },
+    mc2: {
+      origin_x: mc2X,
+      origin_y: G.mc2_origin_y,
+      row_height: G.mc_row_height,
+      col_width: mcColW,
+      rows: mc2Count,
+      labels: mcLabels,
+    },
+  };
+  if (use3Col) {
+    sections.mc3 = {
+      origin_x: mc3X,
+      origin_y: G.mc2_origin_y,
+      row_height: G.mc_row_height,
+      col_width: mcColW,
+      rows: mc3Count,
+      labels: mcLabels,
+    };
+  }
+
   return {
     version: 2,
+    layout: use3Col ? '3col' : '2col',
     page_size: { width: G.page_width, height: G.page_height },
     anchors: {
       top_left: { x: G.anchor_margin, y: G.anchor_margin, size: G.anchor_size },
@@ -161,32 +246,7 @@ export function generateOMRBlueprint(tfCount: number, mcCount: number, mcOptionC
     },
     quiet_zone: G.quiet_zone,
     bubble_diameter: G.bubble_diameter,
-    sections: {
-      tf: {
-        origin_x: G.tf_origin_x,
-        origin_y: G.tf_origin_y,
-        row_height: G.tf_row_height,
-        col_width: G.tf_col_width,
-        rows: tfCount,
-        labels: tfLabels,
-      },
-      mc1: {
-        origin_x: G.mc1_origin_x,
-        origin_y: G.mc1_origin_y,
-        row_height: G.mc_row_height,
-        col_width: G.mc_col_width,
-        rows: halfMC,
-        labels: mcLabels,
-      },
-      mc2: {
-        origin_x: G.mc2_origin_x,
-        origin_y: G.mc2_origin_y,
-        row_height: G.mc_row_height,
-        col_width: G.mc_col_width,
-        rows: mc2Count,
-        labels: mcLabels,
-      },
-    },
+    sections,
     bubbles,
   };
 }
@@ -255,18 +315,35 @@ export const generateAnswerSheetPageHTML = (data: AnswerSheetData): string => {
   }).join('');
 
   const mcLabels = ['A', 'B', 'C', 'D', 'E'].slice(0, mcOptionCount);
-  const halfMC = Math.ceil(totalQuestions.multipleChoice / 2);
-  const mc2Count = totalQuestions.multipleChoice - halfMC;
+  const mcTotal = totalQuestions.multipleChoice;
+  const use3Col = mcTotal > MC_3COL_THRESHOLD;
+  let mc1Count: number, mc2Count: number, mc3Count: number;
+  if (use3Col) {
+    mc1Count = Math.ceil(mcTotal / 3);
+    mc2Count = Math.ceil((mcTotal - mc1Count) / 2);
+    mc3Count = mcTotal - mc1Count - mc2Count;
+  } else {
+    mc1Count = Math.ceil(mcTotal / 2);
+    mc2Count = mcTotal - mc1Count;
+    mc3Count = 0;
+  }
+
+  // Layout-aware column origins
+  const mc1X = use3Col ? G.mc1_3col_origin_x : G.mc1_origin_x;
+  const mc2X = use3Col ? G.mc2_3col_origin_x : G.mc2_origin_x;
+  const mc3X = G.mc3_3col_origin_x;
+  const mcColW = use3Col ? G.mc_3col_col_width : G.mc_col_width;
+  const mcLabelOffset = use3Col ? 9 : 10.8;
 
   const generateMCColumn = (startQ: number, count: number, originX: number, originY: number) => {
     let html = '';
     for (let i = 0; i < count; i++) {
       const rowY = originY + i * G.mc_row_height;
-      html += `<div style="position: absolute; left: ${originX - 10.8}mm; top: ${rowY - 2.35}mm; width: 7.2mm; text-align: right;">
-                <span style="font-size: 11pt; font-weight: 700;">${startQ + i}.</span>
+      html += `<div style="position: absolute; left: ${originX - mcLabelOffset}mm; top: ${rowY - 2.35}mm; width: ${mcLabelOffset - 1}mm; text-align: right;">
+                <span style="font-size: 10pt; font-weight: 700;">${startQ + i}.</span>
             </div>`;
       for (let j = 0; j < mcLabels.length; j++) {
-        const bubbleX = originX + j * G.mc_col_width;
+        const bubbleX = originX + j * mcColW;
         html += `<div style="
                     position: absolute;
                     left: ${bubbleX - G.bubble_diameter / 2}mm;
@@ -274,22 +351,27 @@ export const generateAnswerSheetPageHTML = (data: AnswerSheetData): string => {
                     width: ${G.bubble_diameter}mm; height: ${G.bubble_diameter}mm;
                     border: ${G.bubble_stroke}mm solid #000; border-radius: 50%;
                     display: flex; align-items: center; justify-content: center;
-                    font-size: 10pt; font-weight: 700;
+                    font-size: ${use3Col ? '8.5pt' : '10pt'}; font-weight: 700;
                 ">${mcLabels[j]}</div>`;
       }
     }
     return html;
   };
 
-  const mc1HTML = generateMCColumn(1, halfMC, G.mc1_origin_x, G.mc1_origin_y);
-  const mc2HTML = generateMCColumn(halfMC + 1, mc2Count, G.mc2_origin_x, G.mc2_origin_y);
+  const mc1HTML = generateMCColumn(1, mc1Count, mc1X, G.mc1_origin_y);
+  const mc2HTML = generateMCColumn(mc1Count + 1, mc2Count, mc2X, G.mc2_origin_y);
+  const mc3HTML = use3Col
+    ? generateMCColumn(mc1Count + mc2Count + 1, mc3Count, mc3X, G.mc2_origin_y)
+    : '';
 
   const tfHeaderHTML = `<div style="position: absolute; left: ${G.tf_origin_x - G.tf_label_offset}mm; top: ${G.header_y - 7}mm;">
-        <div style="font-size: 11pt; font-weight: 800; text-transform: uppercase; border-bottom: 0.75mm solid #000; padding-bottom: 1.5mm; width: 58mm;">I. VERDADERO O FALSO</div>
+        <div style="font-size: ${use3Col ? '9.5pt' : '11pt'}; font-weight: 800; text-transform: uppercase; border-bottom: 0.75mm solid #000; padding-bottom: 1.5mm; width: ${use3Col ? '40mm' : '58mm'};">I. VERDADERO O FALSO</div>
     </div>`;
 
-  const mc1HeaderHTML = `<div style="position: absolute; left: ${G.mc1_origin_x - 7}mm; top: ${G.header_y - 7}mm;">
-        <div style="font-size: 11pt; font-weight: 800; text-transform: uppercase; border-bottom: 0.75mm solid #000; padding-bottom: 1.5mm; width: 106mm;">II. SELECCIÓN MÚLTIPLE</div>
+  const mc1HeaderLeft = use3Col ? G.mc1_3col_origin_x - 9 : G.mc1_origin_x - 7;
+  const mc1HeaderWidth = use3Col ? 135 : 106;
+  const mc1HeaderHTML = `<div style="position: absolute; left: ${mc1HeaderLeft}mm; top: ${G.header_y - 7}mm;">
+        <div style="font-size: ${use3Col ? '9.5pt' : '11pt'}; font-weight: 800; text-transform: uppercase; border-bottom: 0.75mm solid #000; padding-bottom: 1.5mm; width: ${mc1HeaderWidth}mm;">II. SELECCIÓN MÚLTIPLE</div>
     </div>`;
 
   const logoSection = institutionLogo
@@ -371,14 +453,18 @@ export const generateAnswerSheetPageHTML = (data: AnswerSheetData): string => {
         ${tfRowsHTML}
         ${mc1HTML}
         ${mc2HTML}
+        ${mc3HTML}
 
-        <div style="position: absolute; bottom: 30mm; left: 22mm; right: 22mm;">
+        <!-- Footer subido: antes estaba a bottom:14-30mm y se cortaba en
+             algunas impresoras. Ahora a bottom:50-80mm para garantizar
+             zona segura de impresión en A4/Legal en cualquier printer. -->
+        <div style="position: absolute; bottom: 80mm; left: 22mm; right: 22mm;">
             <div style="border-top: 0.45mm dashed #8a8a9a; height: 0;"></div>
         </div>
-        <div style="position: absolute; bottom: 14mm; left: 22mm; right: 22mm;">
+        <div style="position: absolute; bottom: 50mm; left: 22mm; right: 22mm;">
             <p style="font-size: 9.6pt; text-align: center; line-height: 1.32; color: #2a2a3e;">
                 <span style="font-weight: 800; color: #5b21b6;">INSTRUCCIONES:</span>
-                Use lápiz pasta negro o mina oscuro. Rellene el óvalo completamente sin salirse de los bordes. Evite arrugar o manchar la hoja fuera de los espacios asignados.
+                Use lápiz pasta negro o mina oscuro. Rellene el óvalo completamente sin salirse de los bordes. Responda solo hasta la pregunta que su profesor indique.
             </p>
             <div style="display: flex; gap: 12mm; justify-content: center; margin-top: 3mm; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 1.8mm;">

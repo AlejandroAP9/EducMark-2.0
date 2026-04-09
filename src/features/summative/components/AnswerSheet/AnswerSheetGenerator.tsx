@@ -49,7 +49,10 @@ export const AnswerSheetGenerator: React.FC<AnswerSheetGeneratorProps> = ({
     const [logo, setLogo] = useState<string | null>(null);
     const [isDownloading, setIsDownloading] = useState(false);
     const [showSideBySide, setShowSideBySide] = useState(false);
-    const [mcOptions, setMcOptions] = useState<4 | 5>(4);
+    // Plantilla estándar fija: 15 V/F + 45 SM × 5 opciones (A-E).
+    // El profe completa una pauta de N ≤ 45 y el alumno solo rellena hasta
+    // donde el profe indique; las burbujas extra se ignoran en la corrección.
+    const [mcOptions] = useState<4 | 5>(5);
     // EV-20: Number of row versions (2 = A/B, 3 = A/B/C, 4 = A/B/C/D)
     const [versionCount, setVersionCount] = useState<2 | 3 | 4>(2);
 
@@ -66,9 +69,10 @@ export const AnswerSheetGenerator: React.FC<AnswerSheetGeneratorProps> = ({
     const [oa, setOa] = useState(evaluationData?.oa || 'OA 02');
     const [idealScore, setIdealScore] = useState(50);
 
-    // FIX 1: Editable question counts
-    const [trueFalseCount, setTrueFalseCount] = useState(evaluationData?.answers?.tf?.length || 10);
-    const [multipleChoiceCount, setMultipleChoiceCount] = useState(evaluationData?.answers?.mc?.length || 40);
+    // Plantilla fija: 15 V/F + 45 SM. Ya no se editan desde el sidebar.
+    // El layout estándar evita mismatches entre hoja física y pauta tipeada.
+    const [trueFalseCount] = useState(15);
+    const [multipleChoiceCount] = useState(45);
     const hasEvalData = !!evaluationData?.answers;
 
     // FIX 2: Auto-save state
@@ -146,8 +150,8 @@ export const AnswerSheetGenerator: React.FC<AnswerSheetGeneratorProps> = ({
                         mc.push(item.correct_answer || 'A');
                     }
                 }
-                setTrueFalseCount(tf.length);
-                setMultipleChoiceCount(mc.length);
+                // Plantilla fija 15+45: se ignoran tf.length/mc.length para el
+                // layout, pero la pauta se usa tal cual para la corrección.
                 setLoadedAnswers({ tf, mc });
                 setIdealScore(tf.length + mc.length);
             }
@@ -621,70 +625,26 @@ export const AnswerSheetGenerator: React.FC<AnswerSheetGeneratorProps> = ({
                                         placeholder="50"
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-xs text-[var(--muted)] mb-1">Alternativas por pregunta</label>
-                                    <select
-                                        value={mcOptions}
-                                        onChange={(e) => setMcOptions(parseInt(e.target.value) as 4 | 5)}
-                                        className="w-full px-3 py-2 text-sm text-[var(--on-background)] bg-[var(--input-bg)] border border-[var(--border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all"
-                                    >
-                                        <option value={4}>4 alternativas (A-D)</option>
-                                        <option value={5}>5 alternativas (A-E)</option>
-                                    </select>
-                                </div>
                             </div>
                         </div>
 
-                        {/* FIX 1: Editable question counts */}
+                        {/* Plantilla estándar fija (no editable) */}
                         <div className="glass-card-premium p-5">
-                            <h3 className="font-semibold text-[var(--on-background)] mb-4">Cantidad de Preguntas</h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-xs text-[var(--muted)] mb-1">Verdadero / Falso</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        max="30"
-                                        value={trueFalseCount}
-                                        onChange={(e) => {
-                                            const v = Math.max(0, Math.min(30, parseInt(e.target.value) || 0));
-                                            setTrueFalseCount(v);
-                                            if (!hasEvalData) setLoadedAnswers(null);
-                                        }}
-                                        disabled={hasEvalData}
-                                        className="w-full px-3 py-2 text-sm text-[var(--on-background)] bg-[var(--input-bg)] border border-[var(--border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                    />
+                            <h3 className="font-semibold text-[var(--on-background)] mb-3">Plantilla Estándar</h3>
+                            <div className="bg-linear-to-br from-[var(--primary)]/10 to-[var(--secondary)]/10 rounded-lg p-4 border border-[var(--primary)]/20">
+                                <div className="flex items-baseline gap-2 mb-2">
+                                    <span className="text-2xl font-bold text-[var(--primary)]">{trueFalseCount}</span>
+                                    <span className="text-xs text-[var(--muted)]">Verdadero/Falso</span>
                                 </div>
-                                <div>
-                                    <label className="block text-xs text-[var(--muted)] mb-1">Selección Múltiple</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        max="60"
-                                        value={multipleChoiceCount}
-                                        onChange={(e) => {
-                                            const v = Math.max(0, Math.min(60, parseInt(e.target.value) || 0));
-                                            setMultipleChoiceCount(v);
-                                            if (!hasEvalData) setLoadedAnswers(null);
-                                        }}
-                                        disabled={hasEvalData}
-                                        className="w-full px-3 py-2 text-sm text-[var(--on-background)] bg-[var(--input-bg)] border border-[var(--border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                    />
+                                <div className="flex items-baseline gap-2 mb-3">
+                                    <span className="text-2xl font-bold text-[var(--primary)]">{multipleChoiceCount}</span>
+                                    <span className="text-xs text-[var(--muted)]">Selección Múltiple (A-E)</span>
                                 </div>
-                                <div className="bg-gradient-to-br from-[var(--primary)]/10 to-[var(--secondary)]/10 rounded-lg p-3 border border-[var(--primary)]/20">
-                                    <ul className="text-xs text-[var(--on-background)] space-y-1 opacity-80">
-                                        <li>• {trueFalseCount} V/F + {multipleChoiceCount} SM = <strong>{trueFalseCount + multipleChoiceCount}</strong> preguntas</li>
-                                        <li>• {mcOptions === 4 ? '4 alternativas (A-D)' : '5 alternativas (A-E)'}</li>
-                                    </ul>
-                                    {hasEvalData && (
-                                        <p className="text-[10px] text-[var(--muted)] mt-2">
-                                            Cantidades fijas: cargadas desde la evaluación.
-                                        </p>
-                                    )}
-                                    <p className="text-[10px] text-[var(--muted)] mt-1">
-                                        El QR contiene las respuestas correctas encriptadas.
-                                    </p>
-                                </div>
+                                <p className="text-[11px] text-[var(--muted)] leading-relaxed">
+                                    Hoja fija con {trueFalseCount + multipleChoiceCount} preguntas. Imprime una vez
+                                    y úsala para cualquier prueba: el alumno responde solo hasta donde indiques, y
+                                    la corrección compara solo las preguntas de tu pauta.
+                                </p>
                             </div>
                         </div>
 
