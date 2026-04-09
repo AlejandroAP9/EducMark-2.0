@@ -49,13 +49,23 @@ export const OMR_GEOMETRY = {
 
   // ── 3-COL LAYOUT (nuevo, fijo 15 TF + 45 MC × 5 opts) ──
   // Se activa automáticamente cuando mc_count > 40.
-  // Anchos reducidos (col_width 7mm vs 8mm) para que quepan 3 columnas
-  // con 5 opciones (A-E) cada una en página Legal.
+  // Geometría calculada para aprovechar los 180mm usables entre anchors
+  // (18mm de margin cada lado en hoja legal 216mm).
+  //
+  // Distribución horizontal:
+  //   TF bubbles:  x=36 (V), x=46 (F)                  [labels 24-34]
+  //   MC col1:     A=68, B=75, C=82, D=89, E=96        [labels 56-64]
+  //   MC col2:     A=111, B=118, C=125, D=132, E=139   [labels 99-107]
+  //   MC col3:     A=154, B=161, C=168, D=175, E=182   [labels 142-150]
+  //
+  // E col3 right edge = 182+2.75 = 184.75mm → clear del quiet zone
+  // del anchor derecho (bottom-right) que empieza en x=188mm (191-3).
+  //
   // Las hojas antiguas (mc_count ≤ 40) siguen usando mc1/mc2 de arriba.
-  mc1_3col_origin_x: 67,  // Col 1: bubbles 67-95mm
-  mc2_3col_origin_x: 110, // Col 2: bubbles 110-138mm
-  mc3_3col_origin_x: 153, // Col 3: bubbles 153-181mm
-  mc_3col_col_width: 7,   // Ancho reducido para caber 3 cols en legal
+  mc1_3col_origin_x: 68,
+  mc2_3col_origin_x: 111,
+  mc3_3col_origin_x: 154,
+  mc_3col_col_width: 7,
 
   // Section headers
   header_y: 106,         // mm from top — section title baseline
@@ -333,14 +343,18 @@ export const generateAnswerSheetPageHTML = (data: AnswerSheetData): string => {
   const mc2X = use3Col ? G.mc2_3col_origin_x : G.mc2_origin_x;
   const mc3X = G.mc3_3col_origin_x;
   const mcColW = use3Col ? G.mc_3col_col_width : G.mc_col_width;
-  const mcLabelOffset = use3Col ? 9 : 10.8;
+  // mcLabelOffset: distancia entre el borde izq del label box y el centro
+  // de la columna A. Para 3-col subimos a 12mm porque los números 2 dígitos
+  // ("45.") pisaban la burbuja A con el valor anterior (9mm).
+  const mcLabelOffset = use3Col ? 12 : 10.8;
+  const mcLabelBoxWidth = use3Col ? 8 : 7.2;
 
   const generateMCColumn = (startQ: number, count: number, originX: number, originY: number) => {
     let html = '';
     for (let i = 0; i < count; i++) {
       const rowY = originY + i * G.mc_row_height;
-      html += `<div style="position: absolute; left: ${originX - mcLabelOffset}mm; top: ${rowY - 2.35}mm; width: ${mcLabelOffset - 1}mm; text-align: right;">
-                <span style="font-size: 10pt; font-weight: 700;">${startQ + i}.</span>
+      html += `<div style="position: absolute; left: ${originX - mcLabelOffset}mm; top: ${rowY - 2.35}mm; width: ${mcLabelBoxWidth}mm; text-align: right;">
+                <span style="font-size: ${use3Col ? '9pt' : '10pt'}; font-weight: 700;">${startQ + i}.</span>
             </div>`;
       for (let j = 0; j < mcLabels.length; j++) {
         const bubbleX = originX + j * mcColW;
@@ -364,14 +378,20 @@ export const generateAnswerSheetPageHTML = (data: AnswerSheetData): string => {
     ? generateMCColumn(mc1Count + mc2Count + 1, mc3Count, mc3X, G.mc2_origin_y)
     : '';
 
-  const tfHeaderHTML = `<div style="position: absolute; left: ${G.tf_origin_x - G.tf_label_offset}mm; top: ${G.header_y - 7}mm;">
-        <div style="font-size: ${use3Col ? '9.5pt' : '11pt'}; font-weight: 800; text-transform: uppercase; border-bottom: 0.75mm solid #000; padding-bottom: 1.5mm; width: ${use3Col ? '40mm' : '58mm'};">I. VERDADERO O FALSO</div>
+  // Headers: en 3-col el TF header es más corto (32mm) porque el MC header
+  // empieza en x=56mm (col1 label a 56) y no puede pisar al TF header que
+  // arranca en x=22mm. En 2-col hay más espacio libre y los headers pueden
+  // ser más anchos como antes.
+  const tfHeaderLeft = use3Col ? 22 : G.tf_origin_x - G.tf_label_offset;
+  const tfHeaderWidth = use3Col ? 32 : 58;
+  const tfHeaderHTML = `<div style="position: absolute; left: ${tfHeaderLeft}mm; top: ${G.header_y - 7}mm;">
+        <div style="font-size: ${use3Col ? '8.5pt' : '11pt'}; font-weight: 800; text-transform: uppercase; border-bottom: 0.75mm solid #000; padding-bottom: 1.5mm; width: ${tfHeaderWidth}mm;">I. VERDADERO O FALSO</div>
     </div>`;
 
-  const mc1HeaderLeft = use3Col ? G.mc1_3col_origin_x - 9 : G.mc1_origin_x - 7;
-  const mc1HeaderWidth = use3Col ? 135 : 106;
+  const mc1HeaderLeft = use3Col ? 56 : G.mc1_origin_x - 7;
+  const mc1HeaderWidth = use3Col ? 130 : 106;
   const mc1HeaderHTML = `<div style="position: absolute; left: ${mc1HeaderLeft}mm; top: ${G.header_y - 7}mm;">
-        <div style="font-size: ${use3Col ? '9.5pt' : '11pt'}; font-weight: 800; text-transform: uppercase; border-bottom: 0.75mm solid #000; padding-bottom: 1.5mm; width: ${mc1HeaderWidth}mm;">II. SELECCIÓN MÚLTIPLE</div>
+        <div style="font-size: ${use3Col ? '8.5pt' : '11pt'}; font-weight: 800; text-transform: uppercase; border-bottom: 0.75mm solid #000; padding-bottom: 1.5mm; width: ${mc1HeaderWidth}mm;">II. SELECCIÓN MÚLTIPLE</div>
     </div>`;
 
   const logoSection = institutionLogo
