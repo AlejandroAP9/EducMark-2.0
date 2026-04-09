@@ -32,6 +32,7 @@ import {
     analyzeImageQuality,
 } from '../../services/omrProcessing';
 import { answerKeyFingerprint } from '../../lib/quickScanFingerprint';
+import { decryptQRData } from '../AnswerSheet/QRCodeGenerator';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { Save } from 'lucide-react';
@@ -252,6 +253,51 @@ export const QuickScanScanner: React.FC<QuickScanScannerProps> = ({
 
         try {
             const compressed = await compressDataUrl(capturedImage);
+
+            // ── Pre-flight validation: decodificar QR y comparar conteo de preguntas ──
+            // Si el QR indica que la hoja fue generada con N preguntas distintas a la
+            // pauta activa, el engine leería posiciones equivocadas y los resultados
+            // saldrían desfasados. Avisamos antes de procesar. BarcodeDetector no
+            // existe en iOS Safari/Firefox — si no está disponible, skip silencioso.
+            try {
+                const detectorCtor = (window as typeof window & {
+                    BarcodeDetector?: new (opts: { formats: string[] }) => {
+                        detect: (src: ImageBitmap) => Promise<{ rawValue?: string }[]>;
+                    };
+                }).BarcodeDetector;
+                if (detectorCtor) {
+                    const blob = await (await fetch(compressed)).blob();
+                    const bitmap = await createImageBitmap(blob);
+                    try {
+                        const detector = new detectorCtor({ formats: ['qr_code'] });
+                        const codes = await detector.detect(bitmap);
+                        const raw = codes?.[0]?.rawValue;
+                        if (raw) {
+                            const qrData = decryptQRData(raw);
+                            if (qrData?.answers) {
+                                const sheetTf = qrData.answers.tf?.length ?? 0;
+                                const sheetMc = qrData.answers.mc?.length ?? 0;
+                                if (sheetTf !== totalTF || sheetMc !== totalMC) {
+                                    clearInterval(stepInterval);
+                                    bitmap.close();
+                                    setError(
+                                        `Esta hoja fue generada con ${sheetTf} V/F + ${sheetMc} SM, ` +
+                                        `pero tu pauta actual tiene ${totalTF} V/F + ${totalMC} SM. ` +
+                                        `Reimprime la hoja desde "Hoja" o ajusta la pauta en "Pauta" para que coincida.`
+                                    );
+                                    setPhase('preview');
+                                    return;
+                                }
+                            }
+                        }
+                    } finally {
+                        bitmap.close();
+                    }
+                }
+            } catch (qrErr) {
+                console.warn('[QuickScan] QR pre-flight check skipped:', qrErr);
+            }
+
             const candidates = getApiCandidatesLazy();
 
             if (candidates.length === 0) {
