@@ -106,14 +106,24 @@ export const parseJsonText = <T,>(raw: string, context: string): T => {
 // ── Image Processing (DOM-dependent, but no React) ──
 
 /**
- * Compresses any data URL to max 1280px / 0.80 quality to keep payloads under nginx proxy limits.
- * Fixes Safari iOS "status=0 / Network request failed" for large file uploads.
+ * Compresses any data URL to max 1600px / 0.85 quality to keep payloads under nginx proxy limits
+ * mientras preserva suficiente resolución para que el OMR engine detecte fiducials + bubbles.
+ *
+ * Historia: Estuvo en 1280/0.80 hasta 2026-04-09. Repro local con foto real de un alumno
+ * (6° Básico Historia, 10 TF + 28 MC) mostró que a 1280px el detect_fiducials() del engine
+ * falla, align_document() cae al fallback contour que warpea una región de ~91×94 px, y
+ * process_standard_sheet() devuelve casi todo blank. A 1600px el engine recupera 10/10 TF
+ * + 26/28 MC con 90% confidence. El peso del JPEG a 1600/q85 es ~150kB, muy por debajo del
+ * límite nginx. Ver `.claude/memory/feedback_omr_calibration_photos_reales.md` y
+ * `educmark-brain/wiki/educmark/hoja-respuestas-omr.md` Debugging history.
+ *
+ * Fixes también Safari iOS "status=0 / Network request failed" para payloads grandes.
  */
 export const compressDataUrl = (dataUrl: string): Promise<string> => {
     return new Promise((resolve) => {
         const img = new Image();
         img.onload = () => {
-            const MAX_DIM = 1280;
+            const MAX_DIM = 1600;
             let w = img.naturalWidth || img.width;
             let h = img.naturalHeight || img.height;
             if (w > MAX_DIM || h > MAX_DIM) {
@@ -125,7 +135,7 @@ export const compressDataUrl = (dataUrl: string): Promise<string> => {
             c.width = w;
             c.height = h;
             c.getContext('2d')!.drawImage(img, 0, 0, w, h);
-            resolve(c.toDataURL('image/jpeg', 0.80));
+            resolve(c.toDataURL('image/jpeg', 0.85));
         };
         img.onerror = () => resolve(dataUrl); // fallback: use original if compression fails
         img.src = dataUrl;
