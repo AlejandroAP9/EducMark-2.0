@@ -700,10 +700,10 @@ export const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ initialEva
                                 </div>
                                 <div className="min-w-0">
                                     <p className="text-sm md:text-base font-bold text-[var(--on-background)]">
-                                        Tenés {quickScanCount} correcci{quickScanCount === 1 ? 'ón' : 'ones'} rápida{quickScanCount === 1 ? '' : 's'} sin asociar
+                                        Tienes {quickScanCount} correcci{quickScanCount === 1 ? 'ón' : 'ones'} rápida{quickScanCount === 1 ? '' : 's'} con QuickScan
                                     </p>
                                     <p className="text-xs md:text-sm text-[var(--muted)] mt-0.5">
-                                        Hojas escaneadas con Corrección Rápida OMR. Vé el análisis agrupado por pauta y día.
+                                        Hojas escaneadas con Corrección Rápida OMR. Mira el análisis agrupado por pauta y día.
                                     </p>
                                 </div>
                             </div>
