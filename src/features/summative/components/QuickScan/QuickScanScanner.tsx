@@ -274,7 +274,10 @@ export const QuickScanScanner: React.FC<QuickScanScannerProps> = ({
                     const jsonPayload = JSON.stringify({
                         image_base64: compressed,
                         total_questions: totalTF + totalMC,
-                        question_type: 'mc',
+                        // 'mixed' cuando hay TF + MC. Si mandamos 'mc' el backend
+                        // resetea inferred_tf_count = 0 y descarta toda la sección TF
+                        // (main.py:353-356 en assessment-api).
+                        question_type: totalTF > 0 && totalMC > 0 ? 'mixed' : (totalTF > 0 ? 'tf' : 'mc'),
                         correct_answers_json: JSON.stringify(correctAnswers),
                     });
 
