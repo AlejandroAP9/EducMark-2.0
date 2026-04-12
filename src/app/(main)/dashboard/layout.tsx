@@ -87,7 +87,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
             const a = document.createElement('a');
             a.style.display = 'none';
             a.href = url;
-            a.download = 'Guia_Prompts_Profesores_EducMark.pdf';
+            a.download = 'De_12_Horas_a_5_Minutos_EducMark.pdf';
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);

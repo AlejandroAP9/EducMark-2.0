@@ -1,293 +1,766 @@
-# Prompts de Ilustraciones — Ebook "Prompts para Profesores"
+# Ebook "De 12 Horas a 5 Minutos"
 
-Estilo global: Hand-drawn sketch on beige/cream background (#F5F0E8). Marker typography.
-Doodle icons filled with soft color. No photographs. No realistic faces.
-Brand colors: violet (#8B5CF6) accents, cyan (#06B6D4) highlights.
-All text in Spanish. Simple, warm, pedagogical.
-
----
-
-## PORTADA
-
-**Prompt:**
-```
-Hand-drawn sketch illustration on cream beige background. Title "PROMPTS PARA PROFESORES" in bold purple marker typography. Subtitle "Copia, Pega y Enseña" in cyan handwritten font. Doodle icons around the title: a laptop with a chat bubble, a notebook with a checkmark, a clock with wings, a coffee cup with steam, a pencil, an apple. At the bottom "por Alejandro Álvarez — EDUCMARK" in smaller purple text. Warm pedagogical sketchnote style. No photographs. Clean and professional.
-```
-**Tamaño:** 1080x1400px (formato ebook cover)
+> Lead magnet de EducMark — versión 2026-04
+> Autor: Alejandro Álvarez
+> Estructura: 16 páginas. Cada página = copy (texto en Canva) + prompt de imagen (elemento visual generado con IA).
 
 ---
 
-## PÁGINA DE AUTOR — "Hola, soy Alejandro"
+## Estilo global de imágenes
 
-**Prompt:**
 ```
-Hand-drawn sketch on cream beige background. A simple doodle figure of a male teacher sitting at a desk with a laptop, coffee cup, and stack of papers. Speech bubble says "¡Hola!" in purple marker. Around him: a clock showing 11 PM, scattered test papers with checkmarks, and a small glowing lightbulb above his head. Warm sketchnote style with violet and cyan accents. No realistic face, just a friendly doodle character. Pedagogical and approachable.
+Hand-drawn sketch illustration on cream beige background (#F5F0E8).
+Marker typography. Doodle icons filled with soft color.
+Brand colors: violet #8B5CF6 accents, cyan #06B6D4 highlights.
+Warm pedagogical sketchnote style. No photographs of faces.
+Clean, professional, educational. All text in Spanish.
 ```
-**Tamaño:** 1080x720px
+
+**Filosofía de uso:**
+- Las imágenes son **elementos visuales centrales**, no páginas completas.
+- El copy se tipea en Canva sobre fondo beige #F5F0E8.
+- Cada imagen debe quedar como ilustración mediana/grande dentro del layout, dejando espacio para título arriba y copy alrededor.
+- **Excepciones:** Portada (pág 1), Página de autor (pág 2), Temario (pág 3), Infografía 13 horas (pág 4), Contraportada (pág 16). Estas son páginas 100% visuales.
 
 ---
 
-## CONTENIDO / ÍNDICE
+## PÁGINA 1 — PORTADA (100% visual)
 
-**Prompt:**
+### Copy
+*(Todo va dentro de la imagen generada)*
+
+- EDUCMARK
+- DE 12 HORAS A 5 MINUTOS
+- La guía honesta para profes chilenos
+- Por Alejandro Álvarez
+- Profesor de Historia · Fundador de EducMark
+
+### Prompt de imagen
+
 ```
-Hand-drawn table of contents on cream beige background. A vertical list with doodle icons next to each chapter: (1) three numbered steps with arrows, (2) four stars in a row, (3) an open book, (4) a globe, (5) a calculator and flask, (6) British flag, (7) a running figure, (8) a heart, (9) a person with a thought bubble. Each item connected by a dotted line to its page number. Purple and cyan marker accents. Sketchnote style. Clean and organized.
-```
-**Tamaño:** 1080x1400px
+Hand-drawn sketch illustration on cream beige background (#F5F0E8).
+Centered composition: a large hand-drawn alarm clock with two clock hands —
+the longer hand pointing to "12h" written in faded red marker (with a strikethrough effect),
+the shorter hand pointing to "5 min" written in bold cyan marker with a glowing highlight.
+Around the clock: small doodles of a coffee cup with steam, a stack of papers,
+a laptop, a pencil, and small stars in violet and cyan.
 
----
+At the top center: the word "EDUCMARK" in bold purple sans-serif marker.
 
-## CÓMO USAR ESTE EBOOK EN 3 PASOS
+At the center-bottom: large bold marker title "DE 12 HORAS A 5 MINUTOS"
+in violet #8B5CF6, two lines, very prominent.
 
-**Prompt:**
-```
-Hand-drawn infographic on cream beige background showing 3 steps in a horizontal flow with arrows. Step 1: a laptop icon with "chatgpt.com" on screen and label "Abre ChatGPT". Step 2: a document with dotted selection lines and a copy icon, label "Copia el prompt". Step 3: brackets [TEMA] being replaced with "La célula" with an arrow, label "Reemplaza los corchetes". Each step inside a rounded rectangle with purple border. Cyan arrows connecting them. Marker typography. Sketchnote pedagogical style.
-```
-**Tamaño:** 1080x720px
+Below the title: subtitle in cyan handwritten font with a soft cyan highlight bar behind it:
+"La guía honesta para profes chilenos".
 
----
+At the very bottom, in smaller handwritten violet marker font, two lines:
+"Por Alejandro Álvarez"
+"Profesor de Historia · Fundador de EducMark"
 
-## LOS 4 PROMPTS MÁS USADOS — Header
-
-**Prompt:**
-```
-Hand-drawn banner on cream beige background. Large text "LOS 4 PROMPTS MÁS USADOS" in bold purple marker. Four doodle icons in a row below: (1) a test paper with checkboxes, (2) a rubric grid/table, (3) three levels stacked like stairs, (4) a document with numbered list. Each icon has a small cyan label: "Prueba", "Rúbrica", "Adaptar", "Guía". Stars and sparkles around the title. Warm sketchnote style.
-```
-**Tamaño:** 1080x600px
-
----
-
-## PROMPT 1: Prueba de selección múltiple
-
-**Prompt:**
-```
-Hand-drawn sketch on cream beige background. A test paper doodle with multiple choice questions (A, B, C, D) visible. A magic wand touching the paper with sparkles. On the left: a clock showing "2 min" with an arrow. On the right: a happy doodle teacher giving thumbs up. Small text bubble: "10 preguntas listas". Purple and cyan accents. Marker style. Pedagogical sketchnote.
-```
-**Tamaño:** 1080x720px
-
----
-
-## PROMPT 2: Rúbrica de evaluación
-
-**Prompt:**
-```
-Hand-drawn sketch on cream beige background. A large rubric table grid drawn with marker. Columns labeled "Insuficiente", "Básico", "Satisfactorio", "Destacado" with filled color dots (red, yellow, light green, dark green). Rows showing criteria icons. A doodle hand filling in the rubric with a pen. Stars rating system visible. Purple header accents. Sketchnote pedagogical style.
-```
-**Tamaño:** 1080x720px
-
----
-
-## PROMPT 3: Adaptar contenido a 3 niveles
-
-**Prompt:**
-```
-Hand-drawn sketch on cream beige background. Three stacked levels like stairs or a pyramid. Bottom level (largest, green): "Básico" with simple icons (smiley, short lines of text). Middle level (medium, cyan): "Estándar" with moderate content icons. Top level (smallest, purple): "Avanzado" with complex icons (magnifying glass, connected nodes). A doodle teacher figure standing beside the stairs pointing to each level. Arrows showing differentiation. Sketchnote marker style.
-```
-**Tamaño:** 1080x720px
-
----
-
-## PROMPT 4: Guía de aprendizaje
-
-**Prompt:**
-```
-Hand-drawn sketch on cream beige background. A document/guide layout with numbered sections visible: "1. Objetivo", "2. Conocimientos previos", "3. Desarrollo", "4. Práctica", "5. Autoevaluación". Each section has a small doodle icon (target, brain, book, pencil, mirror). A dotted path connects all sections from top to bottom. Purple and cyan accents. Clean sketchnote pedagogical style.
-```
-**Tamaño:** 1080x720px
-
----
-
-## NOTA EDUCMARK (transición a producto)
-
-**Prompt:**
-```
-Hand-drawn sketch on cream beige background. Split illustration: LEFT side shows a person manually copying and pasting text between windows (looks tired, small sweat drops). RIGHT side shows the EducMark logo with a magic sparkle, and a complete class document appearing automatically (person looks happy, relaxed). An arrow in the middle goes from left to right with text "Sin copiar ni pegar". Purple EducMark branding. Cyan sparkle accents. Sketchnote style.
-```
-**Tamaño:** 1080x720px
-
----
-
-## CAPÍTULO 1: LENGUA Y LITERATURA
-
-**Prompt:**
-```
-Hand-drawn chapter header on cream beige background. Large "1" in purple circle. Text "LENGUA Y LITERATURA" in bold marker. Doodle icons: an open book with pages flying, a quill pen writing, theater masks (comedy/tragedy), a speech bubble with quotes, stacked books, a magnifying glass over text. All icons in sketch style with purple and cyan fills. Warm pedagogical sketchnote.
-```
-**Tamaño:** 1080x600px
-
----
-
-## CAPÍTULO 2: CIENCIAS SOCIALES
-
-**Prompt:**
-```
-Hand-drawn chapter header on cream beige background. Large "2" in purple circle. Text "CIENCIAS SOCIALES" in bold marker. Doodle icons: a globe, an old scroll/document, a map with a pin, a balance scale (justice), a timeline with dots, a compass. All icons in sketch style with purple and cyan fills. Warm pedagogical sketchnote.
-```
-**Tamaño:** 1080x600px
-
----
-
-## CAPÍTULO 3: CIENCIAS EXACTAS
-
-**Prompt:**
-```
-Hand-drawn chapter header on cream beige background. Large "3" in purple circle. Text "CIENCIAS EXACTAS" in bold marker. Doodle icons: a calculator, a flask/beaker with bubbles, a DNA helix, a graph with rising line, an atom symbol, a ruler and protractor. All icons in sketch style with purple and cyan fills. Warm pedagogical sketchnote.
-```
-**Tamaño:** 1080x600px
-
----
-
-## CAPÍTULO 4: INGLÉS
-
-**Prompt:**
-```
-Hand-drawn chapter header on cream beige background. Large "4" in purple circle. Text "INGLÉS" in bold marker. Doodle icons: British and American flags (simple doodle versions), a speech bubble saying "Hello!", headphones, an open dictionary, a pen writing "A B C", a chat conversation doodle. All icons in sketch style with purple and cyan fills. Warm pedagogical sketchnote.
-```
-**Tamaño:** 1080x600px
-
----
-
-## CAPÍTULO 5: DEPORTES Y SALUD
-
-**Prompt:**
-```
-Hand-drawn chapter header on cream beige background. Large "5" in purple circle. Text "DEPORTES Y SALUD" in bold marker. Doodle icons: a running figure, a basketball, a heart with pulse line, a water bottle, a stopwatch, a stretching figure. All icons in sketch style with purple and cyan fills. Warm pedagogical sketchnote.
-```
-**Tamaño:** 1080x600px
-
----
-
-## CAPÍTULO 6: ORIENTACIÓN RELIGIOSA
-
-**Prompt:**
-```
-Hand-drawn chapter header on cream beige background. Large "6" in purple circle. Text "ORIENTACIÓN RELIGIOSA" in bold marker. Doodle icons: a heart with hands holding it, a balance scale, a dove, connected people figures in circle, a lightbulb with a heart inside, hands shaking. All icons in sketch style with purple and cyan fills. Warm pedagogical sketchnote. Universal symbols, no specific religion.
-```
-**Tamaño:** 1080x600px
-
----
-
-## CAPÍTULO 7: DESARROLLO PERSONAL Y TUTORÍA
-
-**Prompt:**
-```
-Hand-drawn chapter header on cream beige background. Large "7" in purple circle. Text "DESARROLLO PERSONAL Y TUTORÍA" in bold marker. Doodle icons: a brain with gears, a mirror/self-reflection, a path with footsteps leading to a star, a journal/diary, a thermometer with emotion faces, a calendar with checkmarks. All icons in sketch style with purple and cyan fills. Warm pedagogical sketchnote.
-```
-**Tamaño:** 1080x600px
-
----
-
-## ILUSTRACIONES DE PROMPTS POR CAPÍTULO
-
-### Lengua — Debate literario
-**Prompt:**
-```
-Hand-drawn sketch on cream beige background. Two groups of doodle students facing each other across a table. Speech bubbles with opposing arguments. A doodle teacher in the middle as moderator with a whistle. An open book between them. Purple and cyan accents. Sketchnote style. Friendly and dynamic.
-```
-
-### Lengua — Escritura creativa
-**Prompt:**
-```
-Hand-drawn sketch on cream beige background. A doodle student writing in a notebook. From the notebook, colorful doodle elements fly out: a dragon, a letter/envelope, a newspaper, a poem with rhyme marks. Shows creativity flowing from writing. Purple and cyan accents. Warm sketchnote.
-```
-
-### Ciencias Sociales — Simulación histórica
-**Prompt:**
-```
-Hand-drawn sketch on cream beige background. Doodle students wearing simple paper hats/props representing historical figures. They sit around a round table with a map in the center. Speech bubbles with "?" marks. A timeline on the wall behind them. Purple and cyan accents. Fun pedagogical sketchnote.
-```
-
-### Ciencias Exactas — Experimento casero
-**Prompt:**
-```
-Hand-drawn sketch on cream beige background. A simple home experiment setup: a table with bottles, baking soda, vinegar, and a small volcano erupting with foam. A doodle student watching with amazement (stars in eyes). Numbered steps 1-2-3 floating beside. Safety goggles icon. Purple and cyan accents. Fun sketchnote.
-```
-
-### Inglés — Speaking activity
-**Prompt:**
-```
-Hand-drawn sketch on cream beige background. Two doodle students facing each other with speech bubbles containing English phrases: "What do you think about...?" and "I believe that...". A vocabulary list floating between them. A small British flag doodle. Purple and cyan accents. Warm sketchnote.
-```
-
-### Deportes — Circuito de entrenamiento
-**Prompt:**
-```
-Hand-drawn sketch on cream beige background. A circular circuit diagram with 6 stations, each showing a different exercise doodle: jumping jacks, push-ups, running in place, stretching, squats, plank. Arrows connecting stations in a circle. A stopwatch in the center showing "30 seg". Purple and cyan accents. Dynamic sketchnote.
-```
-
-### Orientación — Dilema ético
-**Prompt:**
-```
-Hand-drawn sketch on cream beige background. A doodle person standing at a crossroads with two paths. Each path has a different sign (representing two choices). A thought bubble above their head with a question mark. Other doodle figures in a circle discussing. A balance scale between the two paths. Purple and cyan accents. Reflective sketchnote.
-```
-
-### Desarrollo Personal — Metas SMART
-**Prompt:**
-```
-Hand-drawn sketch on cream beige background. A target/bullseye with an arrow hitting center. Around it, the word SMART broken down: S-Specific (magnifying glass), M-Measurable (ruler), A-Achievable (thumbs up), R-Relevant (star), T-Time-bound (clock). A doodle student writing goals in a notebook. Purple and cyan accents. Motivational sketchnote.
+Warm pedagogical sketchnote style. Professional ebook cover.
+Brand colors: violet #8B5CF6 and cyan #06B6D4.
+Size: 1080x1400px
 ```
 
 ---
 
-## PÁGINA FINAL — CONCLUSIÓN / CTA EDUCMARK
+## PÁGINA 2 — HOLA, SOY ALEJANDRO
 
-**Prompt:**
+### Copy
+
+**Título:** ¡Hola! Soy Alejandro Álvarez
+
+**Cuerpo:**
+
+> Llevo **20 años haciendo clases de Historia en Chile**. Soy profesor jefe de un 4° Medio, papá de Catalina y Leonardo, y como tú, durante años trabajé hasta las 2 de la mañana planificando, corrigiendo e inventando rúbricas que nadie iba a leer.
+>
+> Salía del colegio a las 5:30 PM. Llegaba a la casa cuando mis hijos ya estaban durmiendo. Los fines de semana eran para "ponerme al día" con el libro de clases.
+>
+> Probé todo: dropshipping, marcas personales, cursos online. Nada me devolvía el tiempo. Hasta que entendí algo simple:
+>
+> **El problema no era cuánto trabajaba. Era qué estaba haciendo con ese tiempo.**
+>
+> Este ebook es el resumen honesto de lo que aprendí. Sin humo. Sin vender que "la IA cambiará tu vida". Solo lo que de verdad funciona — y lo que no.
+
+**Firma:** *— Alejandro*
+
+### Layout
+- Foto real de Alejandro a la izquierda (NO la generada con IA del ebook viejo)
+- Texto a la derecha junto a los doodles ambientales
+
+### Prompt de imagen
+
 ```
-Hand-drawn sketch on cream beige background. A before/after split: LEFT shows a tired doodle teacher buried under papers, clock showing 11 PM, stress marks. RIGHT shows the same teacher relaxed, smiling, clock showing 1 PM, with a laptop showing EducMark logo and sparkles. A large arrow from left to right. Below: "educmark.cl" in purple bold marker with a hand-drawn button "Prueba gratis". Cyan and purple accents. Warm, hopeful sketchnote.
+Hand-drawn sketch frame on cream beige background (#F5F0E8). Empty rectangular
+space on the left side reserved for a real photograph of a man (will be added
+later in Canva). On the right side: doodle illustrations of a clock showing 11 PM,
+a small house with warm yellow window light, two small child figures sleeping
+in a bed with pillows, a coffee cup with steam, scattered notebook papers with
+a pen, and a glowing lightbulb above. Small handwritten labels in violet marker:
+"NOCHE DE TRABAJO Y CREATIVIDAD", "CONCILIACIÓN FAMILIAR", "CAFÉ", "REFLEXIONES".
+At the bottom right: small space for handwritten signature with the word "FIRMA:".
+Warm pedagogical sketchnote style. Marker typography. Brand colors: violet #8B5CF6
+and cyan #06B6D4.
+Size: 1080x1400px
 ```
-**Tamaño:** 1080x1400px
 
 ---
 
-## CONTRAPORTADA
+## PÁGINA 3 — TEMARIO (100% visual + texto en Canva)
 
-**Prompt:**
+### Copy (se agrega en Canva sobre la imagen)
+
+- **EN ESTAS PÁGINAS** (título arriba)
+- **01** — El problema real del profe chileno
+- **02** — Por qué los "100 prompts" no funcionan
+- **03** — Los 3 prompts que SÍ uso
+- **04** — El atajo honesto
+- **05** — Bonus: Carrera Docente
+- **06** — Tu próximo paso
+- **Tiempo de lectura: 12 minutos** (abajo)
+
+### Prompt de imagen
+
 ```
-Hand-drawn sketch on cream beige background. EducMark logo centered (purple and cyan). Below: "educmark.cl" in marker typography. Doodle border made of small educational icons: notebooks, pencils, lightbulbs, checkmarks, clocks, coffee cups, apples, stars. At the bottom: copyright symbol with "Alejandro Álvarez" in small text. Clean, professional, warm sketchnote style.
+Hand-drawn sketch illustration on cream beige background (#F5F0E8).
+Vertical zigzag layout centered on the page with 6 large hand-drawn
+numbered circles from "01" to "06" in bold violet #8B5CF6 marker.
+The circles are connected by a wavy dashed line in cyan #06B6D4
+that flows from top to bottom like a learning path.
+
+Next to each numbered circle, a small doodle icon:
+- 01: a magnifying glass over a clock
+- 02: a thumbs-down next to a chat bubble with question marks
+- 03: a checklist with three green checkmarks
+- 04: a small rocket with motion lines
+- 05: a graduation cap on top of a folder
+- 06: an arrow pointing right toward a star
+
+Leave generous empty space to the side of each circle for text labels
+that will be added in Canva.
+
+Warm pedagogical sketchnote style. Marker typography.
+Brand colors: violet #8B5CF6 and cyan #06B6D4.
+Size: 1080x1400px
 ```
-**Tamaño:** 1080x1400px
 
 ---
 
-## SEPARADORES ENTRE PROMPTS (dentro de cada capítulo)
+## PÁGINA 4 — EL PROBLEMA REAL (infografía + texto mínimo)
 
-**Prompt genérico para separadores:**
+### Copy
+
+**Título:** 13 horas al día
+
+**Cuerpo (debajo o al lado de la infografía):**
+
+> Un profe chileno promedio trabaja **13 horas al día**.
+>
+> No es porque seamos lentos. Es porque el sistema te pide planificar, preparar material, evaluar, corregir, llenar el libro, escribir informes y armar tu portafolio de Carrera Docente.
+>
+> Todo eso, además de hacer clases.
+>
+> **¿Cuánto de ese trabajo realmente impacta en tus estudiantes?**
+>
+> Spoiler: el 80% es administrativo. Y se puede automatizar.
+
+### Prompt de imagen
+
 ```
-Hand-drawn decorative divider on cream beige background. A horizontal line made of doodle elements: dots, small arrows, a tiny pencil icon, small stars. Thin and elegant. Purple marker color. Width: full page. Minimal and clean.
+Hand-drawn sketch illustration on cream beige background (#F5F0E8).
+Centered composition: a large hand-drawn circular pie chart shaped like
+a 24-hour clock face, with hour marks around the edge.
+
+The pie chart is divided into two sections:
+- A LARGE section (about 80%) shaded in faded muted red/orange marker,
+  filled with small doodle icons inside: a planning notebook, a red grading
+  pen, a meeting speech bubble, a phone, a stack of report papers, a calendar.
+  Inside this section, the text "13 horas" in handwritten marker.
+- A SMALL green section (about 20%) at the bottom with tiny doodles of
+  a heart, a child figure, and a small house. Inside, the text "Familia"
+  in handwritten marker.
+
+Hand-drawn arrows in violet #8B5CF6 pointing from outside the chart
+toward the red sections, with handwritten marker labels:
+"PLANIFICAR" - "CORREGIR" - "INFORMES" - "REUNIONES"
+
+Warm pedagogical sketchnote style. Marker typography.
+Brand colors: violet #8B5CF6 and cyan #06B6D4.
+Size: 1080x1400px
 ```
-**Tamaño:** 1080x100px
 
 ---
 
-## CAJA DE PROMPT (fondo para cada prompt)
+## PÁGINA 5 — EL ESPEJISMO DE LA IA (imagen mediana + copy)
 
-**Prompt:**
+### Copy
+
+**Título:** Por qué los "100 prompts" no funcionan
+
+**Cuerpo:**
+
+> Hace dos años yo también caí.
+>
+> Bajé un PDF con "200 prompts para profesores", abrí ChatGPT, copié uno, pegué…
+>
+> Y obtuve una planificación **genérica, en español neutro, sin alineación a MINEDUC**, con objetivos inventados que no existen en las Bases Curriculares chilenas.
+>
+> Tuve que reescribirla entera. Tardé más que si la hubiera hecho desde cero.
+
+**Subtítulo:** Por qué pasa esto:
+
+- 🔴 ChatGPT no conoce las Bases Curriculares chilenas. Inventa OAs.
+- 🔴 Los prompts genéricos no saben tu contexto.
+- 🔴 Copiar y pegar igual toma 45 min por clase.
+- 🔴 No genera lo que UTP te pide.
+
+**Cierre:** *La IA sirve. Pero no así.*
+
+### Layout
+- Imagen centrada arriba (40% del alto de la página)
+- Copy abajo
+
+### Prompt de imagen
+
 ```
-Hand-drawn frame/box on cream beige background. Rounded rectangle with dashed purple border. Small clipboard icon in top-left corner. Small "copy" icon (two overlapping squares) in top-right corner. Inside is blank/empty for text overlay. Subtle shadow effect with marker strokes. Clean sketchnote style.
+Hand-drawn sketch illustration on cream beige background (#F5F0E8).
+Single centered vignette (medium size, NOT full page).
+
+A doodle figure of a teacher (simple stick character with a tie and short hair,
+NO detailed face — just dots for eyes and a flat confused mouth) sitting at a
+wooden desk in front of an open laptop. The laptop screen shows messy scribbled
+lines and red X marks, indicating ChatGPT giving a confusing answer.
+
+Above the teacher's head: 4 floating question marks in violet #8B5CF6 of
+different sizes, with small motion lines around them.
+
+On the desk: scattered papers with red X marks, a coffee cup, a crumpled
+paper ball.
+
+To the right of the teacher: a speech bubble in cyan #06B6D4 with "???" inside.
+
+NO title text on the image. NO background labels. Just the centered illustration
+on a clean beige background, leaving plenty of empty space around it for copy
+to be added in Canva.
+
+Warm pedagogical sketchnote style. Marker typography.
+Brand colors: violet #8B5CF6 and cyan #06B6D4.
+Size: 1080x1080px (square, to leave space above and below for text in Canva)
 ```
-**Tamaño:** 1080x400px (se repite para cada prompt, el texto se agrega después en Canva)
 
 ---
 
-# INSTRUCCIONES DE PRODUCCIÓN
+## PÁGINA 6 — INTRO 3 PROMPTS (imagen pequeña + copy)
 
-1. Generar cada imagen con Gemini Nano Banana usando los prompts de arriba
-2. Si el texto en español sale con errores de tildes o ñ, agregar el texto en Canva sobre la imagen
-3. Tamaños de exportación: 1080px de ancho (estándar ebook digital)
-4. Formato: PNG con fondo beige (#F5F0E8)
-5. Ensamblar el ebook final en Canva o Google Slides exportado a PDF
-6. El texto del ebook (prompts, explicaciones) va como texto real sobre las ilustraciones, NO como parte de la imagen generada
+### Copy
 
-## Orden de producción sugerido (prioridad)
-1. Portada
-2. Cómo usar en 3 pasos
-3. Los 4 prompts más usados (header + 4 ilustraciones)
-4. 7 headers de capítulo
-5. Página de autor
-6. Caja de prompt (template reutilizable)
-7. Página final CTA
-8. Ilustraciones de prompts por capítulo (8 ilustraciones)
-9. Separadores
-10. Contraportada
+**Título:** Los 3 prompts que SÍ uso
 
-**Total: ~25 ilustraciones únicas + 1 template reutilizable**
+**Cuerpo:**
+
+> Si vas a usar ChatGPT manualmente, al menos hazlo bien.
+>
+> Estos son los 3 únicos prompts que vale la pena tener a mano. No son mágicos. Pero funcionan **mejor que el 99% de los PDFs gratis** que circulan por internet.
+
+### Prompt de imagen
+
+```
+Hand-drawn sketch illustration on cream beige background (#F5F0E8).
+Three small hand-drawn cards arranged in a row, each with a bold violet
+marker number: "01", "02", "03". Each card has a small doodle icon at
+the top: card 1 a notebook with a pencil, card 2 a checklist with stars,
+card 3 a chat bubble with a heart. Cyan marker frames around each card.
+
+NO title or background text. Just the three numbered cards, centered,
+with empty space around them for copy in Canva.
+
+Warm pedagogical sketchnote style. Marker typography.
+Brand colors: violet #8B5CF6 and cyan #06B6D4.
+Size: 1080x720px (horizontal banner, fits as a header element)
+```
+
+---
+
+## PÁGINA 7 — PROMPT 1: PLANIFICACIÓN
+
+### Copy
+
+**Título:** Prompt 1 · Planificación de clase
+
+**Para qué sirve:** Generar el esqueleto de una clase de 90 minutos con inicio, desarrollo y cierre.
+
+**El prompt (en bloque destacado):**
+
+> Eres un profesor chileno con 20 años de experiencia en [ASIGNATURA]. Necesito una planificación de clase de 90 minutos para [CURSO] sobre el tema [TEMA].
+>
+> Estructúrala así:
+> 1. Objetivo de aprendizaje (en formato MINEDUC: "OA + verbo medible")
+> 2. Inicio (15 min): activación de conocimientos previos
+> 3. Desarrollo (60 min): actividad central + recursos
+> 4. Cierre (15 min): metacognición y síntesis
+> 5. Indicadores de evaluación formativa
+>
+> Usa lenguaje chileno (no neutro). Considera que es un curso heterogéneo con 35 estudiantes y 2 con NEE.
+
+**Tiempo que te ahorra:** ⏱️ De 60 min → a 8 min
+
+**El truco:** 👉 La instrucción "no neutro" es clave. Sin eso, te entrega cosas tipo "ustedes pueden tomar el lápiz" en vez de "saquen el cuaderno".
+
+### Prompt de imagen
+
+```
+Hand-drawn sketch illustration on cream beige background (#F5F0E8).
+Single small icon centered: a doodle of an open notebook with a pencil
+writing on it, surrounded by a few small icons (a clock, a lightbulb,
+a green checkmark). Below the notebook: a small clock illustration with
+an arrow showing "60 min → 8 min" in cyan marker.
+
+NO title. NO additional text. Just the centered icon group, leaving
+plenty of empty space around it.
+
+Warm pedagogical sketchnote style. Marker typography.
+Brand colors: violet #8B5CF6 and cyan #06B6D4.
+Size: 800x800px (small icon, fits as a sidebar or header element)
+```
+
+---
+
+## PÁGINA 8 — PROMPT 2: EVALUACIÓN
+
+### Copy
+
+**Título:** Prompt 2 · Evaluación con pauta
+
+**Para qué sirve:** Crear una prueba sumativa con tabla de especificaciones y pauta de corrección.
+
+**El prompt:**
+
+> Genera una evaluación sumativa para [CURSO] sobre [UNIDAD]. Necesito:
+>
+> — 15 preguntas: 8 selección múltiple, 4 desarrollo corto, 3 desarrollo extenso
+> — Distribuidas según taxonomía de Bloom: 30% recordar, 40% aplicar, 30% analizar
+> — Cada pregunta debe indicar: OA que evalúa, habilidad de Bloom, puntaje
+> — Al final: tabla de especificaciones + pauta de corrección con respuestas modelo
+>
+> Contexto: estudiantes chilenos, 90 minutos, escala de notas 2.0 a 7.0 con 60% de exigencia.
+
+**Tiempo que te ahorra:** ⏱️ De 3 horas → a 15 min
+
+**El truco:** 👉 Pedir explícitamente la **tabla de especificaciones** es lo que UTP te va a revisar. Sin eso, tu prueba no pasa.
+
+### Prompt de imagen
+
+```
+Hand-drawn sketch illustration on cream beige background (#F5F0E8).
+Single small icon centered: a doodle of a test paper with a grid/table
+structure visible, a red pen marking checks, and a small graduation cap
+on top. Below: a small clock with arrow "3 horas → 15 min" in cyan marker.
+
+NO title. NO additional text. Just the centered icon, leaving empty space
+around it for copy in Canva.
+
+Warm pedagogical sketchnote style. Marker typography.
+Brand colors: violet #8B5CF6 and cyan #06B6D4.
+Size: 800x800px
+```
+
+---
+
+## PÁGINA 9 — PROMPT 3: RETROALIMENTACIÓN
+
+### Copy
+
+**Título:** Prompt 3 · Retroalimentación masiva
+
+**Para qué sirve:** Escribir comentarios personalizados para el informe de notas, sin repetir el mismo "buen trabajo, sigue así" 35 veces.
+
+**El prompt:**
+
+> Necesito generar 5 versiones distintas de retroalimentación escrita para estudiantes de [CURSO] en [ASIGNATURA].
+>
+> Cada versión debe corresponder a un nivel de logro:
+> 1. Destacado (6.5–7.0)
+> 2. Logrado (5.5–6.4)
+> 3. En desarrollo (4.5–5.4)
+> 4. Inicial (4.0–4.4)
+> 5. No logrado (<4.0)
+>
+> Cada comentario: 3 frases máximo, tono cálido pero profesional, en chileno, evitando frases hechas. Debe mencionar 1 fortaleza concreta + 1 área de mejora + 1 sugerencia accionable.
+
+**Tiempo que te ahorra:** ⏱️ De 2 horas → a 5 min
+
+**El truco:** 👉 Pedir 5 versiones por nivel te da una base para personalizar, en vez de copiar lo mismo a todos.
+
+### Prompt de imagen
+
+```
+Hand-drawn sketch illustration on cream beige background (#F5F0E8).
+Single small icon centered: a doodle of 5 stars in a row, each colored
+differently (gold, violet, cyan, pink, gray) representing 5 levels of
+achievement. Above the stars: a small chat bubble with a heart inside.
+Below: a small clock with arrow "2 horas → 5 min" in cyan marker.
+
+NO title. NO additional text. Centered, with empty space around it.
+
+Warm pedagogical sketchnote style. Marker typography.
+Brand colors: violet #8B5CF6 and cyan #06B6D4.
+Size: 800x800px
+```
+
+---
+
+## PÁGINA 10 — LA TRAMPA
+
+### Copy
+
+**Título:** Pero acá viene la trampa
+
+**Cuerpo:**
+
+> Tienes los 3 prompts. Los usas bien. Te ahorras 4 horas por semana.
+>
+> Genial.
+>
+> Pero ahora tienes que:
+
+**Lista (con X rojas):**
+- ❌ Buscar imágenes para los slides
+- ❌ Diseñar las diapositivas en Canva
+- ❌ Pasar la prueba a Word y diagramarla
+- ❌ Imprimirla
+- ❌ Aplicarla
+- ❌ Corregirla a mano, alternativa por alternativa, fila por fila
+- ❌ Pasar las notas al libro
+- ❌ Escribir los comentarios uno por uno
+
+**Cierre:**
+
+> Y al final del año, tienes que armar tu **portafolio para Carrera Docente** desde cero.
+>
+> **Ahí me cansé.**
+
+### Prompt de imagen
+
+```
+Hand-drawn sketch illustration on cream beige background (#F5F0E8).
+Single small vignette: a doodle figure of an exhausted teacher (simple
+stick character, NO detailed face — just dots for eyes and a tired
+flat mouth) slumped over a desk, with sweat drops and a coffee cup
+about to fall. Above the figure: a thought bubble in violet with "..."
+inside. Around: a few crumpled papers.
+
+NO title. NO additional text. Centered, with empty space around it.
+
+Humorous but empathetic tone. Warm pedagogical sketchnote style.
+Marker typography. Brand colors: violet #8B5CF6 and cyan #06B6D4.
+Size: 800x800px
+```
+
+---
+
+## PÁGINA 11 — EL ATAJO HONESTO
+
+### Copy
+
+**Título:** Lo que hice cuando me cansé
+
+**Cuerpo:**
+
+> En 2024 empecé a construir una herramienta solo para mí.
+>
+> Quería **una app que hiciera todo el ciclo completo en dos tandas de 5 minutos**, no solo el prompt.
+
+**Subtítulo cian:** Preparación (5 minutos):
+
+**Lista (con checks verdes):**
+- ✅ Planificación alineada a MINEDUC
+- ✅ Slides con imágenes generadas
+- ✅ Quiz formativo
+
+**Subtítulo cian:** Evaluación y cierre (5 minutos):
+
+**Lista (con checks verdes):**
+- ✅ Evaluación sumativa con pauta
+- ✅ Hoja de respuestas (bubble sheet)
+- ✅ Corrección automática desde una foto del celular
+- ✅ Retroalimentación personalizada de cada estudiante
+
+**Cierre:**
+
+> 10 minutos en total. Todo en chileno. Todo conectado a las Bases Curriculares.
+>
+> Se llama **EducMark**.
+>
+> No te lo cuento para venderte algo. Te lo cuento porque **es la única razón por la que ahora alcanzo a almorzar con mis hijos los sábados**.
+
+### Prompt de imagen
+
+```
+Hand-drawn sketch illustration on cream beige background (#F5F0E8).
+Single centered illustration (medium size): a doodle of a smartphone or
+laptop screen showing a simplified dashboard with 6 small cards arranged
+in a 2x3 grid. Each card has a small doodle icon (book, slide, quiz,
+test paper, bubble sheet, magnifying glass) and a green checkmark in
+the corner. Around the device: small sparkles, TWO clocks each showing
+"5 min" in cyan marker (one for "Preparación" and one for "Evaluación"),
+and a few floating stars in violet.
+
+NO title. NO labels on the cards. NO EducMark logo. Centered, with empty
+space around it for copy in Canva.
+
+Warm pedagogical sketchnote style. Marker typography.
+Brand colors: violet #8B5CF6 and cyan #06B6D4.
+Size: 1080x1080px
+```
+
+---
+
+## PÁGINA 12 — CÓMO FUNCIONA (2 tandas de 5 minutos)
+
+### Copy
+
+**Título:** Así funciona, paso a paso
+
+**Intro:**
+> Dos tandas de 5 minutos. Eso es todo lo que separa una clase pensada de una clase entregada y corregida.
+
+---
+
+**🟣 TANDA 1 — Preparación (5 minutos)**
+
+**Paso 1:** Eliges curso, asignatura y tema
+> *Ejemplo: 7° Básico · Historia · Civilizaciones precolombinas*
+
+**Paso 2:** EducMark trabaja mientras te sirves un café
+> *Consulta las Bases Curriculares MINEDUC, genera la planificación alineada, diseña los slides con imágenes únicas y arma el quiz formativo.*
+
+**Paso 3:** Descargas tu kit de clase
+> *Planificación + slides + quiz. Listo para proyectar mañana.*
+
+---
+
+**🔵 TANDA 2 — Evaluación y cierre (5 minutos)**
+
+**Paso 4:** Generas la evaluación sumativa
+> *Con tabla de especificaciones, pauta de corrección y hoja de respuestas (bubble sheet) lista para imprimir.*
+
+**Paso 5:** Aplicas la prueba y escaneas las hojas
+> *Sacas una foto a cada hoja con tu celular. EducMark corrige automáticamente.*
+
+**Paso 6:** Recibes retroalimentación personalizada
+> *EducMark te entrega un comentario para cada estudiante basado en sus respuestas reales. Lo revisas, lo ajustas si quieres, y listo.*
+
+---
+
+**Cierre (destacado violeta):**
+
+> **10 minutos. Ese es el tiempo real que te separa de salir del colegio a la 1 PM.**
+
+### Prompt de imagen
+
+```
+Hand-drawn sketch illustration on cream beige background (#F5F0E8).
+Horizontal layout showing two groups of three icons each, separated by
+a vertical dashed cyan line in the middle.
+
+LEFT GROUP (labeled "Preparación · 5 min" above in violet marker):
+- Icon 1: a cursor clicking a dropdown menu
+- Icon 2: a small clock showing 5 minutes with sparkles
+- Icon 3: a stack of documents (planning + slides + quiz)
+Connected by small cyan arrows pointing right.
+
+RIGHT GROUP (labeled "Evaluación · 5 min" above in violet marker):
+- Icon 4: a test paper with a bubble sheet
+- Icon 5: a smartphone taking a picture (camera icon)
+- Icon 6: a chat bubble with a checkmark and stars
+Connected by small cyan arrows pointing right.
+
+Above each icon, a small violet marker number (1, 2, 3, 4, 5, 6).
+
+NO title. NO additional long text, just the small labels described above.
+Clean horizontal banner format.
+
+Warm pedagogical sketchnote style. Marker typography.
+Brand colors: violet #8B5CF6 and cyan #06B6D4.
+Size: 1400x700px (wide horizontal banner)
+```
+
+---
+
+## PÁGINA 13 — BONUS: CARRERA DOCENTE
+
+### Copy
+
+**Título:** Bonus · Carrera Docente
+
+**Cuerpo:**
+
+> Si eres profe en Chile, sabes que **el portafolio de Carrera Docente puede consumir 80+ horas** durante el año.
+>
+> EducMark tiene un módulo dedicado a esto:
+
+**Lista (checks):**
+- ✅ Genera borradores del **Módulo 1** (Planificación + Evaluación) usando tus clases reales del año
+- ✅ Reúne automáticamente tus secuencias de planificación
+- ✅ Te entrega un texto base alineado al **Manual Portafolio 2025**
+- ✅ Tú solo editas y subes a docentemas.cl
+
+**Cierre:**
+
+> No es un template genérico. Usa **tus** clases, **tu** contexto, **tus** estudiantes.
+>
+> Porque la evaluación de Carrera Docente no se gana con plantillas. Se gana mostrando tu trabajo real, bien organizado.
+
+### Prompt de imagen
+
+```
+Hand-drawn sketch illustration on cream beige background (#F5F0E8).
+Single centered icon: a doodle of an open portfolio folder with multiple
+pages flying out, each page showing tiny scribbled text and small
+checkmarks. On top of the folder: a large green checkmark. Around:
+a small graduation cap, a few stars, and a clock with motion lines
+indicating time saved.
+
+NO title. NO labels. Centered, with empty space around it for copy
+in Canva.
+
+Warm pedagogical sketchnote style. Marker typography.
+Brand colors: violet #8B5CF6 and cyan #06B6D4.
+Size: 1080x1080px
+```
+
+---
+
+## PÁGINA 14 — TU PRÓXIMO PASO
+
+### Copy
+
+**Título:** Tu próximo paso
+
+**Texto introductorio:** Tienes dos opciones:
+
+**Opción A — Seguir con los 3 prompts:**
+> Te van a ahorrar unas 4 horas por semana. No es poco. Si esto es lo que necesitas, perfecto. Guarda este PDF.
+
+**Opción B — Probar EducMark gratis:**
+> Al registrarte tienes acceso a **3 clases completas gratis** (planificación + slides + quiz + evaluación). Sin tarjeta. Sin compromiso.
+>
+> Generas tu primera clase, ves si te sirve, decides después.
+
+**CTA final:** 👉 Empieza acá: **educmark.cl**
+
+### Prompt de imagen
+
+```
+Hand-drawn sketch illustration on cream beige background (#F5F0E8).
+Two small cards side by side. Left card: smaller, in muted gray marker,
+with a small doodle of a PDF document on top. Right card: larger and
+brighter, in bold violet and cyan marker, with a doodle of a rocket
+taking off and sparkles around it.
+
+Below the cards: a large hand-drawn cyan arrow pointing right.
+
+NO title. NO "Opción A" / "Opción B" text. NO URL text. Just the visual
+comparison of the two cards and the arrow, leaving space around for
+copy in Canva.
+
+Warm pedagogical sketchnote style. Marker typography.
+Brand colors: violet #8B5CF6 and cyan #06B6D4.
+Size: 1200x800px
+```
+
+---
+
+## PÁGINA 15 — DESPEDIDA
+
+### Copy
+
+**Título:** Una última cosa
+
+**Cuerpo:**
+
+> Hace 3 años, cuando llegaba a mi casa a las 8 de la noche, mi hija Catalina me preguntaba todos los días lo mismo:
+>
+> > *— Papá, ¿mañana también te vas temprano?*
+>
+> Y yo le decía que sí.
+>
+> Hoy ya no me pregunta. Porque sabe que los sábados son nuestros, y que en algún momento del próximo año voy a salir del colegio a la 1 PM para irla a buscar.
+>
+> No te estoy vendiendo una app. Te estoy contando lo que a mí me funcionó.
+>
+> Ojalá te sirva.
+
+**Firma:** *— Alejandro Álvarez · Profesor de Historia · Fundador de EducMark*
+
+**Contacto:** 📩 Instagram: **@educmark.cl**
+
+### Layout
+- Foto real casual de Alejandro arriba o al lado
+- Texto principal al centro/abajo
+
+### Prompt de imagen
+
+```
+Hand-drawn sketch frame on cream beige background (#F5F0E8). Empty
+rounded space on the upper-left reserved for a real casual photograph
+of a man (will be added later in Canva). On the right side: a doodle
+of a small girl figure (no detailed face) holding hands with a stick
+figure parent, walking together. Above them: a sun with rays in cyan,
+small hearts in violet. Below: a doodle of a calendar with "SÁBADO"
+circled in red marker.
+
+At the bottom right: small space for a handwritten signature.
+
+Warm, emotional, pedagogical sketchnote style. Marker typography.
+Brand colors: violet #8B5CF6 and cyan #06B6D4.
+Size: 1080x1400px
+```
+
+---
+
+## PÁGINA 16 — CONTRAPORTADA (100% visual)
+
+### Copy
+*(Todo va dentro de la imagen generada)*
+
+- **EDUCMARK** (logo)
+- Recupera tus tardes.
+- Clase completa en minutos.
+- De profe a profe.
+- educmark.cl
+- Instagram · TikTok · @educmark.cl
+
+### Prompt de imagen
+
+```
+Hand-drawn sketch illustration on cream beige background (#F5F0E8) for the
+top half. Bottom half: solid violet #8B5CF6 background.
+
+Top half:
+- Large EducMark logo sketch (3 ascending bars representing teachers
+  growing) in violet, centered.
+- Below the logo: tagline in cyan handwritten marker, three lines:
+  "Recupera tus tardes."
+  "Clase completa en minutos."
+  "De profe a profe."
+
+Bottom violet half:
+- In white marker, large and centered: "educmark.cl"
+- Below in smaller text: "Instagram · TikTok · @educmark.cl"
+- Small doodle icons of a heart and a star around the URL.
+
+Clean, professional ebook back cover. Warm pedagogical sketchnote style.
+Marker typography. Brand colors: violet #8B5CF6 and cyan #06B6D4.
+Size: 1080x1400px
+```
+
+---
+
+# Recomendaciones generales
+
+1. **Generador principal:** Gemini Nano Banana (gratis). Backup: Kie.ai (`generate-kie.ts`).
+2. **Texto en español:** si la IA falla con tildes/ñ, genera la imagen sin texto y agrégalo en Canva con tipografía manuscrita (Caveat, Kalam, Permanent Marker).
+3. **Páginas con foto real:** 2 y 15. Necesitas 2 fotos tuyas (una formal, una casual). NO usar la generada con IA del ebook viejo.
+4. **Tamaños:** páginas 100% visuales (1, 2, 3, 4, 15, 16) son 1080x1400. Imágenes-elemento son cuadradas (800x800 o 1080x1080) o banners (1200x600).
+5. **Orden de generación recomendado:** 1 → 16 → 2 → 15 → 4 → 3 → resto. Así confirmas el estilo en las páginas más visibles antes de gastar generaciones en las del medio.

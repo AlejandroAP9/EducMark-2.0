@@ -293,7 +293,7 @@ export const Hero: React.FC = () => {
                     <div className="absolute -inset-1 bg-gradient-to-r from-primary to-purple-400 rounded-lg blur opacity-20 group-hover:opacity-60 transition duration-500"></div>
                     <img
                       src="/images/ebook-cover.jpg"
-                      alt="Guia Maestra de Prompts para Profesores - Ebook gratuito de EducMark"
+                      alt="De 12 Horas a 5 Minutos - Ebook gratuito de EducMark para profesores chilenos"
                       width="160"
                       height="213"
                       className="relative w-32 md:w-40 rounded-lg shadow-2xl border border-white/10 group-hover:shadow-[0_0_40px_rgba(139,92,246,0.6)] group-hover:border-primary/50 transition-all duration-300"
