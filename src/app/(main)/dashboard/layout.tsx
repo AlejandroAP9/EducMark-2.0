@@ -121,16 +121,18 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
     };
 
     useEffect(() => {
-        // Clear welcome param
-        const isWelcome = searchParams.get('welcome') === 'true';
-        if (isWelcome) {
+        // Clear welcome param from URL when it appears, but keep ebook-status check out of here
+        if (searchParams.get('welcome') === 'true') {
             window.history.replaceState({}, '', pathname);
         }
+    }, [searchParams, pathname]);
 
+    useEffect(() => {
+        // Ebook welcome check runs ONCE per layout mount, not on every navigation.
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session?.user) checkEbookStatus(session.user.id);
         });
-    }, [searchParams, pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         supabase.auth.getSession().then(async ({ data: { session } }) => {
