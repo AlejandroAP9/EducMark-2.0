@@ -293,7 +293,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
             <Modal isOpen={welcomeModalOpen} onClose={() => handleEbookAction('NO')} title="¡Bienvenido a EducMark!">
                 <div className="text-center p-4">
                     <p className="text-gray-300 mb-6 text-lg leading-relaxed">
-                        Gracias por unirte. Como regalo de bienvenida, hemos preparado una <strong>Guía de Prompts para Profesores</strong> que te ayudará a sacar el máximo provecho de EducMark en tu aula.
+                        Gracias por unirte. Como regalo de bienvenida, descarga el ebook <strong>De 12 Horas a 5 Minutos</strong> — la guia honesta para que uses EducMark y recuperes tus tardes.
                     </p>
                     <div className="inline-block hover:scale-105 transition-transform duration-300">
                         <Button
@@ -307,7 +307,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
                                     <Loader2 className="animate-spin" size={18} /> Descargando...
                                 </span>
                             ) : (
-                                "Descargar Guía de Prompts"
+                                "Descargar Ebook"
                             )}
                         </Button>
                     </div>

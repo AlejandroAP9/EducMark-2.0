@@ -193,17 +193,12 @@ export const Pricing: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // 6.1 -- Dynamic pioneer counter
+  // 6.1 -- Dynamic pioneer counter (public RPC bypasses RLS, returns only int)
   useEffect(() => {
-    supabase
-      .from('user_profiles')
-      .select('*', { count: 'exact', head: true })
-      .eq('plan', 'pioneer')
-      .eq('subscription_status', 'active')
-      .then(({ count }) => {
-        if (count !== null) setPioneerCount(count);
-      });
-  }, []);
+    supabase.rpc('get_pioneer_count').then(({ data, error }) => {
+      if (!error && typeof data === 'number') setPioneerCount(data);
+    });
+  }, [supabase]);
 
   const openPayment = async (url: string, planName?: string) => {
     trackEvent('payment_start', { plan: planName || 'unknown', location: 'pricing' });
