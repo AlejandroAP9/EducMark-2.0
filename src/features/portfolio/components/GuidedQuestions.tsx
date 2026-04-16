@@ -18,7 +18,7 @@ export default function GuidedQuestions({
 
   if (!section) {
     return (
-      <div className="text-sm text-white/40 py-4">
+      <div className="text-sm text-[var(--muted)] py-4">
         Seccion &quot;{sectionId}&quot; no encontrada en las preguntas guia.
       </div>
     );
@@ -27,12 +27,12 @@ export default function GuidedQuestions({
   return (
     <div className="space-y-5">
       <div>
-        <h4 className="text-sm font-semibold text-[#F8F9FA]">
+        <h4 className="text-sm font-semibold text-[var(--foreground)]">
           {section.tarea}
         </h4>
-        <p className="text-xs text-white/50 mt-1">{section.indicador}</p>
-        <div className="mt-2 bg-[#8B5CF6]/10 border border-[#8B5CF6]/20 rounded-lg px-3 py-2">
-          <p className="text-xs text-[#8B5CF6]">
+        <p className="text-xs text-[var(--muted)] mt-1">{section.indicador}</p>
+        <div className="mt-2 bg-[var(--primary)]/10 border border-[var(--primary)]/20 rounded-lg px-3 py-2">
+          <p className="text-xs text-[var(--primary)]">
             <span className="font-medium">Nivel Competente:</span>{' '}
             {section.nivel_competente}
           </p>
@@ -43,9 +43,9 @@ export default function GuidedQuestions({
         {section.preguntas.map((pregunta) => (
           <div
             key={pregunta.key}
-            className="border-l-2 border-[#8B5CF6] pl-4"
+            className="border-l-2 border-[var(--primary)] pl-4"
           >
-            <label className="block text-sm text-[#F8F9FA] mb-2 leading-relaxed">
+            <label className="block text-sm text-[var(--foreground)] mb-2 leading-relaxed">
               {pregunta.pregunta}
             </label>
             <textarea
@@ -53,7 +53,7 @@ export default function GuidedQuestions({
               onChange={(e) => onAnswer(pregunta.key, e.target.value)}
               placeholder={pregunta.placeholder}
               rows={4}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-[#F8F9FA] placeholder:text-white/20 focus:outline-none focus:border-[#8B5CF6] transition-colors resize-y"
+              className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--primary)] transition-colors resize-y"
             />
           </div>
         ))}

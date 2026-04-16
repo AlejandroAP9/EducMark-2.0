@@ -85,7 +85,7 @@ export default function PortfolioPreview() {
   }, [store]);
 
   return (
-    <div className="min-h-screen bg-[#05050A] text-[#F8F9FA]">
+    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <motion.div
@@ -97,11 +97,11 @@ export default function PortfolioPreview() {
             {store.wizardCompleted && (
               <button
                 onClick={handleBackToWizard}
-                className="p-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors"
+                className="p-2 rounded-lg border border-[var(--border)] hover:bg-[var(--card-hover)] transition-colors"
                 aria-label="Volver al wizard"
               >
                 <svg
-                  className="w-4 h-4 text-white/60"
+                  className="w-4 h-4 text-[var(--muted)]"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -116,11 +116,11 @@ export default function PortfolioPreview() {
               </button>
             )}
             <div>
-              <h1 className="text-2xl font-bold text-[#F8F9FA]">
+              <h1 className="text-2xl font-bold text-[var(--foreground)]">
                 Portafolio Carrera Docente{' '}
-                <span className="text-[#8B5CF6]">— Modulo 1</span>
+                <span className="text-[var(--primary)]">— Modulo 1</span>
               </h1>
-              <p className="text-sm text-white/50 mt-0.5">
+              <p className="text-sm text-[var(--muted)] mt-0.5">
                 Genera borradores de texto para completar en docentemas.cl
               </p>
             </div>

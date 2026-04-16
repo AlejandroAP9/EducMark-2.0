@@ -26,7 +26,7 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
             {i > 0 && (
               <div
                 className={`h-px w-8 ${
-                  isCompleted ? 'bg-[#8B5CF6]' : 'bg-white/10'
+                  isCompleted ? 'bg-[var(--primary)]' : 'bg-[var(--border)]'
                 }`}
               />
             )}
@@ -34,17 +34,17 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-[#8B5CF6] text-white'
+                    ? 'bg-[var(--primary)] text-white'
                     : isCompleted
-                    ? 'bg-[#8B5CF6]/30 text-[#8B5CF6]'
-                    : 'bg-white/5 text-white/40'
+                    ? 'bg-[var(--primary)]/30 text-[var(--primary)]'
+                    : 'bg-[var(--input-bg)] text-[var(--muted)]'
                 }`}
               >
                 {isCompleted ? '✓' : step}
               </div>
               <span
                 className={`text-xs ${
-                  isActive ? 'text-[#F8F9FA]' : 'text-white/40'
+                  isActive ? 'text-[var(--foreground)]' : 'text-[var(--muted)]'
                 }`}
               >
                 {label}
@@ -81,20 +81,20 @@ function ClassCard({
       disabled={disabled && !selected}
       className={`w-full text-left p-4 rounded-xl border transition-all ${
         selected
-          ? 'bg-[#8B5CF6]/10 border-[#8B5CF6] ring-1 ring-[#8B5CF6]/50'
+          ? 'bg-[var(--primary)]/10 border-[var(--primary)] ring-1 ring-[var(--primary)]/50'
           : disabled
-          ? 'bg-white/5 border-white/5 opacity-50 cursor-not-allowed'
-          : 'bg-white/5 border-white/10 hover:border-white/20'
+          ? 'bg-[var(--input-bg)] border-[var(--card-border)] opacity-50 cursor-not-allowed'
+          : 'bg-[var(--input-bg)] border-[var(--border)] hover:border-[var(--primary)]/40'
       }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-[#F8F9FA] font-medium truncate">
+          <p className="text-sm text-[var(--foreground)] font-medium truncate">
             {cls.topic ?? cls.objetivo_clase ?? '(Sin tema)'}
           </p>
-          <p className="text-xs text-white/40 mt-1">{fecha}</p>
+          <p className="text-xs text-[var(--muted)] mt-1">{fecha}</p>
           {cls.oa_label && (
-            <p className="text-xs text-[#06B6D4] mt-1 truncate">
+            <p className="text-xs text-[var(--secondary)] mt-1 truncate">
               {cls.oa_label}
             </p>
           )}
@@ -102,8 +102,8 @@ function ClassCard({
         <div
           className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center mt-0.5 ${
             selected
-              ? 'border-[#8B5CF6] bg-[#8B5CF6]'
-              : 'border-white/20'
+              ? 'border-[var(--primary)] bg-[var(--primary)]'
+              : 'border-[var(--border)]'
           }`}
         >
           {selected && (
@@ -196,7 +196,6 @@ export default function PortfolioWizard() {
     store,
   ]);
 
-  const canContinueStep2 = wizardState.selectedClasses.length >= 1;
   const canGenerate = wizardState.selectedClasses.length >= 1;
 
   return (
@@ -215,29 +214,29 @@ export default function PortfolioWizard() {
             className="space-y-6"
           >
             <div>
-              <h3 className="text-lg font-semibold text-[#F8F9FA] mb-1">
+              <h3 className="text-lg font-semibold text-[var(--foreground)] mb-1">
                 Selecciona asignatura y curso
               </h3>
-              <p className="text-sm text-white/50">
+              <p className="text-sm text-[var(--muted)]">
                 Buscaremos tus clases y evaluaciones generadas en EducMark
               </p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-white/60 mb-1.5">
+                <label className="block text-sm text-[var(--muted)] mb-1.5">
                   Asignatura
                 </label>
                 <select
                   value={localAsignatura}
                   onChange={(e) => setLocalAsignatura(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-[#F8F9FA] focus:outline-none focus:border-[#8B5CF6] transition-colors appearance-none"
+                  className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors appearance-none"
                 >
-                  <option value="" className="bg-[#0a0a0f]">
+                  <option value="" className="bg-[var(--card)] text-[var(--foreground)]">
                     Seleccionar...
                   </option>
                   {data.availableAsignaturas.map((a) => (
-                    <option key={a} value={a} className="bg-[#0a0a0f]">
+                    <option key={a} value={a} className="bg-[var(--card)] text-[var(--foreground)]">
                       {a}
                     </option>
                   ))}
@@ -245,19 +244,19 @@ export default function PortfolioWizard() {
               </div>
 
               <div>
-                <label className="block text-sm text-white/60 mb-1.5">
+                <label className="block text-sm text-[var(--muted)] mb-1.5">
                   Curso
                 </label>
                 <select
                   value={localCurso}
                   onChange={(e) => setLocalCurso(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-[#F8F9FA] focus:outline-none focus:border-[#8B5CF6] transition-colors appearance-none"
+                  className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors appearance-none"
                 >
-                  <option value="" className="bg-[#0a0a0f]">
+                  <option value="" className="bg-[var(--card)] text-[var(--foreground)]">
                     Seleccionar...
                   </option>
                   {data.availableCursos.map((c) => (
-                    <option key={c} value={c} className="bg-[#0a0a0f]">
+                    <option key={c} value={c} className="bg-[var(--card)] text-[var(--foreground)]">
                       {c}
                     </option>
                   ))}
@@ -265,7 +264,7 @@ export default function PortfolioWizard() {
               </div>
 
               <div>
-                <label className="block text-sm text-white/60 mb-1.5">
+                <label className="block text-sm text-[var(--muted)] mb-1.5">
                   Periodo (opcional)
                 </label>
                 <input
@@ -273,7 +272,7 @@ export default function PortfolioWizard() {
                   value={localPeriodo}
                   onChange={(e) => setLocalPeriodo(e.target.value)}
                   placeholder="Ej: Primer semestre 2026"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-[#F8F9FA] placeholder:text-white/30 focus:outline-none focus:border-[#8B5CF6] transition-colors"
+                  className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--primary)] transition-colors"
                 />
               </div>
             </div>
@@ -281,7 +280,7 @@ export default function PortfolioWizard() {
             <button
               onClick={handleStep1Continue}
               disabled={!localAsignatura || !localCurso}
-              className="w-full bg-[#8B5CF6] hover:bg-[#8B5CF6]/90 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl transition-all"
+              className="w-full bg-[var(--primary)] hover:bg-[var(--primary-hover)] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl transition-all"
             >
               Continuar
             </button>
@@ -299,27 +298,27 @@ export default function PortfolioWizard() {
             className="space-y-6"
           >
             <div>
-              <h3 className="text-lg font-semibold text-[#F8F9FA] mb-1">
+              <h3 className="text-lg font-semibold text-[var(--foreground)] mb-1">
                 Selecciona hasta 3 experiencias
               </h3>
-              <p className="text-sm text-white/50">
+              <p className="text-sm text-[var(--muted)]">
                 Estas clases se incluiran en la Tarea 1 de tu portafolio
               </p>
             </div>
 
             {data.loading ? (
               <div className="flex items-center justify-center py-12">
-                <div className="w-6 h-6 border-2 border-[#8B5CF6] border-t-transparent rounded-full animate-spin" />
-                <span className="ml-3 text-sm text-white/50">
+                <div className="w-6 h-6 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+                <span className="ml-3 text-sm text-[var(--muted)]">
                   Cargando clases...
                 </span>
               </div>
             ) : data.classes.length === 0 ? (
-              <div className="text-center py-12 bg-white/5 border border-white/10 rounded-xl">
-                <p className="text-white/50 text-sm">
+              <div className="text-center py-12 bg-[var(--input-bg)] border border-[var(--border)] rounded-xl">
+                <p className="text-[var(--muted)] text-sm">
                   No se encontraron clases para esta asignatura y curso.
                 </p>
-                <p className="text-white/30 text-xs mt-1">
+                <p className="text-[var(--muted)] opacity-60 text-xs mt-1">
                   Genera clases primero desde el Generador de Clases.
                 </p>
               </div>
@@ -337,21 +336,21 @@ export default function PortfolioWizard() {
               </div>
             )}
 
-            <p className="text-xs text-white/30 text-center">
+            <p className="text-xs text-[var(--muted)] opacity-60 text-center">
               {wizardState.selectedClasses.length}/3 seleccionadas
             </p>
 
             <div className="flex gap-3">
               <button
                 onClick={prevStep}
-                className="flex-1 border border-white/10 hover:bg-white/5 text-[#F8F9FA] font-medium py-3 px-6 rounded-xl transition-all"
+                className="flex-1 border border-[var(--border)] hover:bg-[var(--card-hover)] text-[var(--foreground)] font-medium py-3 px-6 rounded-xl transition-all"
               >
                 Volver
               </button>
               <button
                 onClick={handleGenerateDrafts}
                 disabled={!canGenerate || generating}
-                className="flex-1 bg-gradient-to-r from-[#8B5CF6] to-[#06B6D4] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl transition-all"
+                className="flex-1 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl transition-all"
               >
                 {generating ? (
                   <span className="flex items-center justify-center gap-2">
