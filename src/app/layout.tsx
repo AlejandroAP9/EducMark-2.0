@@ -54,6 +54,11 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');var light=t==='light'||(!t&&window.matchMedia('(prefers-color-scheme: light)').matches);if(light){document.body.classList.add('light-mode');}}catch(e){}})();`,
+          }}
+        />
         {children}
         <PWARegister />
         <Toaster richColors position="top-right" />

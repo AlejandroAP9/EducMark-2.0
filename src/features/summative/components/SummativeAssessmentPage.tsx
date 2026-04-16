@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Menu, Moon, Wand2, Search } from 'lucide-react';
+import { Menu, Wand2, Search } from 'lucide-react';
+import { ThemeToggle } from '@/shared/components/ThemeToggle';
 import { useSubscriptionStore } from '@/features/auth/store/subscriptionStore';
 import { useRouter } from 'next/navigation';
 import { DashboardOverview } from './DashboardOverview';
@@ -339,9 +340,7 @@ function SummativeHeader({ setMobileOpen }: { setMobileOpen: (open: boolean) => 
                     <Wand2 size={13} />
                     <span>{credits.used}/{classesLimit}</span>
                 </button>
-                <button className="header-btn" onClick={() => document.body.classList.toggle('light-mode')} title="Cambiar Tema">
-                    <Moon size={20} />
-                </button>
+                <ThemeToggle />
                 <div className="user-profile">
                     <div className="text-right hidden md:block mr-3">
                         <div className="text-sm font-semibold text-[var(--on-background)] leading-tight">

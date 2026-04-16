@@ -1,83 +1,13 @@
 /* =========================================
-   DASHBOARD CSS - NEO-OBSIDIAN v1
-   NOTE: Shared variables are in variables.css.
-   Only add dashboard-specific overrides here.
+   DASHBOARD CSS - NEO-OBSIDIAN v1 + Liquid Glass
+   Theme tokens live in src/app/globals.css (:root + body.light-mode).
+   This file only adds dashboard-specific metrics and component styles.
    ========================================= */
 
-/* 1. VARIABLES & THEME */
+/* 1. Dashboard-specific metrics (light/dark agnostic) */
 :root {
-    /* Base Colors - Deep & Rich */
-    --background: #05050A;
-    /* Deeper black/blue */
-    --foreground: #F8F9FA;
-    --on-background: #ffffff;
-
-    --card: rgba(18, 18, 26, 0.6);
-    /* More transparent for glass */
-    --card-hover: rgba(28, 28, 40, 0.8);
-    --card-foreground: #ffffff;
-    --card-border: rgba(255, 255, 255, 0.06);
-
-    /* Neo Accents - Iridescent/Electric */
-    --primary: #8B5CF6;
-    /* Violet */
-    --primary-bg: rgba(139, 92, 246, 0.1);
-    --primary-glow: 0 0 50px rgba(139, 92, 246, 0.25);
-
-    --secondary: #06B6D4;
-    /* Cyan */
-    --accent-gradient: linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%);
-
-    /* Functional Colors */
-    --input-bg: rgba(255, 255, 255, 0.03);
-    --border: rgba(255, 255, 255, 0.08);
-    --muted: #94A3B8;
-
-    --success: #10B981;
-    --warning: #F59E0B;
-    --danger: #EF4444;
-
-    /* Metrics & Effects */
-    --radius: 1.5rem;
-    --radius-sm: 0.75rem;
-    --transition: cubic-bezier(0.2, 0.8, 0.2, 1);
-
     --sidebar-width: 280px;
-    /* Slightly wider for elegance */
     --header-height: 80px;
-
-    /* Authenticity & Texture */
-    --glass-bg: rgba(10, 10, 15, 0.6);
-    --glass-border: rgba(255, 255, 255, 0.08);
-    --glass-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
-    --noise-url: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.07'/%3E%3C/svg%3E");
-
-    /* Typography - Editorial & Clean */
-    --font-heading: 'Space Grotesk', system-ui, sans-serif;
-    --font-body: 'Outfit', -apple-system, sans-serif;
-}
-
-/* Light Mode Overrides (Refined) */
-body.light-mode {
-    --background: #F3F4F6;
-    --foreground: #1F2937;
-    --on-background: #111827;
-
-    --card: #FFFFFF;
-    --card-hover: #F9FAFB;
-    --card-foreground: #1F2937;
-    --card-border: #E5E7EB;
-
-    --input-bg: #FFFFFF;
-    --border: #E5E7EB;
-    --muted: #6B7280;
-
-    --glass-bg: rgba(255, 255, 255, 0.8);
-    --glass-border: rgba(0, 0, 0, 0.05);
-    --glass-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.5);
-
-    --noise-url: none;
-    /* Cleaner look for light mode */
 }
 
 /* 2. BASE STYLES & LAYOUT */
@@ -147,10 +77,10 @@ h4 {
     left: 0;
     width: var(--sidebar-width);
     height: 100vh;
-    background: rgba(5, 5, 10, 0.6);
+    background: var(--sidebar-bg);
     backdrop-filter: blur(40px) saturate(180%);
     -webkit-backdrop-filter: blur(40px) saturate(180%);
-    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    border-right: 1px solid var(--sidebar-border);
     display: flex;
     flex-direction: column;
     z-index: 50;
@@ -176,7 +106,7 @@ h4 {
     );
     background-size: 100% 200%;
     animation: aurora 6s ease-in-out infinite;
-    opacity: 0.7;
+    opacity: var(--aurora-opacity);
 }
 
 .sidebar-header {
@@ -267,10 +197,10 @@ h4 {
     justify-content: space-between;
     padding: 0 4rem;
     z-index: 40;
-    background: rgba(5, 5, 10, 0.55);
+    background: var(--header-bg);
     backdrop-filter: blur(40px) saturate(180%);
     -webkit-backdrop-filter: blur(40px) saturate(180%);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid var(--sidebar-border);
     gap: 2rem;
 }
 
@@ -752,10 +682,10 @@ h4 {
         width: 100%;
         padding: 0 1.25rem;
         gap: 0.5rem;
-        background: rgba(5, 5, 10, 0.7);
+        background: var(--sidebar-bg);
         backdrop-filter: blur(40px) saturate(180%);
         -webkit-backdrop-filter: blur(40px) saturate(180%);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        border-bottom: 1px solid var(--sidebar-border);
     }
 
     /* Mobile Search Behavior - managed by React state mostly, but here for backup */
@@ -951,3 +881,80 @@ h4 {
 .driver-popover-arrow-side-bottom.driver-popover-arrow {
     border-top-color: #1a1a2e !important;
 }
+
+/* =========================================
+   LIGHT MODE — Component-level overrides
+   Targets the hardcoded rgba() that assume dark surfaces.
+   ========================================= */
+
+/* Nav items: subtle violet tint instead of white translucency */
+body.light-mode .nav-item:hover {
+    background: rgba(124, 58, 237, 0.06);
+}
+body.light-mode .nav-item.active {
+    background: rgba(124, 58, 237, 0.1);
+    border-color: rgba(124, 58, 237, 0.15);
+}
+
+/* Inputs inside dashboard (search, header-search, generic form inputs) */
+body.light-mode .header-search input,
+body.light-mode input[type="text"].dashboard-input,
+body.light-mode input[type="search"].dashboard-input {
+    background: rgba(124, 58, 237, 0.04);
+    border: 1px solid var(--card-border);
+    color: var(--foreground);
+}
+body.light-mode .header-search input:focus {
+    background: #FFFFFF;
+    box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.2);
+}
+
+/* User profile avatar border in light */
+body.light-mode .user-profile .avatar {
+    background: rgba(124, 58, 237, 0.1);
+    border: 1px solid rgba(124, 58, 237, 0.2);
+}
+
+/* Header pill buttons (credits badge, referral, theme toggle, bell) */
+body.light-mode .header-btn,
+body.light-mode .header-actions > button {
+    background: rgba(124, 58, 237, 0.05);
+    border: 1px solid var(--card-border);
+    color: var(--foreground);
+}
+body.light-mode .header-btn:hover {
+    background: rgba(124, 58, 237, 0.1);
+    border-color: rgba(124, 58, 237, 0.25);
+}
+
+/* Cards / panels (generic .card class used throughout) */
+body.light-mode .card,
+body.light-mode .glass-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    box-shadow: 0 2px 12px rgba(26, 21, 40, 0.06);
+}
+body.light-mode .card:hover,
+body.light-mode .glass-card:hover {
+    background: var(--card-hover);
+    border-color: rgba(124, 58, 237, 0.2);
+    box-shadow: 0 4px 20px rgba(26, 21, 40, 0.08);
+}
+
+/* Driver.js tour popover — legible on light */
+body.light-mode .driver-popover {
+    background: #FFFFFF !important;
+    color: var(--foreground) !important;
+}
+body.light-mode .driver-popover-arrow-side-left.driver-popover-arrow { border-right-color: #FFFFFF !important; }
+body.light-mode .driver-popover-arrow-side-right.driver-popover-arrow { border-left-color: #FFFFFF !important; }
+body.light-mode .driver-popover-arrow-side-top.driver-popover-arrow { border-bottom-color: #FFFFFF !important; }
+body.light-mode .driver-popover-arrow-side-bottom.driver-popover-arrow { border-top-color: #FFFFFF !important; }
+
+/* Scrollbars in light */
+body.light-mode ::-webkit-scrollbar-track { background: transparent; }
+body.light-mode ::-webkit-scrollbar-thumb {
+    background: rgba(124, 58, 237, 0.2);
+    border-radius: 4px;
+}
+body.light-mode ::-webkit-scrollbar-thumb:hover { background: rgba(124, 58, 237, 0.35); }

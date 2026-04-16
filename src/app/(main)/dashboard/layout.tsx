@@ -11,8 +11,9 @@ import { Sidebar } from '@/features/dashboard/components/Sidebar';
 import { ReferralButton } from '@/features/dashboard/components/ReferralProgram';
 import { NotificationBell } from '@/features/dashboard/components/NotificationBell';
 import { Modal, Button } from '@/shared/components/ui/UIComponents';
+import { ThemeToggle } from '@/shared/components/ThemeToggle';
 import { toast } from 'sonner';
-import { Menu, Search, X, ArrowRight, Moon, Loader2, Wand2 } from 'lucide-react';
+import { Menu, Search, X, ArrowRight, Loader2, Wand2 } from 'lucide-react';
 
 function CreditsBadge() {
     const router = useRouter();
@@ -268,9 +269,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
                         <CreditsBadge />
                         <ReferralButton />
                         <NotificationBell />
-                        <button className="header-btn" onClick={() => document.body.classList.toggle('light-mode')} title="Cambiar Tema">
-                            <Moon size={20} />
-                        </button>
+                        <ThemeToggle />
                         <div className="user-profile">
                             <div className="text-right hidden md:block mr-3">
                                 <div className="text-sm font-semibold text-[var(--on-background)] leading-tight">
