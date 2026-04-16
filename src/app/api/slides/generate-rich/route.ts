@@ -8,6 +8,7 @@ import { renderSlide } from '@/lib/slides/slideRenderer';
 import { wrapSlidesHtml, type SlideBlock } from '@/lib/slides/htmlWrapper';
 import { renderPlanificacionHtml } from '@/lib/slides/planificacionRenderer';
 import { fetchAllOAsFromRag, type OAFull } from '@/lib/slides/oaExtractor';
+import { uploadToDrive } from '@/lib/slides/driveStorage';
 
 const EVALUACION_PROMPT = `# TAREA: EVALUACIÓN FORMATIVA
 
@@ -413,7 +414,7 @@ ${slides.map((s, i) => `SLIDE ${i + 1}: "${s.title}"
 
       if (imgPrompts.length > 0) {
         const settled = await Promise.allSettled(
-          imgPrompts.map((p, i) => generateAndStoreImage(kieKey, p.image_prompt, admin, userId, classId, i))
+          imgPrompts.map((p, i) => generateAndStoreImage(kieKey, p.image_prompt, admin, userId, classId, i, userEmail))
         );
         imageUrls = settled.map(r => r.status === 'fulfilled' ? r.value : null);
       }
@@ -463,19 +464,39 @@ ${slides.map((s, i) => `SLIDE ${i + 1}: "${s.title}"
 
     const fullHtml = wrapSlidesHtml(topic, allSlides);
 
-    // --- 7. UPLOAD a Supabase Storage ---
-    const storagePath = `${userId}/${classId}.html`;
-    const { error: uploadErr } = await admin.storage
-      .from('generated-classes')
-      .upload(storagePath, fullHtml, { contentType: 'text/html; charset=utf-8', upsert: false });
+    // --- 7. UPLOAD a Google Drive (o Supabase Storage si Drive no está configurado) ---
+    const useDrive = !!(process.env.GOOGLE_SERVICE_ACCOUNT_JSON && process.env.GOOGLE_DRIVE_FOLDER_ID);
+    let presentacionUrl: string;
 
-    if (uploadErr) {
-      console.error('[Kit] Upload error:', uploadErr);
-      return NextResponse.json({ error: 'Error subiendo presentación' }, { status: 500 });
+    if (useDrive) {
+      try {
+        const safeTitle = topic.replace(/[^\w\s-]/g, '').substring(0, 50);
+        const res = await uploadToDrive(
+          fullHtml,
+          `Presentacion_${safeTitle}_${classId.substring(0, 8)}.html`,
+          'text/html; charset=utf-8',
+          userEmail || userId
+        );
+        presentacionUrl = res.webViewLink;
+      } catch (err) {
+        console.error('[Kit] Drive upload failed, falling back to Supabase:', err);
+        const storagePath = `${userId}/${classId}.html`;
+        await admin.storage.from('generated-classes').upload(storagePath, fullHtml, { contentType: 'text/html; charset=utf-8', upsert: false });
+        const { data } = admin.storage.from('generated-classes').getPublicUrl(storagePath);
+        presentacionUrl = data.publicUrl;
+      }
+    } else {
+      const storagePath = `${userId}/${classId}.html`;
+      const { error: uploadErr } = await admin.storage
+        .from('generated-classes')
+        .upload(storagePath, fullHtml, { contentType: 'text/html; charset=utf-8', upsert: false });
+      if (uploadErr) {
+        console.error('[Kit] Upload error:', uploadErr);
+        return NextResponse.json({ error: 'Error subiendo presentación' }, { status: 500 });
+      }
+      const { data: publicUrlData } = admin.storage.from('generated-classes').getPublicUrl(storagePath);
+      presentacionUrl = publicUrlData.publicUrl;
     }
-
-    const { data: publicUrlData } = admin.storage.from('generated-classes').getPublicUrl(storagePath);
-    const presentacionUrl = publicUrlData.publicUrl;
 
     // --- 7.5. Generar HTML de planificación y subir ---
     // Prioridad de fuentes para OAs:
@@ -496,10 +517,55 @@ ${slides.map((s, i) => `SLIDE ${i + 1}: "${s.title}"
       }));
     }
 
-    // Si el RAG trajo indicadores oficiales, también los usamos en lugar de los del LLM
-    const indicadoresFinales = oasLiterales.length > 0
+    // Selección de indicadores: los del RAG son TODOS los del OA (4-7 por OA).
+    // En una clase solo se trabajan 2-3. Pedimos al LLM que seleccione los que
+    // realmente se abordan según la secuencia didáctica.
+    const todosLosIndicadores = oasLiterales.length > 0
       ? oasLiterales.flatMap(o => o.indicadores)
       : (plan.indicadores || []);
+
+    let indicadoresFinales: string[] = todosLosIndicadores;
+    if (todosLosIndicadores.length > 3) {
+      try {
+        const selectRes = await openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          temperature: 0.3,
+          max_tokens: 600,
+          response_format: { type: 'json_object' },
+          messages: [
+            {
+              role: 'system',
+              content: `Eres un experto curricular chileno. Dado un objetivo de clase, secuencia didáctica e indicadores oficiales del OA, selecciona SOLO los 2-3 indicadores que REALMENTE se trabajan en ESTA clase (no los que se trabajarían en el OA completo a lo largo de varias clases). Prioriza alineación con las actividades concretas de la secuencia. JSON: { "indices": [0, 2] } — indica los números de índice (0-based) de los indicadores seleccionados.`,
+            },
+            {
+              role: 'user',
+              content: `OBJETIVO CLASE: ${plan.objetivo_clase || objetivoFull}
+
+SECUENCIA DIDÁCTICA:
+- Inicio: ${plan.fase_inicio || ''}
+- Desarrollo: ${plan.fase_desarrollo || ''}
+- Cierre: ${plan.fase_cierre || ''}
+
+INDICADORES OFICIALES DEL OA (${todosLosIndicadores.length} disponibles):
+${todosLosIndicadores.map((ind, i) => `[${i}] ${ind}`).join('\n')}
+
+Selecciona 2-3 índices (máximo).`,
+            },
+          ],
+        });
+        const parsed = JSON.parse(selectRes.choices[0]?.message?.content || '{}');
+        const indices: number[] = Array.isArray(parsed.indices) ? parsed.indices : [];
+        if (indices.length > 0) {
+          indicadoresFinales = indices
+            .filter((i: number) => i >= 0 && i < todosLosIndicadores.length)
+            .slice(0, 3)
+            .map((i: number) => todosLosIndicadores[i]);
+          console.log('[Kit] Indicadores filtrados:', indicadoresFinales.length, 'de', todosLosIndicadores.length);
+        }
+      } catch (err) {
+        console.warn('[Kit] Filtro de indicadores falló, usando todos:', err);
+      }
+    }
 
     // Extract rubrica with normalization (handles both our new format and legacy detalle_instrumento)
     let rubrica = evaluacion.rubrica || [];
@@ -526,16 +592,30 @@ ${slides.map((s, i) => `SLIDE ${i + 1}: "${s.title}"
       nee_data: neeData,
     });
 
-    const planPath = `${userId}/${classId}-planificacion.html`;
     let planificacionUrl: string | null = null;
-    const { error: planUploadErr } = await admin.storage
-      .from('generated-classes')
-      .upload(planPath, planificacionHtml, { contentType: 'text/html; charset=utf-8', upsert: false });
-    if (!planUploadErr) {
-      const { data: planUrlData } = admin.storage.from('generated-classes').getPublicUrl(planPath);
-      planificacionUrl = planUrlData.publicUrl;
-    } else {
-      console.warn('[Kit] Planificación upload failed:', planUploadErr);
+    if (useDrive) {
+      try {
+        const safeTitle = topic.replace(/[^\w\s-]/g, '').substring(0, 50);
+        const res = await uploadToDrive(
+          planificacionHtml,
+          `Planificacion_${safeTitle}_${classId.substring(0, 8)}.html`,
+          'text/html; charset=utf-8',
+          userEmail || userId
+        );
+        planificacionUrl = res.webViewLink;
+      } catch (err) {
+        console.warn('[Kit] Planificación Drive upload failed, fallback:', err);
+      }
+    }
+    if (!planificacionUrl) {
+      const planPath = `${userId}/${classId}-planificacion.html`;
+      const { error: planUploadErr } = await admin.storage
+        .from('generated-classes')
+        .upload(planPath, planificacionHtml, { contentType: 'text/html; charset=utf-8', upsert: false });
+      if (!planUploadErr) {
+        const { data: planUrlData } = admin.storage.from('generated-classes').getPublicUrl(planPath);
+        planificacionUrl = planUrlData.publicUrl;
+      }
     }
 
     // --- 8. INSERT en generated_classes ---
@@ -646,39 +726,44 @@ async function generateAndStoreImage(
   admin: any,
   userId: string,
   classId: string,
-  index: number
+  index: number,
+  userEmail: string
 ): Promise<string | null> {
-  // 1. Create Kie.ai task
   const tempUrl = await generateNanoBananaTempUrl(apiKey, prompt);
   if (!tempUrl) return null;
 
-  // 2. Download image bytes
   try {
     const imgRes = await fetch(tempUrl);
-    if (!imgRes.ok) {
-      console.warn('[Kie->Storage] download failed', imgRes.status);
-      return tempUrl; // fallback: use temp url (will expire)
-    }
+    if (!imgRes.ok) return tempUrl;
     const buffer = Buffer.from(await imgRes.arrayBuffer());
     const contentType = imgRes.headers.get('content-type') || 'image/png';
     const ext = contentType.includes('jpeg') ? 'jpg' : 'png';
 
-    // 3. Upload to Supabase Storage (permanent)
-    const path = `${userId}/${classId}-img-${index}.${ext}`;
-    const { error: uploadErr } = await admin.storage
-      .from('generated-classes')
-      .upload(path, buffer, { contentType, upsert: false });
-
-    if (uploadErr) {
-      console.warn('[Kie->Storage] upload failed:', uploadErr.message);
-      return tempUrl; // fallback
+    // Prioridad: Drive > Supabase Storage
+    const useDrive = !!(process.env.GOOGLE_SERVICE_ACCOUNT_JSON && process.env.GOOGLE_DRIVE_FOLDER_ID);
+    if (useDrive) {
+      try {
+        const res = await uploadToDrive(
+          buffer,
+          `img-${classId.substring(0, 8)}-${index}.${ext}`,
+          contentType,
+          userEmail || userId
+        );
+        return res.directLink; // usa thumbnail high-res para <img>
+      } catch (err) {
+        console.warn('[Img->Drive] failed, falling back to Supabase:', err);
+      }
     }
 
+    // Fallback Supabase
+    const path = `${userId}/${classId}-img-${index}.${ext}`;
+    const { error } = await admin.storage.from('generated-classes').upload(path, buffer, { contentType, upsert: false });
+    if (error) return tempUrl;
     const { data } = admin.storage.from('generated-classes').getPublicUrl(path);
     return data.publicUrl;
   } catch (err) {
-    console.warn('[Kie->Storage] error:', err);
-    return tempUrl; // fallback
+    console.warn('[Img->Storage] error:', err);
+    return tempUrl;
   }
 }
 

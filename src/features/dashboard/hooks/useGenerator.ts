@@ -352,19 +352,44 @@ export function useGenerator() {
 
             const cacheKey = await generateCacheKey(payload);
 
-            const { data: apiResult, error: fnError } = await supabase.functions.invoke('generate-class-kit', {
-                body: {
-                    ...payload,
-                    generated_at: new Date().toISOString(),
-                    user_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                    email: formData.userEmail,
-                    nombre: formData.userName,
-                },
-            });
+            // FEATURE FLAG: si NEXT_PUBLIC_USE_NEW_GENERATOR=true usa el endpoint Next.js
+            // (genera en ~30-90s con Nano Banana + Drive + Resend directo).
+            // Default: usa la Edge Function supabase que llama a n8n (~4-5 min).
+            const useNewGenerator = process.env.NEXT_PUBLIC_USE_NEW_GENERATOR === 'true';
+            let result: Record<string, unknown>;
 
-            if (fnError) throw new Error(`Error del servidor: ${fnError.message}`);
-
-            const result = apiResult;
+            if (useNewGenerator) {
+                const res = await fetch('/api/slides/generate-rich', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        asignatura: formData.subject,
+                        curso: formData.grade,
+                        oa: formData.oaCodes.length > 0 ? formData.oaCodes.join(', ') : formData.oa,
+                        objetivo_clase: formData.topic,
+                        nee: formData.nee,
+                        duracion_clase: formData.duration,
+                        profesor: formData.userName,
+                    }),
+                });
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({ error: 'Error desconocido' }));
+                    throw new Error(`Error del servidor: ${errData.error}`);
+                }
+                result = await res.json();
+            } else {
+                const { data: apiResult, error: fnError } = await supabase.functions.invoke('generate-class-kit', {
+                    body: {
+                        ...payload,
+                        generated_at: new Date().toISOString(),
+                        user_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                        email: formData.userEmail,
+                        nombre: formData.userName,
+                    },
+                });
+                if (fnError) throw new Error(`Error del servidor: ${fnError.message}`);
+                result = apiResult;
+            }
             const hasContent = result && (
                 result.metadata ||
                 result.slides ||
@@ -395,29 +420,38 @@ export function useGenerator() {
 
             // Save History
             let generatedClassId: string | null = null;
+
+            // Si usamos el endpoint nuevo, el backend YA insertó en generated_classes.
+            // Solo tomamos el classId del response.
+            if (useNewGenerator) {
+                generatedClassId = (result.classId as string) || null;
+            }
+
             const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                const planningText = typeof result?.planning === 'string'
-                    ? result.planning
-                    : (typeof result?.planning_text === 'string' ? result.planning_text : '');
+            if (session && !useNewGenerator) {
+                const r = result as Record<string, unknown>;
+                const metadata = (r.metadata || {}) as Record<string, unknown>;
+                const planningText = typeof r.planning === 'string'
+                    ? r.planning
+                    : (typeof r.planning_text === 'string' ? r.planning_text : '');
 
                 const planningBlocks = {
-                    objective: result?.objetivo_clase || formData.topic || '',
-                    indicators: result?.metadata?.indicadores_evaluacion || [],
-                    inicio: result?.metadata?.inicio || '',
-                    desarrollo: result?.metadata?.desarrollo || '',
-                    cierre: result?.metadata?.cierre || '',
-                    resources: result?.metadata?.recursos_concretos || [],
+                    objective: (r.objetivo_clase as string) || formData.topic || '',
+                    indicators: (metadata.indicadores_evaluacion as string[]) || [],
+                    inicio: (metadata.inicio as string) || '',
+                    desarrollo: (metadata.desarrollo as string) || '',
+                    cierre: (metadata.cierre as string) || '',
+                    resources: (metadata.recursos_concretos as string[]) || [],
                     planningText,
                 };
 
                 const exitTicket = {
                     title: 'Ticket de Salida',
                     instructions: 'Responde al finalizar la clase.',
-                    questions: Array.isArray(result?.quiz)
-                        ? result.quiz.slice(0, 5).map((item: Record<string, unknown>, index: number) => ({
+                    questions: Array.isArray(r.quiz)
+                        ? (r.quiz as Record<string, unknown>[]).slice(0, 5).map((item, index) => ({
                             id: index + 1,
-                            type: Array.isArray(item?.options) && item.options.length ? 'multiple_choice' : 'open',
+                            type: Array.isArray(item?.options) && (item.options as unknown[]).length ? 'multiple_choice' : 'open',
                             question: (item?.question as string) || `Pregunta ${index + 1}`,
                             options: (item?.options as string[]) || [],
                             answer: (item?.correct as string) || null,
@@ -464,7 +498,11 @@ export function useGenerator() {
                 toast.success("¡Kit generado con éxito! 🎉");
                 logAuditEvent('class_generated', { subject: formData.subject, grade: formData.grade });
                 sessionStorage.setItem('kitResultState', JSON.stringify({ data: result, generatedClassId }));
-                router.push('/dashboard/kit-result');
+                // Con endpoint nuevo, pasamos el classId por URL para que KitResult lo cargue desde DB
+                const kitUrl = useNewGenerator && generatedClassId
+                    ? `/dashboard/kit-result?id=${generatedClassId}`
+                    : '/dashboard/kit-result';
+                router.push(kitUrl);
             }, 800);
 
         } catch (error: unknown) {

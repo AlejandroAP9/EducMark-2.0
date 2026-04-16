@@ -207,9 +207,28 @@ export async function POST(req: NextRequest) {
       oas = oaNumbers.map((num: string, i: number) => ({ numero: num, texto: oaTexts[i] || oaTexts[0] || '' }));
     }
 
-    const indicadoresFinales = oasLiterales.length > 0
+    const todosLosIndicadores = oasLiterales.length > 0
       ? oasLiterales.flatMap(o => o.indicadores)
       : (plan.indicadores || []);
+
+    let indicadoresFinales: string[] = todosLosIndicadores;
+    if (todosLosIndicadores.length > 3) {
+      try {
+        const selectRes = await openai.chat.completions.create({
+          model: 'gpt-4o-mini', temperature: 0.3, max_tokens: 600,
+          response_format: { type: 'json_object' },
+          messages: [
+            { role: 'system', content: `Eres experto curricular chileno. Selecciona SOLO 2-3 indicadores que se trabajan en ESTA clase según su secuencia. JSON: { "indices": [0, 2] }` },
+            { role: 'user', content: `OBJETIVO: ${plan.objetivo_clase || objetivoFull}\nInicio: ${plan.fase_inicio}\nDesarrollo: ${plan.fase_desarrollo}\nCierre: ${plan.fase_cierre}\n\nINDICADORES:\n${todosLosIndicadores.map((ind: string, i: number) => `[${i}] ${ind}`).join('\n')}` },
+          ],
+        });
+        const parsed = JSON.parse(selectRes.choices[0]?.message?.content || '{}');
+        const indices: number[] = Array.isArray(parsed.indices) ? parsed.indices : [];
+        if (indices.length > 0) {
+          indicadoresFinales = indices.filter(i => i >= 0 && i < todosLosIndicadores.length).slice(0, 3).map(i => todosLosIndicadores[i]);
+        }
+      } catch { /* ignore */ }
+    }
 
     const planificacionHtml = renderPlanificacionHtml({
       asignatura, profesor, curso, duracion: duracion_clase, fecha: today,
