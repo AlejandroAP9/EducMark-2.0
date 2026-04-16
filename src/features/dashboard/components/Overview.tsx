@@ -381,7 +381,7 @@ export function Overview() {
                                 <>
                                     <motion.span
                                         whileHover={{ scale: 1.05 }}
-                                        className="inline-flex items-center gap-2 py-2 px-5 rounded-full bg-white/10 text-white text-sm font-bold uppercase tracking-wider border border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.1)] w-fit mb-6"
+                                        className="inline-flex items-center gap-2 py-2 px-5 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] text-sm font-bold uppercase tracking-wider border border-[var(--primary)]/25 w-fit mb-6"
                                     >
                                         <Sparkles size={16} className="fill-current" /> Generador Unificado
                                     </motion.span>
