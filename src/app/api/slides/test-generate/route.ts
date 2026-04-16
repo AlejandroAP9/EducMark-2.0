@@ -9,6 +9,7 @@ import { queryRag } from '@/lib/slides/ragQuery';
 import { renderSlide } from '@/lib/slides/slideRenderer';
 import { wrapSlidesHtml, type SlideBlock } from '@/lib/slides/htmlWrapper';
 import { renderPlanificacionHtml } from '@/lib/slides/planificacionRenderer';
+import { fetchAllOAsFromRag, type OAFull } from '@/lib/slides/oaExtractor';
 
 const PLANIFICACION_PROMPT = `# ROL: ARQUITECTO PEDAGÓGICO EDUCMARK
 Identifica OA REALES del currículum MINEDUC chileno, construye objetivo TRIDIMENSIONAL y secuencia cerebro-compatible.
@@ -91,16 +92,20 @@ export async function POST(req: NextRequest) {
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
   try {
-    // RAG
+    // RAG + OA Extractor
     let ragPrograma = '';
     let ragTexto = '';
+    let oasLiterales: OAFull[] = [];
     try {
-      const [p, t] = await Promise.all([
+      const [p, t, oasFromRag] = await Promise.all([
         queryRag(objetivoFull, asignatura, curso, 'programa', 5),
         queryRag(objetivoFull, asignatura, curso, 'texto_estudiante', 5),
+        fetchAllOAsFromRag(asignatura, curso, oa),
       ]);
       ragPrograma = p.map(c => c.contenido).join('\n\n');
       ragTexto = t.map(c => c.contenido).join('\n\n');
+      oasLiterales = oasFromRag;
+      console.log('[Test] OAs literales:', oasLiterales.length);
     } catch (err) { console.warn('[Test] RAG:', err); }
 
     // Plan
@@ -190,14 +195,21 @@ export async function POST(req: NextRequest) {
 
     const presentacionHtml = wrapSlidesHtml(topic, allSlides);
 
+    // Prioridad: OAs literales del RAG > LLM plan.oas > fallback legacy
     let oas: { numero: string; texto: string }[] = [];
-    if (Array.isArray(plan.oas) && plan.oas.length > 0) {
+    if (oasLiterales.length > 0) {
+      oas = oasLiterales.map(o => ({ numero: o.numero, texto: o.texto }));
+    } else if (Array.isArray(plan.oas) && plan.oas.length > 0) {
       oas = plan.oas.filter((o: { numero?: string; texto?: string }) => o.numero && o.texto) as { numero: string; texto: string }[];
     } else {
       const oaNumbers = (plan.oa_number || oa).split(/[/,]/).map((s: string) => s.trim()).filter(Boolean);
       const oaTexts = (plan.oa_text || objetivoFull).split('|||').map((s: string) => s.trim()).filter(Boolean);
       oas = oaNumbers.map((num: string, i: number) => ({ numero: num, texto: oaTexts[i] || oaTexts[0] || '' }));
     }
+
+    const indicadoresFinales = oasLiterales.length > 0
+      ? oasLiterales.flatMap(o => o.indicadores)
+      : (plan.indicadores || []);
 
     const planificacionHtml = renderPlanificacionHtml({
       asignatura, profesor, curso, duracion: duracion_clase, fecha: today,
@@ -209,7 +221,7 @@ export async function POST(req: NextRequest) {
       fase_inicio: plan.fase_inicio,
       fase_desarrollo: plan.fase_desarrollo,
       fase_cierre: plan.fase_cierre,
-      indicadores: plan.indicadores,
+      indicadores: indicadoresFinales,
       rubrica: evaluacion.rubrica || [],
       nee_data: neeData,
     });

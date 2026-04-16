@@ -7,6 +7,7 @@ import { queryRag } from '@/lib/slides/ragQuery';
 import { renderSlide } from '@/lib/slides/slideRenderer';
 import { wrapSlidesHtml, type SlideBlock } from '@/lib/slides/htmlWrapper';
 import { renderPlanificacionHtml } from '@/lib/slides/planificacionRenderer';
+import { fetchAllOAsFromRag, type OAFull } from '@/lib/slides/oaExtractor';
 
 const EVALUACION_PROMPT = `# TAREA: EVALUACIÓN FORMATIVA
 
@@ -251,17 +252,21 @@ export async function POST(req: NextRequest) {
   const objetivoFull = objetivo_clase || oa;
 
   try {
-    // --- 2. RAG ---
-    console.log('[Kit] RAG queries for user:', userId);
+    // --- 2. RAG + OA Extractor (paralelo) ---
+    console.log('[Kit] RAG + OA extraction for user:', userId);
     let ragPrograma = '';
     let ragTexto = '';
+    let oasLiterales: OAFull[] = [];
     try {
-      const [programaChunks, textoChunks] = await Promise.all([
+      const [programaChunks, textoChunks, oasFromRag] = await Promise.all([
         queryRag(objetivoFull, asignatura, curso, 'programa', 5),
         queryRag(objetivoFull, asignatura, curso, 'texto_estudiante', 5),
+        fetchAllOAsFromRag(asignatura, curso, oa),
       ]);
       ragPrograma = programaChunks.map(c => c.contenido).join('\n\n---\n\n');
       ragTexto = textoChunks.map(c => c.contenido).join('\n\n');
+      oasLiterales = oasFromRag;
+      console.log('[Kit] OAs extraídos del RAG:', oasLiterales.length);
     } catch (err) {
       console.warn('[Kit] RAG failed:', err);
     }
@@ -473,12 +478,16 @@ ${slides.map((s, i) => `SLIDE ${i + 1}: "${s.title}"
     const presentacionUrl = publicUrlData.publicUrl;
 
     // --- 7.5. Generar HTML de planificación y subir ---
-    // Parse OAs: el LLM devuelve un array, con fallback al formato legacy
+    // Prioridad de fuentes para OAs:
+    // 1. oasLiterales (extraídos DIRECTO del RAG, texto oficial MINEDUC)
+    // 2. plan.oas del LLM (puede resumir)
+    // 3. Fallback legacy
     let oas: { numero: string; texto: string }[] = [];
-    if (Array.isArray(plan.oas) && plan.oas.length > 0) {
+    if (oasLiterales.length > 0) {
+      oas = oasLiterales.map(o => ({ numero: o.numero, texto: o.texto }));
+    } else if (Array.isArray(plan.oas) && plan.oas.length > 0) {
       oas = plan.oas.filter(o => o.numero && o.texto);
     } else {
-      // Fallback legacy: oa_number / oa_text con |||
       const oaNumbers = (plan.oa_number || oa).split(/[/,]/).map((s: string) => s.trim()).filter(Boolean);
       const oaTexts = (plan.oa_text || objetivoFull).split('|||').map((s: string) => s.trim()).filter(Boolean);
       oas = oaNumbers.map((num: string, i: number) => ({
@@ -486,6 +495,11 @@ ${slides.map((s, i) => `SLIDE ${i + 1}: "${s.title}"
         texto: oaTexts[i] || oaTexts[0] || '',
       }));
     }
+
+    // Si el RAG trajo indicadores oficiales, también los usamos en lugar de los del LLM
+    const indicadoresFinales = oasLiterales.length > 0
+      ? oasLiterales.flatMap(o => o.indicadores)
+      : (plan.indicadores || []);
 
     // Extract rubrica with normalization (handles both our new format and legacy detalle_instrumento)
     let rubrica = evaluacion.rubrica || [];
@@ -507,7 +521,7 @@ ${slides.map((s, i) => `SLIDE ${i + 1}: "${s.title}"
       fase_inicio: plan.fase_inicio,
       fase_desarrollo: plan.fase_desarrollo,
       fase_cierre: plan.fase_cierre,
-      indicadores: plan.indicadores,
+      indicadores: indicadoresFinales,
       rubrica,
       nee_data: neeData,
     });
