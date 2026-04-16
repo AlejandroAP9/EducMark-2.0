@@ -8,6 +8,63 @@ import { renderSlide } from '@/lib/slides/slideRenderer';
 import { wrapSlidesHtml, type SlideBlock } from '@/lib/slides/htmlWrapper';
 import { renderPlanificacionHtml } from '@/lib/slides/planificacionRenderer';
 
+const EVALUACION_PROMPT = `# TAREA: EVALUACIÓN FORMATIVA
+
+Crea una Rúbrica Analítica con 2-3 criterios basados en los indicadores proporcionados.
+Usa VERBOS ESPECÍFICOS en descriptores (no "lo hace bien" sino "identifica correctamente 3+").
+4 niveles: DESTACADO (4), LOGRADO (3), EN DESARROLLO (2), INICIAL (1).
+NO inventes indicadores — usa los proporcionados.
+Si NEE no es "Ninguna", incluye un criterio adicional con adaptación DUA.
+
+JSON ESTRICTO:
+{
+  "evaluacion": {
+    "tipo_evaluacion": "Formativa",
+    "instrumento": "Rúbrica Analítica",
+    "rubrica": [
+      { "criterio": "Nombre del criterio 1", "destacado": "...", "logrado": "...", "en_desarrollo": "...", "inicial": "..." },
+      { "criterio": "Nombre del criterio 2", "destacado": "...", "logrado": "...", "en_desarrollo": "...", "inicial": "..." },
+      { "criterio": "Nombre del criterio 3", "destacado": "...", "logrado": "...", "en_desarrollo": "...", "inicial": "..." }
+    ]
+  }
+}
+
+RESTRICCIONES: NO uses viñetas ni negritas dentro de celdas. Texto plano.`;
+
+const NEE_DUA_PROMPT = `# ROL: ARQUITECTO NEE/DUA — Especialista en Inclusión Educativa Chilena
+Experto en Diseño Universal para el Aprendizaje (DUA) y adecuaciones curriculares según Decreto 83/2015 y PIE Chile. Base teórica: neuroeducación de Amanda Céspedes y biología del conocimiento de Humberto Maturana.
+
+FRAMEWORK:
+- Céspedes → DUA: Cada cerebro tiene un perfil neurocognitivo único. Si presentas info por un solo canal, pierdes a los que procesan por otros.
+- Maturana → Inclusión: "Amar es aceptar al otro como legítimo otro". NEE no es problema, es camino diferente.
+
+INSTRUCCIONES:
+1. Si NEE = "Ninguna": genera estrategias DUA UNIVERSALES para todo el grupo
+2. Si NEE es específica: adaptaciones al perfil con vínculo EXPLÍCITO a actividades de la secuencia real
+3. Lenguaje colega mentor, no clínico
+
+JSON:
+{
+  "nee_enriched": {
+    "diagnostico": "Diagnóstico o 'Grupo Curso (DUA Universal)'",
+    "perfil_neurocognitivo": "Descripción 2-3 líneas según Céspedes",
+    "principio_dua_prioritario": "Representación / Acción y Expresión / Implicación",
+    "barrera_identificada": "Barrera específica en ESTA clase",
+    "adaptaciones": {
+      "acceso": { "descripcion": "Vinculada a actividad real de la secuencia" },
+      "metodologia": { "descripcion": "Vinculada a actividad real" },
+      "evaluacion": { "descripcion": "Adaptación evaluativa concreta" }
+    },
+    "co_docencia": {
+      "profesor_aula": "Qué hace durante la actividad adaptada",
+      "educador_diferencial": "Qué hace el educador diferencial"
+    },
+    "estrategia_dua_universal": "Estrategia que beneficia a TODO el grupo"
+  }
+}
+
+Máximo 3 líneas por campo. No inventes datos clínicos.`;
+
 const PLANIFICACION_PROMPT = `# ROL: ARQUITECTO PEDAGÓGICO EDUCMARK
 
 # TAREAS (3 bloques en un solo JSON)
@@ -33,18 +90,31 @@ Di "los estudiantes" SIN mencionar el curso.
 
 # SALIDA JSON ESTRICTA:
 {
-  "oa_number": "Código OA",
-  "oa_text": "Texto completo del OA",
+  "oas": [
+    { "numero": "OA 3", "texto": "Texto COMPLETO y LITERAL del OA 3 (40+ palabras exactas del currículum MINEDUC)" },
+    { "numero": "OA 4", "texto": "Texto COMPLETO y LITERAL del OA 4 (distinto al anterior, 40+ palabras)" }
+  ],
   "conceptos_clave": "Conceptos separados por comas",
-  "habilidades": "Verbo (N-Nombre)",
-  "objetivo_clase": "Objetivo TRIDIMENSIONAL: verbo infinitivo + contenido + actitud. UNA oración fluida.",
-  "indicadores": ["Indicadores REALES del currículum MINEDUC"],
-  "fase_inicio": "Descripción detallada, mínimo 3-4 oraciones",
-  "fase_desarrollo": "Descripción detallada con micro-ciclos, pausas activas, colaborativo. Mínimo 5-6 oraciones.",
-  "fase_cierre": "Descripción detallada con metacognición, pregunta reflexiva, ticket de salida. Mínimo 3-4 oraciones."
+  "habilidades": "Verbos en infinitivo separados por coma (ej: 'Explicar, Relacionar, Argumentar')",
+  "nivel_taxonomico": "Nivel Bloom numerado. Si hay varios, separados por coma (ej: 'Comprender - Nivel 2, Analizar - Nivel 4')",
+  "actitud": "Actitud/OAT transversal del currículum chileno (ej: 'Pensamiento crítico e informado', 'Valorar la diversidad')",
+  "objetivo_clase": "Objetivo TRIDIMENSIONAL. DEBE tener 3 partes claramente identificables:\\n  PARTE 1 - HABILIDAD: Inicia con verbo en infinitivo (Caracterizar, Analizar, Explicar, Comparar).\\n  PARTE 2 - CONTENIDO: El qué específico del tema, con detalles concretos.\\n  PARTE 3 - ACTITUD: 'valorando/apreciando/demostrando [actitud concreta]'.\\n  Ejemplo VÁLIDO: 'Caracterizar el Estado moderno y la economía mercantilista del siglo XVI, analizando los cambios en el poder político y económico, valorando el pensamiento crítico frente a los procesos históricos.'\\n  Ejemplo INVÁLIDO (sin actitud): 'Caracterizar el Estado moderno del siglo XVI.'\\n  UNA sola oración fluida, 30-50 palabras.",
+  "indicadores": ["Indicadores REALES del currículum MINEDUC, al menos 3"],
+  "fase_inicio": "Descripción detallada, mínimo 3-4 oraciones con actividades específicas",
+  "fase_desarrollo": "Descripción con micro-ciclos 15+5+15, pausas activas, colaborativo, contexto chileno. Mín 5-6 oraciones.",
+  "fase_cierre": "Descripción con metacognición, pregunta reflexiva, ticket de salida. Mín 3-4 oraciones."
 }
 
-REGLA RAG: Si el campo "OA Oficial RAG" contiene texto, USA ese texto TEXTUALMENTE para oa_text.`;
+REGLA RAG CRÍTICA:
+1. Si el campo "OA Oficial RAG" contiene el texto de un OA, COPIALO TEXTUALMENTE en oa_text. NO lo resumas.
+2. Si hay múltiples OAs solicitados (ej: "OA 3, OA 4"), DEBES incluir el texto COMPLETO de CADA UNO separados por |||. Cada OA tiene 40+ palabras con sus detalles específicos.
+3. Si el RAG no trae el texto, genera el texto oficial según tu conocimiento del currículum MINEDUC chileno — NUNCA inventes, NUNCA uses texto genérico.
+
+VALIDACIÓN OBLIGATORIA del objetivo_clase antes de responder:
+- ¿Empieza con verbo en infinitivo? ✓
+- ¿Menciona contenido específico (no genérico)? ✓
+- ¿Tiene palabra como "valorando/apreciando/demostrando" + actitud concreta? ✓
+Si alguno falla, reescribe.`;
 
 const IMAGE_SYSTEM_PROMPT = `# EXPERTO EN PROMPTS VISUALES EDUCATIVOS
 
@@ -196,6 +266,9 @@ export async function POST(req: NextRequest) {
       console.warn('[Kit] RAG failed:', err);
     }
 
+    // Generate classId early (used in image storage paths)
+    const classId = crypto.randomUUID();
+
     // --- 3. PLANIFICACIÓN ---
     const planRes = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -212,17 +285,21 @@ export async function POST(req: NextRequest) {
     });
     const plan = JSON.parse(planRes.choices[0]?.message?.content || '{}') as PlanData;
 
-    // --- 4. CONTENIDO ---
-    const contentRes = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      temperature: 0.7,
-      max_tokens: 6000,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: CONTENT_SYSTEM_PROMPT },
-        {
-          role: 'user',
-          content: `Asignatura: ${asignatura} | Curso: ${curso}
+    // --- 3b. EVALUACIÓN + NEE/DUA (paralelo con contenido) ---
+    // Se dispara cuando ya tenemos la planificación
+
+    // --- 4. CONTENIDO + EVALUACIÓN + NEE/DUA (paralelo) ---
+    const [contentRes, evaluacionRes, neeRes] = await Promise.all([
+      openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        temperature: 0.7,
+        max_tokens: 6000,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: CONTENT_SYSTEM_PROMPT },
+          {
+            role: 'user',
+            content: `Asignatura: ${asignatura} | Curso: ${curso}
 Objetivo: ${plan.objetivo_clase || objetivoFull}
 
 PLANIFICACIÓN:
@@ -235,13 +312,66 @@ PLANIFICACIÓN:
 
 RAG MINEDUC: ${ragPrograma || '(N/A)'}
 TEXTO ESTUDIANTE: ${ragTexto ? ragTexto.substring(0, 1500) : '(N/A)'}`,
-        },
-      ],
-    });
+          },
+        ],
+      }),
+      openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        temperature: 0.5,
+        max_tokens: 2500,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: EVALUACION_PROMPT },
+          {
+            role: 'user',
+            content: `Objetivo: ${plan.objetivo_clase || objetivoFull}
+Desarrollo: ${plan.fase_desarrollo || ''}
+Indicadores: ${JSON.stringify(plan.indicadores || [])}
+Habilidades: ${plan.habilidades || ''}
+Asignatura/Curso: ${asignatura} - ${curso}
+NEE: ${nee}`,
+          },
+        ],
+      }),
+      openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        temperature: 0.6,
+        max_tokens: 2500,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: NEE_DUA_PROMPT },
+          {
+            role: 'user',
+            content: `OA/Objetivo: ${plan.objetivo_clase || objetivoFull}
+Asignatura: ${asignatura} | Curso: ${curso} | Duración: ${duracion_clase}
+NEE Reportada: ${nee}
+Secuencia INICIO: ${plan.fase_inicio || ''}
+Secuencia DESARROLLO: ${plan.fase_desarrollo || ''}
+Secuencia CIERRE: ${plan.fase_cierre || ''}
+Indicadores: ${(plan.indicadores || []).join('; ')}`,
+          },
+        ],
+      }),
+    ]);
+
     const contentData = JSON.parse(contentRes.choices[0]?.message?.content || '{}') as ContentData;
     const slides = contentData.slides || [];
     const quiz = contentData.quiz || [];
     const topic = contentData.metadata?.topic || asignatura;
+
+    let evaluacion: EvaluacionData = {};
+    try {
+      const parsed = JSON.parse(evaluacionRes.choices[0]?.message?.content || '{}');
+      evaluacion = parsed.evaluacion || {};
+    } catch { /* ignore */ }
+
+    let neeData: NEEEnrichedData = {};
+    try {
+      const parsed = JSON.parse(neeRes.choices[0]?.message?.content || '{}');
+      neeData = parsed.nee_enriched || {};
+    } catch { /* ignore */ }
+
+    console.log('[Kit] Plan+Eval+NEE OK. Rubrica rows:', (evaluacion.rubrica || []).length, '| NEE:', neeData.diagnostico);
 
     console.log('[Kit]', slides.length, 'slides,', quiz.length, 'quiz');
 
@@ -278,7 +408,7 @@ ${slides.map((s, i) => `SLIDE ${i + 1}: "${s.title}"
 
       if (imgPrompts.length > 0) {
         const settled = await Promise.allSettled(
-          imgPrompts.map(p => generateNanoBananaImage(kieKey, p.image_prompt))
+          imgPrompts.map((p, i) => generateAndStoreImage(kieKey, p.image_prompt, admin, userId, classId, i))
         );
         imageUrls = settled.map(r => r.status === 'fulfilled' ? r.value : null);
       }
@@ -329,7 +459,6 @@ ${slides.map((s, i) => `SLIDE ${i + 1}: "${s.title}"
     const fullHtml = wrapSlidesHtml(topic, allSlides);
 
     // --- 7. UPLOAD a Supabase Storage ---
-    const classId = crypto.randomUUID();
     const storagePath = `${userId}/${classId}.html`;
     const { error: uploadErr } = await admin.storage
       .from('generated-classes')
@@ -344,23 +473,43 @@ ${slides.map((s, i) => `SLIDE ${i + 1}: "${s.title}"
     const presentacionUrl = publicUrlData.publicUrl;
 
     // --- 7.5. Generar HTML de planificación y subir ---
+    // Parse OAs: el LLM devuelve un array, con fallback al formato legacy
+    let oas: { numero: string; texto: string }[] = [];
+    if (Array.isArray(plan.oas) && plan.oas.length > 0) {
+      oas = plan.oas.filter(o => o.numero && o.texto);
+    } else {
+      // Fallback legacy: oa_number / oa_text con |||
+      const oaNumbers = (plan.oa_number || oa).split(/[/,]/).map((s: string) => s.trim()).filter(Boolean);
+      const oaTexts = (plan.oa_text || objetivoFull).split('|||').map((s: string) => s.trim()).filter(Boolean);
+      oas = oaNumbers.map((num: string, i: number) => ({
+        numero: num,
+        texto: oaTexts[i] || oaTexts[0] || '',
+      }));
+    }
+
+    // Extract rubrica with normalization (handles both our new format and legacy detalle_instrumento)
+    let rubrica = evaluacion.rubrica || [];
+    if (rubrica.length === 0 && evaluacion.detalle_instrumento) {
+      rubrica = parseRubricaFromMarkdown(evaluacion.detalle_instrumento);
+    }
+
     const planificacionHtml = renderPlanificacionHtml({
-      titulo: topic,
-      profesor: userName,
       asignatura,
+      profesor: userName,
       curso,
       duracion: duracion_clase,
       fecha: today,
-      oa_number: plan.oa_number,
-      oa_text: plan.oa_text,
-      objetivo_clase: plan.objetivo_clase || objetivoFull,
-      conceptos_clave: plan.conceptos_clave,
+      oas,
       habilidades: plan.habilidades,
-      indicadores: plan.indicadores,
+      nivel_taxonomico: plan.nivel_taxonomico,
+      actitud: plan.actitud,
+      objetivo_clase: plan.objetivo_clase || objetivoFull,
       fase_inicio: plan.fase_inicio,
       fase_desarrollo: plan.fase_desarrollo,
       fase_cierre: plan.fase_cierre,
-      nee,
+      indicadores: plan.indicadores,
+      rubrica,
+      nee_data: neeData,
     });
 
     const planPath = `${userId}/${classId}-planificacion.html`;
@@ -476,7 +625,50 @@ ${slides.map((s, i) => `SLIDE ${i + 1}: "${s.title}"
 
 // ===== Helpers =====
 
-async function generateNanoBananaImage(apiKey: string, prompt: string): Promise<string | null> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function generateAndStoreImage(
+  apiKey: string,
+  prompt: string,
+  admin: any,
+  userId: string,
+  classId: string,
+  index: number
+): Promise<string | null> {
+  // 1. Create Kie.ai task
+  const tempUrl = await generateNanoBananaTempUrl(apiKey, prompt);
+  if (!tempUrl) return null;
+
+  // 2. Download image bytes
+  try {
+    const imgRes = await fetch(tempUrl);
+    if (!imgRes.ok) {
+      console.warn('[Kie->Storage] download failed', imgRes.status);
+      return tempUrl; // fallback: use temp url (will expire)
+    }
+    const buffer = Buffer.from(await imgRes.arrayBuffer());
+    const contentType = imgRes.headers.get('content-type') || 'image/png';
+    const ext = contentType.includes('jpeg') ? 'jpg' : 'png';
+
+    // 3. Upload to Supabase Storage (permanent)
+    const path = `${userId}/${classId}-img-${index}.${ext}`;
+    const { error: uploadErr } = await admin.storage
+      .from('generated-classes')
+      .upload(path, buffer, { contentType, upsert: false });
+
+    if (uploadErr) {
+      console.warn('[Kie->Storage] upload failed:', uploadErr.message);
+      return tempUrl; // fallback
+    }
+
+    const { data } = admin.storage.from('generated-classes').getPublicUrl(path);
+    return data.publicUrl;
+  } catch (err) {
+    console.warn('[Kie->Storage] error:', err);
+    return tempUrl; // fallback
+  }
+}
+
+async function generateNanoBananaTempUrl(apiKey: string, prompt: string): Promise<string | null> {
   try {
     const createRes = await fetch('https://api.kie.ai/api/v1/jobs/createTask', {
       method: 'POST',
@@ -556,15 +748,51 @@ function buildEmailHtml(nombre: string, topic: string, asignatura: string, curso
 
 // ===== Types =====
 interface PlanData {
-  oa_number?: string;
-  oa_text?: string;
+  oas?: { numero: string; texto: string }[];
+  oa_number?: string;  // legacy fallback
+  oa_text?: string;    // legacy fallback
   conceptos_clave?: string;
   habilidades?: string;
+  nivel_taxonomico?: string;
+  actitud?: string;
   objetivo_clase?: string;
   indicadores?: string[];
   fase_inicio?: string;
   fase_desarrollo?: string;
   fase_cierre?: string;
+}
+
+interface EvaluacionData {
+  tipo_evaluacion?: string;
+  instrumento?: string;
+  detalle_instrumento?: string;
+  rubrica?: { criterio: string; destacado: string; logrado: string; en_desarrollo: string; inicial: string }[];
+}
+
+interface NEEEnrichedData {
+  diagnostico?: string;
+  perfil_neurocognitivo?: string;
+  principio_dua_prioritario?: string;
+  barrera_identificada?: string;
+  adaptaciones?: {
+    acceso?: { descripcion?: string };
+    metodologia?: { descripcion?: string };
+    evaluacion?: { descripcion?: string };
+  };
+  co_docencia?: { profesor_aula?: string; educador_diferencial?: string };
+  estrategia_dua_universal?: string;
+}
+
+function parseRubricaFromMarkdown(md: string): { criterio: string; destacado: string; logrado: string; en_desarrollo: string; inicial: string }[] {
+  // Handles "| col1 | col2 | col3 | col4 | col5 |<br>" format from legacy n8n
+  if (!md) return [];
+  const rows = md.split(/<br>|\n/).map(r => r.trim()).filter(r => r.startsWith('|') && !r.includes(':---'));
+  const dataRows = rows.slice(1); // skip header
+  return dataRows.map(row => {
+    const cols = row.split('|').map(c => c.trim()).filter(Boolean);
+    if (cols.length < 5) return null;
+    return { criterio: cols[0], destacado: cols[1], logrado: cols[2], en_desarrollo: cols[3], inicial: cols[4] };
+  }).filter((r): r is { criterio: string; destacado: string; logrado: string; en_desarrollo: string; inicial: string } => r !== null);
 }
 interface ContentData {
   metadata?: { topic?: string; subject?: string; level?: string };

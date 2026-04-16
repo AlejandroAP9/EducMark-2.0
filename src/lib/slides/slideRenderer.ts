@@ -25,14 +25,20 @@ export function renderSlide(data: SlideInput): { innerHTML: string; bgStyle: str
     ? data.content
     : { main_text: typeof data.content === 'string' ? data.content : '' };
 
+  const toArray = (v: unknown): string[] => {
+    if (Array.isArray(v)) return v.map(String);
+    if (typeof v === 'string' && v.trim()) return v.split(/[,;]|\n/).map(s => s.trim()).filter(Boolean);
+    return [];
+  };
+
   const slide = {
     number: Number(data.slide_number || 1),
     type: data.type || 'content',
     title: data.title || 'Clase',
     text: contentObj.main_text || data.main_text || '',
     example: contentObj.chilean_example || data.chilean_example || '',
-    vocab: contentObj.key_vocabulary || data.key_vocabulary || [],
-    questions: contentObj.activation_questions || data.activation_questions || [],
+    vocab: toArray(contentObj.key_vocabulary || data.key_vocabulary),
+    questions: toArray(contentObj.activation_questions || data.activation_questions),
     teacher: data.teacher || 'Docente',
     grade: data.grade || 'Curso',
     image: data.imageUrl || '',
