@@ -14,6 +14,8 @@ export interface AnswerKeyItem {
     cognitiveSkill?: string;
     rubric?: string;
     points?: number;
+    /** Si true, se corrige manualmente (desarrollo/respuesta breve). Muestra la rúbrica en vez de "(Ver Rúbrica)". */
+    isManual?: boolean;
 }
 
 export interface AnswerKeyParams {
@@ -34,12 +36,21 @@ export function generateAnswerKeyHTML(params: AnswerKeyParams): string {
         const bloomCell = lvl
             ? `<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-weight:700;font-size:12px;${lvl >= 4 ? 'background:#dcfce7;color:#15803d;' : lvl >= 3 ? 'background:#ddd6fe;color:#6d28d9;' : 'background:#fef3c7;color:#92400e;'}">${lvl} · ${BLOOM_LABELS[lvl]}</span>`
             : '<span style="color:#94a3b8;">—</span>';
+        const rowBg = item.isManual ? 'background:#fffbeb;' : '';
+        const numberCell = item.isManual
+            ? '<span style="color:#b45309; font-size:11px; font-style:italic;">Manual</span>'
+            : String(item.questionNumber);
+        const answerCell = item.isManual
+            ? (item.rubric
+                ? `<div style="font-size:12px; color:#78350f; line-height:1.5;"><strong style="color:#b45309;">Rúbrica:</strong> ${item.rubric}</div>`
+                : '<em style="color:#b45309; font-size:12px;">Corrección manual — sin rúbrica</em>')
+            : `<span style="font-weight:bold;color:#16a34a;font-size:16px;">${item.correctAnswer}</span>`;
         return `
-        <tr>
-            <td style="padding:8px;border:1px solid #ddd;text-align:center;font-weight:bold;">${item.questionNumber}</td>
+        <tr style="${rowBg}">
+            <td style="padding:8px;border:1px solid #ddd;text-align:center;font-weight:bold;">${numberCell}</td>
             <td style="padding:8px;border:1px solid #ddd;">${item.questionType}</td>
             <td style="padding:8px;border:1px solid #ddd;max-width:300px;">${item.question.substring(0, 100)}${item.question.length > 100 ? '...' : ''}</td>
-            <td style="padding:8px;border:1px solid #ddd;text-align:center;font-weight:bold;color:#16a34a;font-size:16px;">${item.correctAnswer}</td>
+            <td style="padding:8px;border:1px solid #ddd;text-align:center;">${answerCell}</td>
             <td style="padding:8px;border:1px solid #ddd;">${item.oa || '-'}</td>
             <td style="padding:8px;border:1px solid #ddd;">${item.cognitiveSkill || '-'}</td>
             <td style="padding:8px;border:1px solid #ddd;text-align:center;">${bloomCell}</td>

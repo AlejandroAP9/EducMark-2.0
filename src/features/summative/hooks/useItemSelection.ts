@@ -667,27 +667,52 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
 
         const title = testData.testTitle || 'Evaluación Sumativa';
 
+        // Pauta de corrección: N°, Respuesta (o Rúbrica si is_manual), Tipo, Habilidad, OA
+        let answerKeySlot = 0;
+        const answerKeyRows = itemsToPrint.map((item: GeneratedItem) => {
+            const isManual = !!item.is_manual;
+            if (!isManual) answerKeySlot++;
+            const slotLabel = isManual ? '—' : String(answerKeySlot);
+            const typeLabel = item.pedagogical_type === 'doble_proceso' ? 'Doble Proceso'
+                : item.pedagogical_type === 'ordenamiento' ? 'Ordenamiento'
+                : item.pedagogical_type === 'pareados' ? 'Pareados'
+                : item.pedagogical_type === 'completacion' ? 'Completación'
+                : item.pedagogical_type === 'desarrollo' ? 'Desarrollo'
+                : item.pedagogical_type === 'respuesta_breve' ? 'Respuesta Breve'
+                : item.type === 'tf' ? 'V/F' : 'SM';
+            const answerCell = isManual
+                ? (item.rubric
+                    ? `<em style="color:#b45309; font-size:12px;">Rúbrica:</em> ${item.rubric}`
+                    : '<em style="color:#b45309;">(Corrección manual — sin rúbrica definida)</em>')
+                : `<b>${item.correctAnswer || '—'}</b>`;
+            const rowBg = isManual ? 'background-color:#fffbeb;' : '';
+            return `
+                <tr style="${rowBg}">
+                    <td style="border: 1px solid #d1d5db; padding: 10px;">${slotLabel}</td>
+                    <td style="border: 1px solid #d1d5db; padding: 10px;">${answerCell}</td>
+                    <td style="border: 1px solid #d1d5db; padding: 10px; color: #4b5563; font-size:12px;">${typeLabel}</td>
+                    <td style="border: 1px solid #d1d5db; padding: 10px; color: #4b5563;">${item.skill || '-'}</td>
+                    <td style="border: 1px solid #d1d5db; padding: 10px; color: #4b5563;">${item.oa || '-'}</td>
+                </tr>
+            `;
+        }).join('');
+
         const answerKeyHtml = `
             <div style="page-break-before: always; font-family: 'Inter', sans-serif;">
-                <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;">Pauta de Corrección: ${title}</h2>
-                <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px;">
+                <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Pauta de Corrección: ${title}</h2>
+                <p style="font-size: 12px; color: #6b7280; margin-bottom: 20px;">N° = slot OMR. Los ítems marcados con "—" son de corrección manual (desarrollo / respuesta breve).</p>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 14px;">
                     <thead>
                         <tr style="background-color: #f3f4f6;">
-                            <th style="border: 1px solid #d1d5db; padding: 10px; text-align: left;">N°</th>
-                            <th style="border: 1px solid #d1d5db; padding: 10px; text-align: left;">Respuesta Sugerida</th>
-                            <th style="border: 1px solid #d1d5db; padding: 10px; text-align: left;">Habilidad</th>
-                            <th style="border: 1px solid #d1d5db; padding: 10px; text-align: left;">OA</th>
+                            <th style="border: 1px solid #d1d5db; padding: 10px; text-align: left; width:50px;">N°</th>
+                            <th style="border: 1px solid #d1d5db; padding: 10px; text-align: left;">Respuesta / Rúbrica</th>
+                            <th style="border: 1px solid #d1d5db; padding: 10px; text-align: left; width:120px;">Tipo</th>
+                            <th style="border: 1px solid #d1d5db; padding: 10px; text-align: left; width:140px;">Habilidad</th>
+                            <th style="border: 1px solid #d1d5db; padding: 10px; text-align: left; width:100px;">OA</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${itemsToPrint.map((item: GeneratedItem, idx: number) => `
-                            <tr>
-                                <td style="border: 1px solid #d1d5db; padding: 10px;">${idx + 1}</td>
-                                <td style="border: 1px solid #d1d5db; padding: 10px;"><b>${item.correctAnswer || '(Ver Rúbrica)'}</b></td>
-                                <td style="border: 1px solid #d1d5db; padding: 10px; color: #4b5563;">${item.skill || '-'}</td>
-                                <td style="border: 1px solid #d1d5db; padding: 10px; color: #4b5563;">${item.oa || '-'}</td>
-                            </tr>
-                        `).join('')}
+                        ${answerKeyRows}
                     </tbody>
                 </table>
             </div>
@@ -768,38 +793,158 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
   </div>
 
   <div class="questions">
-    ${itemsToPrint.map((item: GeneratedItem, idx: number) => `
-      <div class="question-block">
-        ${item.stimulusText ? `
-          <div class="stimulus-box" style="margin-bottom: 10px; padding: 12px 16px; background: #f8f9fa; border-left: 4px solid #6e56cf; border-radius: 0 8px 8px 0; font-size: 0.9em; line-height: 1.6;">
-            <strong style="font-size: 0.75em; text-transform: uppercase; letter-spacing: 1px; color: #6e56cf; display: block; margin-bottom: 6px;">
-              ${item.stimulusType === 'source' ? 'Fuente' : item.stimulusType === 'table' ? 'Datos' : 'Lee el siguiente texto'}
-            </strong>
-            <span style="white-space: pre-wrap;">${item.stimulusText}</span>
-          </div>
-        ` : ''}
-        ${item.imageUrl ? `<img src="${item.imageUrl}" class="question-image" alt="Pregunta ${idx + 1}" />` : ''}
-        <div class="question-title"><strong>${idx + 1}.</strong> ${item.question || '(Sin enunciado)'}</div>
+    ${(() => {
+        // Agrupa items consecutivos que comparten group_id + pedagogical_type
+        // en bloques pedagógicos. Items manuales (desarrollo/respuesta breve)
+        // no consumen slot OMR, los demás sí (contador separado).
+        type Block = { kind: string; items: GeneratedItem[]; startSlot: number };
+        const blocks: Block[] = [];
+        let omrSlot = 1;
+        for (let i = 0; i < itemsToPrint.length; i++) {
+            const item = itemsToPrint[i];
+            const kind = item.pedagogical_type || item.type || 'mc';
+            const prev = blocks[blocks.length - 1];
+            const isCompound = item.group_id && ['doble_proceso', 'ordenamiento', 'pareados', 'completacion'].includes(kind);
+            if (isCompound && prev && prev.items[0].group_id === item.group_id) {
+                prev.items.push(item);
+            } else {
+                blocks.push({ kind, items: [item], startSlot: item.is_manual ? 0 : omrSlot });
+            }
+            if (!item.is_manual) omrSlot++;
+        }
 
-        ${(item.options && item.options.length > 0) ? `
-          <div class="options-grid">
-            ${item.options.map((opt: string, i: number) => `
-              <div class="option-item">
-                <div class="circle"></div>
-                <span>${String.fromCharCode(65 + i)}) ${opt}</span>
-              </div>
-            `).join('')}
-          </div>
-        ` : `
-          <div class="open-lines">
-            <div class="line"></div>
-            <div class="line"></div>
-            <div class="line"></div>
-            <div class="line"></div>
-          </div>
-        `}
-      </div>
-    `).join('')}
+        return blocks.map((block) => {
+            const first = block.items[0];
+            const slotRange = block.items.filter((i: GeneratedItem) => !i.is_manual).length > 1
+                ? `preguntas ${block.startSlot} a ${block.startSlot + block.items.length - 1}`
+                : `pregunta ${block.startSlot}`;
+
+            // === Doble Proceso ===
+            if (block.kind === 'doble_proceso' && block.items.length === 2) {
+                const [tfItem, mcItem] = block.items;
+                return `
+                <div class="question-block" style="padding:14px 18px; background:#faf7ff; border:1px solid #e9d5ff; border-radius:10px;">
+                    <div style="font-size:10px; letter-spacing:2px; color:#7c3aed; font-weight:700; text-transform:uppercase; margin-bottom:8px;">Doble Proceso · ${slotRange}</div>
+                    <div class="question-title"><strong>${block.startSlot}.</strong> ${tfItem.question || ''} <span style="color:#7c3aed;">(Marca V o F)</span></div>
+                    <div style="margin:10px 0 16px 20px; display:flex; gap:28px; font-size:14px;">
+                        <div class="option-item"><div class="circle"></div><span>V) Verdadero</span></div>
+                        <div class="option-item"><div class="circle"></div><span>F) Falso</span></div>
+                    </div>
+                    <div class="question-title"><strong>${block.startSlot + 1}.</strong> ${mcItem.question || ''}</div>
+                    ${(mcItem.options && mcItem.options.length > 0) ? `
+                        <div class="options-grid">
+                            ${mcItem.options.map((opt: string, i: number) => `
+                                <div class="option-item"><div class="circle"></div><span>${String.fromCharCode(65 + i)}) ${opt}</span></div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>`;
+            }
+
+            // === Ordenamiento ===
+            if (block.kind === 'ordenamiento') {
+                // Extrae el premise del primer item y los elementos del texto de cada pregunta
+                const firstQ = first.question || '';
+                const premise = firstQ.includes(' — Elemento ') ? firstQ.split(' — Elemento ')[0] : firstQ;
+                const elements = block.items.map((it) => {
+                    const m = (it.question || '').match(/— Elemento ([A-Z]): "([^"]*)"/);
+                    return m ? { label: m[1], text: m[2] } : { label: '?', text: it.question || '' };
+                });
+                return `
+                <div class="question-block" style="padding:14px 18px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px;">
+                    <div style="font-size:10px; letter-spacing:2px; color:#2563eb; font-weight:700; text-transform:uppercase; margin-bottom:8px;">Ordenamiento · ${slotRange}</div>
+                    <div style="font-size:15px; margin-bottom:10px;"><strong>${premise}</strong></div>
+                    <ul style="margin:10px 0 14px 24px; padding:0; list-style:none;">
+                        ${elements.map((e) => `<li style="margin:4px 0; font-size:14px;"><strong style="color:#2563eb;">${e.label})</strong> ${e.text}</li>`).join('')}
+                    </ul>
+                    <div style="background:white; border:1px solid #bfdbfe; border-radius:8px; padding:10px 14px; font-size:13px; color:#1e3a8a;">
+                        <strong>Instrucciones:</strong> en la hoja OMR, marca para cada elemento la posición correcta (1°, 2°, 3°, ...) en las <strong>${slotRange}</strong>. Cada posición corresponde a una letra: A=1°, B=2°, C=3°, D=4°, E=5°.
+                    </div>
+                </div>`;
+            }
+
+            // === Términos Pareados ===
+            if (block.kind === 'pareados') {
+                const firstQ = first.question || '';
+                const premise = firstQ.includes(' — Ítem ') ? firstQ.split(' — Ítem ')[0] : firstQ;
+                const colA = block.items.map((it) => {
+                    const m = (it.question || '').match(/— Ítem ([A-Z0-9]+): "([^"]*)"/);
+                    return m ? { label: m[1], text: m[2] } : { label: '?', text: it.question || '' };
+                });
+                const colB = (first.options || []).map((o: string) => o);
+                return `
+                <div class="question-block" style="padding:14px 18px; background:#fdf2f8; border:1px solid #fbcfe8; border-radius:10px;">
+                    <div style="font-size:10px; letter-spacing:2px; color:#db2777; font-weight:700; text-transform:uppercase; margin-bottom:8px;">Términos Pareados · ${slotRange}</div>
+                    <div style="font-size:15px; margin-bottom:10px;"><strong>${premise}</strong></div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin:12px 0;">
+                        <div>
+                            <div style="font-size:11px; color:#9f1239; letter-spacing:1px; text-transform:uppercase; font-weight:700; margin-bottom:6px;">Columna A</div>
+                            <ol style="margin:0; padding-left:18px;">
+                                ${colA.map((a) => `<li style="margin:4px 0; font-size:14px;"><strong>${a.label}.</strong> ${a.text}</li>`).join('')}
+                            </ol>
+                        </div>
+                        <div>
+                            <div style="font-size:11px; color:#9f1239; letter-spacing:1px; text-transform:uppercase; font-weight:700; margin-bottom:6px;">Columna B (opciones)</div>
+                            <ul style="margin:0; padding-left:18px; list-style:none;">
+                                ${colB.map((b: string, i: number) => `<li style="margin:4px 0; font-size:14px;"><strong>${String.fromCharCode(65 + i)}.</strong> ${b}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                    <div style="background:white; border:1px solid #fbcfe8; border-radius:8px; padding:10px 14px; font-size:13px; color:#831843;">
+                        <strong>Instrucciones:</strong> para cada ítem de columna A, marca en la hoja OMR la letra de columna B que le corresponde (${slotRange}).
+                    </div>
+                </div>`;
+            }
+
+            // === Desarrollo / Respuesta Breve ===
+            if (first.is_manual) {
+                const isDev = block.kind === 'desarrollo';
+                const linesCount = isDev ? 8 : 3;
+                return `
+                <div class="question-block" style="padding:14px 18px; background:#fffbeb; border:1px solid #fde68a; border-radius:10px;">
+                    <div style="font-size:10px; letter-spacing:2px; color:#b45309; font-weight:700; text-transform:uppercase; margin-bottom:8px;">
+                        ${isDev ? 'Desarrollo' : 'Respuesta Breve'} · Corrección Manual
+                    </div>
+                    <div class="question-title">${first.question || '(Sin enunciado)'}</div>
+                    <div class="open-lines" style="margin-top:12px;">
+                        ${Array(linesCount).fill('<div class="line"></div>').join('')}
+                    </div>
+                    <div style="margin-top:8px; font-size:11px; color:#92400e; font-style:italic;">
+                        Esta pregunta NO se responde en la hoja OMR; el docente la corrige manualmente.
+                    </div>
+                </div>`;
+            }
+
+            // === Default: MC / VF / Completación suelto ===
+            return block.items.map((item: GeneratedItem, localIdx: number) => {
+                const slotNum = first.is_manual ? '' : `${block.startSlot + localIdx}.`;
+                return `
+                <div class="question-block">
+                    ${item.stimulusText ? `
+                      <div class="stimulus-box" style="margin-bottom: 10px; padding: 12px 16px; background: #f8f9fa; border-left: 4px solid #6e56cf; border-radius: 0 8px 8px 0; font-size: 0.9em; line-height: 1.6;">
+                        <strong style="font-size: 0.75em; text-transform: uppercase; letter-spacing: 1px; color: #6e56cf; display: block; margin-bottom: 6px;">
+                          ${item.stimulusType === 'source' ? 'Fuente' : item.stimulusType === 'table' ? 'Datos' : 'Lee el siguiente texto'}
+                        </strong>
+                        <span style="white-space: pre-wrap;">${item.stimulusText}</span>
+                      </div>
+                    ` : ''}
+                    ${item.imageUrl ? `<img src="${item.imageUrl}" class="question-image" alt="Pregunta ${slotNum}" />` : ''}
+                    <div class="question-title"><strong>${slotNum}</strong> ${item.question || '(Sin enunciado)'}</div>
+
+                    ${(item.options && item.options.length > 0) ? `
+                      <div class="options-grid">
+                        ${item.options.map((opt: string, i: number) => `
+                          <div class="option-item">
+                            <div class="circle"></div>
+                            <span>${String.fromCharCode(65 + i)}) ${opt}</span>
+                          </div>
+                        `).join('')}
+                      </div>
+                    ` : ''}
+                </div>`;
+            }).join('');
+        }).join('');
+    })()}
   </div>
 
   ${answerKeyHtml}
