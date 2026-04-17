@@ -467,6 +467,17 @@ ${slides.map((s, i) => `SLIDE ${i + 1}: "${s.title}"
         imgPrompts = (JSON.parse(imgPromptRes.choices[0]?.message?.content || '{}').prompts || []);
       } catch { /* ignore */ }
 
+      // Si el LLM devolvió menos prompts que slides, generar fallbacks
+      // basados en el título y conceptos clave del slide
+      if (imgPrompts.length < slides.length) {
+        console.warn('[Kit] LLM devolvió', imgPrompts.length, 'prompts para', slides.length, 'slides. Completando faltantes...');
+        for (let i = imgPrompts.length; i < slides.length; i++) {
+          const s = slides[i];
+          const fallbackPrompt = `Professional educational photography related to: ${s.title}. Context: ${asignatura} ${curso} — ${(s.content?.key_vocabulary || []).join(', ')}. Documentary style, National Geographic quality, 8k resolution, no text, no people, sharp focus, natural lighting.`;
+          imgPrompts.push({ image_prompt: fallbackPrompt, visual_type: 'photo' });
+        }
+      }
+
       if (imgPrompts.length > 0) {
         const allowedTypes = ['photo', 'diagram', 'comparative', 'timeline', 'concept_map', 'geo_map'] as const;
         const visualCounts: Record<string, number> = {};
