@@ -20,14 +20,26 @@ function getSelfClient() {
 }
 
 /**
- * Construye la URL pública del archivo usando la URL externa (no el DNS interno Docker).
- * Esto es crítico porque los links se envían por email y deben ser accesibles desde
- * el browser del usuario, no solo desde dentro del VPS.
+ * Construye la URL pública del archivo.
+ *
+ * Para HTMLs: usa el proxy /api/slides/view (Supabase fuerza text/plain para HTML por XSS).
+ * Para imágenes: usa directamente la URL pública de Supabase Storage (se sirven con content-type correcto).
+ *
+ * La base de la app debe configurarse con NEXT_PUBLIC_APP_URL (ej: https://educmark.cl)
+ * para que los HTML-links funcionen desde el email.
  */
 function buildPublicUrl(path: string): string {
+  const isHtml = path.endsWith('.html');
+
+  if (isHtml) {
+    const appBase = process.env.NEXT_PUBLIC_APP_URL || '';
+    const base = appBase.replace(/\/$/, '');
+    return `${base}/api/slides/view/${path}`;
+  }
+
+  // Para imágenes: URL pública directa del Supabase self-hosted
   const publicBase = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_PUBLIC_URL
     || process.env.NEXT_PUBLIC_RAG_SUPABASE_URL!;
-  // Normaliza: remueve trailing slash
   const base = publicBase.replace(/\/$/, '');
   return `${base}/storage/v1/object/public/generated-classes/${path}`;
 }
