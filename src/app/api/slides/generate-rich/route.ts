@@ -8,7 +8,7 @@ import { renderSlide } from '@/lib/slides/slideRenderer';
 import { wrapSlidesHtml, type SlideBlock } from '@/lib/slides/htmlWrapper';
 import { renderPlanificacionHtml } from '@/lib/slides/planificacionRenderer';
 import { fetchAllOAsFromRag, type OAFull } from '@/lib/slides/oaExtractor';
-import { uploadToDrive } from '@/lib/slides/driveStorage';
+import { uploadToSelfStorage } from '@/lib/slides/selfStorage';
 
 const EVALUACION_PROMPT = `# TAREA: EVALUACIÓN FORMATIVA
 
@@ -476,7 +476,7 @@ ${slides.map((s, i) => `SLIDE ${i + 1}: "${s.title}"
               ? (p.visual_type as VisualType)
               : 'photo';
             visualCounts[vt] = (visualCounts[vt] || 0) + 1;
-            return generateAndStoreImage(kieKey, p.image_prompt, admin, userId, classId, i, userEmail, vt);
+            return generateAndStoreImage(kieKey, p.image_prompt, userId, classId, i, vt);
           })
         );
         imageUrls = settled.map(r => r.status === 'fulfilled' ? r.value : null);
@@ -528,38 +528,18 @@ ${slides.map((s, i) => `SLIDE ${i + 1}: "${s.title}"
 
     const fullHtml = wrapSlidesHtml(topic, allSlides);
 
-    // --- 7. UPLOAD a Google Drive (o Supabase Storage si Drive no está configurado) ---
-    const useDrive = !!(process.env.GOOGLE_SERVICE_ACCOUNT_JSON && process.env.GOOGLE_DRIVE_FOLDER_ID);
+    // --- 7. UPLOAD a Supabase self-hosted (Easypanel, cuota del VPS) ---
     let presentacionUrl: string;
-
-    if (useDrive) {
-      try {
-        const safeTitle = topic.replace(/[^\w\s-]/g, '').substring(0, 50);
-        const res = await uploadToDrive(
-          fullHtml,
-          `Presentacion_${safeTitle}_${classId.substring(0, 8)}.html`,
-          'text/html; charset=utf-8',
-          userEmail || userId
-        );
-        presentacionUrl = res.webViewLink;
-      } catch (err) {
-        console.error('[Kit] Drive upload failed, falling back to Supabase:', err);
-        const storagePath = `${userId}/${classId}.html`;
-        await admin.storage.from('generated-classes').upload(storagePath, fullHtml, { contentType: 'text/html; charset=utf-8', upsert: false });
-        const { data } = admin.storage.from('generated-classes').getPublicUrl(storagePath);
-        presentacionUrl = data.publicUrl;
-      }
-    } else {
-      const storagePath = `${userId}/${classId}.html`;
-      const { error: uploadErr } = await admin.storage
-        .from('generated-classes')
-        .upload(storagePath, fullHtml, { contentType: 'text/html; charset=utf-8', upsert: false });
-      if (uploadErr) {
-        console.error('[Kit] Upload error:', uploadErr);
-        return NextResponse.json({ error: 'Error subiendo presentación' }, { status: 500 });
-      }
-      const { data: publicUrlData } = admin.storage.from('generated-classes').getPublicUrl(storagePath);
-      presentacionUrl = publicUrlData.publicUrl;
+    try {
+      const res = await uploadToSelfStorage(
+        fullHtml,
+        `${userId}/${classId}.html`,
+        'text/html; charset=utf-8'
+      );
+      presentacionUrl = res.publicUrl;
+    } catch (err) {
+      console.error('[Kit] Self-hosted upload failed:', err);
+      return NextResponse.json({ error: 'Error subiendo presentación' }, { status: 500 });
     }
 
     // --- 7.5. Generar HTML de planificación y subir ---
@@ -657,29 +637,15 @@ Selecciona 2-3 índices (máximo).`,
     });
 
     let planificacionUrl: string | null = null;
-    if (useDrive) {
-      try {
-        const safeTitle = topic.replace(/[^\w\s-]/g, '').substring(0, 50);
-        const res = await uploadToDrive(
-          planificacionHtml,
-          `Planificacion_${safeTitle}_${classId.substring(0, 8)}.html`,
-          'text/html; charset=utf-8',
-          userEmail || userId
-        );
-        planificacionUrl = res.webViewLink;
-      } catch (err) {
-        console.warn('[Kit] Planificación Drive upload failed, fallback:', err);
-      }
-    }
-    if (!planificacionUrl) {
-      const planPath = `${userId}/${classId}-planificacion.html`;
-      const { error: planUploadErr } = await admin.storage
-        .from('generated-classes')
-        .upload(planPath, planificacionHtml, { contentType: 'text/html; charset=utf-8', upsert: false });
-      if (!planUploadErr) {
-        const { data: planUrlData } = admin.storage.from('generated-classes').getPublicUrl(planPath);
-        planificacionUrl = planUrlData.publicUrl;
-      }
+    try {
+      const res = await uploadToSelfStorage(
+        planificacionHtml,
+        `${userId}/${classId}-planificacion.html`,
+        'text/html; charset=utf-8'
+      );
+      planificacionUrl = res.publicUrl;
+    } catch (err) {
+      console.warn('[Kit] Planificación upload failed:', err);
     }
 
     // --- 8. INSERT en generated_classes ---
@@ -787,11 +753,9 @@ Selecciona 2-3 índices (máximo).`,
 async function generateAndStoreImage(
   apiKey: string,
   prompt: string,
-  admin: any,
   userId: string,
   classId: string,
   index: number,
-  userEmail: string,
   visualType: VisualType = 'photo'
 ): Promise<string | null> {
   const tempUrl = await generateNanoBananaTempUrl(apiKey, prompt, visualType);
@@ -804,30 +768,14 @@ async function generateAndStoreImage(
     const contentType = imgRes.headers.get('content-type') || 'image/png';
     const ext = contentType.includes('jpeg') ? 'jpg' : 'png';
 
-    // Prioridad: Drive > Supabase Storage
-    const useDrive = !!(process.env.GOOGLE_SERVICE_ACCOUNT_JSON && process.env.GOOGLE_DRIVE_FOLDER_ID);
-    if (useDrive) {
-      try {
-        const res = await uploadToDrive(
-          buffer,
-          `img-${classId.substring(0, 8)}-${index}.${ext}`,
-          contentType,
-          userEmail || userId
-        );
-        return res.directLink; // usa thumbnail high-res para <img>
-      } catch (err) {
-        console.warn('[Img->Drive] failed, falling back to Supabase:', err);
-      }
-    }
-
-    // Fallback Supabase
-    const path = `${userId}/${classId}-img-${index}.${ext}`;
-    const { error } = await admin.storage.from('generated-classes').upload(path, buffer, { contentType, upsert: false });
-    if (error) return tempUrl;
-    const { data } = admin.storage.from('generated-classes').getPublicUrl(path);
-    return data.publicUrl;
+    const res = await uploadToSelfStorage(
+      buffer,
+      `${userId}/${classId}-img-${index}.${ext}`,
+      contentType
+    );
+    return res.publicUrl;
   } catch (err) {
-    console.warn('[Img->Storage] error:', err);
+    console.warn('[Img->Storage] error, using temp URL:', err);
     return tempUrl;
   }
 }
