@@ -200,10 +200,10 @@ export const Hero: React.FC = () => {
                 Planifica 10 clases perfectas en 1 hora y <span className="bg-gradient-primary bg-clip-text text-transparent">recupera tus tardes</span>.
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-4 leading-relaxed max-w-xl">
-                El primer <strong>Sistema Operativo de Gestion Pedagogica</strong> para el docente chileno. No es un chatbot. Es tu copiloto pedagogico, construido desde el aula.
+                Planificaciones, presentaciones, evaluaciones y correccion automatica &mdash; todo alineado a las Bases Curriculares chilenas. Hecho por un profe chileno, para profes chilenos.
               </p>
               <p className="text-base text-muted-foreground/70 mb-8 leading-relaxed max-w-xl">
-                Los profesores chilenos no necesitan otro chatbot. Necesitan un sistema que entienda las Bases Curriculares, los tiempos de UTP, las NEE, y el agotamiento de trabajar domingos. EducMark es la primera plataforma construida desde el aula para el ciclo completo del docente.
+                Incluye un generador de borradores para el <strong>Portafolio Carrera Docente</strong> con tus propias clases y resultados de evaluaciones. No es un chatbot generico: entiende Bloom, DUA, NEE y los tiempos de UTP.
               </p>
 
               <motion.ul

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { Search } from 'lucide-react';
 import { DashboardOverview } from './DashboardOverview';
 import { AssessmentList } from './AssessmentList';
 import { TestDesigner } from './TestDesigner/TestDesigner';
