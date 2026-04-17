@@ -362,9 +362,14 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
                 blueprint: blueprintPayload
             };
 
+            // FEATURE FLAG: default = endpoint Next.js multi-tipo (30-90s).
+            // Opt-out legacy: NEXT_PUBLIC_USE_LEGACY_EVAL_GENERATOR=true vuelve al webhook n8n.
+            const useLegacy = process.env.NEXT_PUBLIC_USE_LEGACY_EVAL_GENERATOR === 'true';
+            const targetUrl = useLegacy ? webhookUrl : '/api/evaluations/generate';
+
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 min timeout
-            const response = await fetch(webhookUrl, {
+            const response = await fetch(targetUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -372,7 +377,10 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
             });
             clearTimeout(timeoutId);
 
-            if (!response.ok) throw new Error('Error en la generación');
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.error || 'Error en la generación');
+            }
 
             const data = await response.json();
             const responseEvaluationId = data?.evaluationId || data?.evaluation_id || stableEvaluationId;
