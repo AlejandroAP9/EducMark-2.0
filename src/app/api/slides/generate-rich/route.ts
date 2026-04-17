@@ -167,7 +167,9 @@ JSON estructura exacta:
       "question_text": "Pregunta Bloom 3+",
       "options": [ { "key": "A", "text": "..." }, { "key": "B", "text": "..." }, { "key": "C", "text": "..." }, { "key": "D", "text": "..." } ],
       "correct_answer": "A",
-      "explanation": "Retroalimentación 2-3 oraciones"
+      "explanation": "Retroalimentación 2-3 oraciones",
+      "cognitive_skill": "Analizar",
+      "bloom_level": 4
     }
   ]
 }
@@ -184,7 +186,9 @@ ESTRUCTURA OBLIGATORIA (10-12 slides):
 REGLAS:
 - MÍNIMO 10 slides, MÁXIMO 12
 - Cada slide con chilean_example ESPECÍFICO
-- 6 preguntas quiz, Bloom 3+
+- 6 preguntas quiz, cada una con bloom_level numérico (3, 4, 5 o 6)
+- cognitive_skill debe ser uno de: Aplicar (3), Analizar (4), Evaluar (5), Crear (6). NO uses Recordar o Comprender.
+- Mínimo 4 de las 6 preguntas deben ser Bloom 4+ (Analizar o superior) para alinear con rúbricas de Carrera Docente
 - Distractores plausibles
 - Español neutro chileno, NO voseo
 - Títulos específicos`;
@@ -364,6 +368,23 @@ Indicadores: ${(plan.indicadores || []).join('; ')}`,
     const slides = contentData.slides || [];
     const quiz = contentData.quiz || [];
     const topic = contentData.metadata?.topic || asignatura;
+
+    // --- Validación Bloom post-LLM (P0 #6 auditoría) ---
+    // No re-genera, solo registra métrica para observabilidad.
+    // Si el ratio es bajo de forma sistemática, se ajusta el prompt.
+    const bloomCounts: Record<string, number> = { '3+': 0, 'bajo': 0, 'sin_clasificar': 0 };
+    for (const q of quiz) {
+      const raw = (q as { bloom_level?: unknown; cognitive_skill?: unknown }).bloom_level;
+      const lvl = typeof raw === 'number' ? raw : typeof raw === 'string' ? parseInt(raw, 10) : NaN;
+      if (Number.isInteger(lvl) && lvl >= 3) bloomCounts['3+']++;
+      else if (Number.isInteger(lvl) && lvl > 0) bloomCounts.bajo++;
+      else bloomCounts.sin_clasificar++;
+    }
+    const highRatio = quiz.length > 0 ? bloomCounts['3+'] / quiz.length : 0;
+    console.log('[Kit] Bloom check:', JSON.stringify(bloomCounts), 'ratio_3+:', highRatio.toFixed(2));
+    if (quiz.length > 0 && highRatio < 0.6) {
+      console.warn('[Kit] Quiz bajo estandar Carrera Docente: solo', Math.round(highRatio * 100), '% preguntas Bloom 3+');
+    }
 
     let evaluacion: EvaluacionData = {};
     try {

@@ -1,7 +1,9 @@
 /**
  * Generate Answer Key / Pauta de Correcci\u00f3n — EV-25, EV-17
  * Creates a downloadable HTML document with all correct answers and rubrics.
+ * Incluye clasificaci\u00f3n Bloom para alinear con rubricas Carrera Docente.
  */
+import { classifyBloomLevel, BLOOM_LABELS, percentBloomThreeOrHigher } from './bloomClassifier';
 
 export interface AnswerKeyItem {
     questionNumber: number;
@@ -27,7 +29,12 @@ export function generateAnswerKeyHTML(params: AnswerKeyParams): string {
     const { evaluationTitle, subject, grade, items, fila, date } = params;
     const dateStr = date || new Date().toLocaleDateString('es-CL');
 
-    const rows = items.map((item) => `
+    const rows = items.map((item) => {
+        const lvl = classifyBloomLevel(item.cognitiveSkill);
+        const bloomCell = lvl
+            ? `<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-weight:700;font-size:12px;${lvl >= 4 ? 'background:#dcfce7;color:#15803d;' : lvl >= 3 ? 'background:#ddd6fe;color:#6d28d9;' : 'background:#fef3c7;color:#92400e;'}">${lvl} · ${BLOOM_LABELS[lvl]}</span>`
+            : '<span style="color:#94a3b8;">—</span>';
+        return `
         <tr>
             <td style="padding:8px;border:1px solid #ddd;text-align:center;font-weight:bold;">${item.questionNumber}</td>
             <td style="padding:8px;border:1px solid #ddd;">${item.questionType}</td>
@@ -35,9 +42,15 @@ export function generateAnswerKeyHTML(params: AnswerKeyParams): string {
             <td style="padding:8px;border:1px solid #ddd;text-align:center;font-weight:bold;color:#16a34a;font-size:16px;">${item.correctAnswer}</td>
             <td style="padding:8px;border:1px solid #ddd;">${item.oa || '-'}</td>
             <td style="padding:8px;border:1px solid #ddd;">${item.cognitiveSkill || '-'}</td>
+            <td style="padding:8px;border:1px solid #ddd;text-align:center;">${bloomCell}</td>
             <td style="padding:8px;border:1px solid #ddd;text-align:center;">${item.points ?? 1}</td>
         </tr>
-    `).join('');
+    `;
+    }).join('');
+
+    const bloomCoverage = percentBloomThreeOrHigher(
+        items.map((i) => ({ cognitive_skill: i.cognitiveSkill }))
+    );
 
     const rubricSection = items.filter(i => i.rubric).length > 0 ? `
         <h2 style="color:#4f46e5;margin-top:30px;">R\u00fabricas de Desarrollo</h2>
@@ -82,6 +95,7 @@ export function generateAnswerKeyHTML(params: AnswerKeyParams): string {
                 <th style="width:80px;">Clave</th>
                 <th>OA</th>
                 <th>Habilidad</th>
+                <th style="width:120px;">Bloom</th>
                 <th style="width:60px;">Pts</th>
             </tr>
         </thead>
@@ -92,7 +106,7 @@ export function generateAnswerKeyHTML(params: AnswerKeyParams): string {
 
     <div style="margin-top:20px;padding:12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;">
         <p style="margin:0;font-weight:bold;color:#16a34a;">Puntaje Total: ${items.reduce((sum, i) => sum + (i.points ?? 1), 0)} puntos</p>
-        <p style="margin:4px 0 0;color:#64748b;font-size:14px;">${items.length} preguntas</p>
+        <p style="margin:4px 0 0;color:#64748b;font-size:14px;">${items.length} preguntas &bull; ${bloomCoverage}% en Bloom 3+ (Aplicar o superior)${bloomCoverage < 60 ? ' &mdash; bajo para el est&aacute;ndar de Carrera Docente' : ''}</p>
     </div>
 
     ${rubricSection}
