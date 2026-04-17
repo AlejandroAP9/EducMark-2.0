@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/dashboard/', '/summative/', '/admin/'],
+      disallow: ['/dashboard/', '/admin/'],
     },
     sitemap: 'https://educmark.cl/sitemap.xml',
   }

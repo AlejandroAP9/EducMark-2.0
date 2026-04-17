@@ -33,7 +33,7 @@ export function Sidebar({ mobileOpen, setMobileOpen }: { mobileOpen: boolean, se
     const navItems = [
         { id: 'overview', icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
         { id: 'generator', icon: Presentation, label: 'Generar Clase', path: '/dashboard/generator' },
-        { id: 'assessments', icon: Layers, label: 'Evaluaciones', path: '/summative' },
+        { id: 'assessments', icon: Layers, label: 'Evaluaciones', path: '/dashboard/summative' },
         { id: 'history', icon: Library, label: 'Biblioteca', path: '/dashboard/history' },
         { id: 'profile', icon: UserCircle, label: 'Mi Perfil', path: '/dashboard/profile' },
         { id: 'subscription', icon: CreditCard, label: 'Suscripción', path: '/dashboard/subscription' },

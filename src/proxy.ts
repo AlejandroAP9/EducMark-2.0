@@ -33,10 +33,17 @@ export async function proxy(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
 
     // Protected routes — redirect to login if not authenticated
-    if (!user && (pathname.startsWith('/dashboard') || pathname.startsWith('/summative'))) {
+    if (!user && pathname.startsWith('/dashboard')) {
         const url = request.nextUrl.clone();
         url.pathname = '/login';
         return NextResponse.redirect(url);
+    }
+
+    // Legacy /summative → /dashboard/summative (soporte URLs viejas)
+    if (pathname === '/summative' || pathname.startsWith('/summative/')) {
+        const url = request.nextUrl.clone();
+        url.pathname = pathname.replace(/^\/summative/, '/dashboard/summative');
+        return NextResponse.redirect(url, 308);
     }
 
     // Auth routes — redirect to dashboard if already authenticated

@@ -399,7 +399,7 @@ export const QuickScanFeedback: React.FC = () => {
                         crear una evaluacion previa.
                     </p>
                     <Link
-                        href="/summative"
+                        href="/dashboard/summative"
                         className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-lg shadow-violet-500/20"
                     >
                         <Sparkles size={16} />
