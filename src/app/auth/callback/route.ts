@@ -1,8 +1,10 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { getPublicOrigin } from '@/shared/lib/getPublicOrigin';
 
 export async function GET(request: Request) {
-    const { searchParams, origin } = new URL(request.url);
+    const { searchParams } = new URL(request.url);
+    const origin = getPublicOrigin(request);
     const code = searchParams.get('code');
     const next = searchParams.get('next') ?? '/dashboard';
 
