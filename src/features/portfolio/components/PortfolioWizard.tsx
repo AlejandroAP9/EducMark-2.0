@@ -1,17 +1,18 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { usePortfolioBuilder } from '../hooks/usePortfolioBuilder';
 import { usePortfolioStore } from '../store/usePortfolioStore';
-import type { GeneratedClassRow } from '../types/portfolio';
+import type { GeneratedClassRow, EvaluationRow } from '../types/portfolio';
 
 // Las asignaturas y cursos se cargan dinámicamente desde las clases del usuario
 
 const STEP_LABELS = [
   'Asignatura y curso',
   'Seleccionar clases',
+  'Evaluación sumativa',
 ];
 
 function StepIndicator({ currentStep }: { currentStep: number }) {
@@ -117,8 +118,64 @@ function ClassCard({
   );
 }
 
+function EvaluationCard({
+  ev,
+  selected,
+  onToggle,
+}: {
+  ev: EvaluationRow;
+  selected: boolean;
+  onToggle: () => void;
+}) {
+  const fecha = new Date(ev.created_at).toLocaleDateString('es-CL', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
 
-export default function PortfolioWizard() {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`w-full text-left p-4 rounded-xl border transition-all ${
+        selected
+          ? 'bg-[var(--primary)]/10 border-[var(--primary)] ring-1 ring-[var(--primary)]/50'
+          : 'bg-[var(--input-bg)] border-[var(--border)] hover:border-[var(--primary)]/40'
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm text-[var(--foreground)] font-medium truncate">
+            {ev.title}
+          </p>
+          <p className="text-xs text-[var(--muted)] mt-1">
+            {ev.subject} · {ev.grade} · {fecha}
+          </p>
+        </div>
+        <div
+          className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center mt-0.5 ${
+            selected
+              ? 'border-[var(--primary)] bg-[var(--primary)]'
+              : 'border-[var(--border)]'
+          }`}
+        >
+          {selected && (
+            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+        </div>
+      </div>
+    </button>
+  );
+}
+
+
+interface PortfolioWizardProps {
+  preSelectedEvaluationId?: string | null;
+}
+
+export default function PortfolioWizard({ preSelectedEvaluationId = null }: PortfolioWizardProps) {
   const {
     wizardState,
     data,
@@ -126,6 +183,7 @@ export default function PortfolioWizard() {
     prevStep,
     setAsignaturaCurso,
     setSelectedClasses,
+    setSelectedEvaluation,
     getSelectedClassObjects,
   } = usePortfolioBuilder();
 
@@ -135,6 +193,17 @@ export default function PortfolioWizard() {
   const [localCurso, setLocalCurso] = useState('');
   const [localPeriodo, setLocalPeriodo] = useState('');
   const [generating, setGenerating] = useState(false);
+  const [appliedPreSelect, setAppliedPreSelect] = useState(false);
+
+  // Pre-selección: cuando llegan las evaluaciones y hay un ID pre-seleccionado,
+  // marcarlo automáticamente (una sola vez).
+  useEffect(() => {
+    if (!preSelectedEvaluationId || appliedPreSelect) return;
+    if (data.evaluations.some((e) => e.id === preSelectedEvaluationId)) {
+      setSelectedEvaluation(preSelectedEvaluationId);
+      setAppliedPreSelect(true);
+    }
+  }, [preSelectedEvaluationId, data.evaluations, appliedPreSelect, setSelectedEvaluation]);
 
   const handleStep1Continue = useCallback(() => {
     if (!localAsignatura || !localCurso) return;
@@ -154,6 +223,15 @@ export default function PortfolioWizard() {
     [wizardState.selectedClasses, setSelectedClasses]
   );
 
+  const handleEvaluationToggle = useCallback(
+    (evaluationId: string) => {
+      setSelectedEvaluation(
+        wizardState.selectedEvaluation === evaluationId ? null : evaluationId
+      );
+    },
+    [wizardState.selectedEvaluation, setSelectedEvaluation]
+  );
+
   const handleGenerateDrafts = useCallback(async () => {
     const selectedClasses = getSelectedClassObjects();
     if (selectedClasses.length === 0) return;
@@ -170,6 +248,9 @@ export default function PortfolioWizard() {
           asignatura: wizardState.asignatura,
           curso: wizardState.curso,
           userId: data.userId,
+          evaluationId: wizardState.selectedEvaluation,
+          evaluationItems: data.evaluationItems,
+          omrResults: data.omrResults,
         }),
       });
 
@@ -192,11 +273,14 @@ export default function PortfolioWizard() {
     getSelectedClassObjects,
     wizardState.asignatura,
     wizardState.curso,
+    wizardState.selectedEvaluation,
     data.userId,
+    data.evaluationItems,
+    data.omrResults,
     store,
   ]);
 
-  const canGenerate = wizardState.selectedClasses.length >= 1;
+  const canAdvanceStep2 = wizardState.selectedClasses.length >= 1;
 
   return (
     <div className="w-full max-w-2xl mx-auto">
@@ -348,8 +432,89 @@ export default function PortfolioWizard() {
                 Volver
               </button>
               <button
+                onClick={nextStep}
+                disabled={!canAdvanceStep2}
+                className="flex-1 bg-[var(--primary)] hover:bg-[var(--primary-hover)] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl transition-all"
+              >
+                Continuar
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* STEP 3: Asociar evaluación sumativa (opcional) */}
+        {wizardState.step === 3 && (
+          <motion.div
+            key="step3"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-6"
+          >
+            <div>
+              <h3 className="text-lg font-semibold text-[var(--foreground)] mb-1">
+                Asocia una evaluación (opcional)
+              </h3>
+              <p className="text-sm text-[var(--muted)]">
+                La Tarea 2 pide análisis de evaluación. Si seleccionás una prueba
+                que ya corregiste con OMR, pre-llenamos el borrador con los
+                resultados reales: indicadores, habilidades y % de logro.
+              </p>
+            </div>
+
+            {data.evaluations.length === 0 ? (
+              <div className="text-center py-10 bg-[var(--input-bg)] border border-[var(--border)] rounded-xl">
+                <p className="text-[var(--muted)] text-sm">
+                  No se encontraron evaluaciones para esta asignatura y curso.
+                </p>
+                <p className="text-[var(--muted)] opacity-60 text-xs mt-1">
+                  Podés continuar sin asociar una. La Tarea 2 se generará con
+                  plantillas que tendrás que completar a mano.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {data.evaluations.map((ev) => (
+                  <EvaluationCard
+                    key={ev.id}
+                    ev={ev}
+                    selected={wizardState.selectedEvaluation === ev.id}
+                    onToggle={() => handleEvaluationToggle(ev.id)}
+                  />
+                ))}
+              </div>
+            )}
+
+            {wizardState.selectedEvaluation && data.loading && (
+              <div className="flex items-center justify-center py-3 text-xs text-[var(--muted)]">
+                <div className="w-4 h-4 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin mr-2" />
+                Cargando preguntas y resultados OMR...
+              </div>
+            )}
+
+            {wizardState.selectedEvaluation && !data.loading && (
+              <div className="bg-[var(--primary)]/5 border border-[var(--primary)]/20 rounded-xl px-4 py-3 text-xs text-[var(--muted)]">
+                {data.evaluationItems.length} pregunta
+                {data.evaluationItems.length === 1 ? '' : 's'} cargada
+                {data.evaluationItems.length === 1 ? '' : 's'}
+                {wizardState.hasOMR
+                  ? ` · ${data.omrResults.length} resultados OMR disponibles`
+                  : ' · sin correcciones OMR todavía'}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={prevStep}
+                disabled={generating}
+                className="flex-1 border border-[var(--border)] hover:bg-[var(--card-hover)] text-[var(--foreground)] font-medium py-3 px-6 rounded-xl transition-all"
+              >
+                Volver
+              </button>
+              <button
                 onClick={handleGenerateDrafts}
-                disabled={!canGenerate || generating}
+                disabled={generating}
                 className="flex-1 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl transition-all"
               >
                 {generating ? (
@@ -360,8 +525,10 @@ export default function PortfolioWizard() {
                     </svg>
                     Generando con IA...
                   </span>
-                ) : (
+                ) : wizardState.selectedEvaluation ? (
                   'Generar Borradores con IA'
+                ) : (
+                  'Generar sin evaluación'
                 )}
               </button>
             </div>

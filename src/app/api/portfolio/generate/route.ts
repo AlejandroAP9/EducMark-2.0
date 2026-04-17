@@ -25,7 +25,33 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Body inválido' }, { status: 400 });
   }
 
-  const { classes, asignatura, curso, userId } = body;
+  const {
+    classes,
+    asignatura,
+    curso,
+    userId,
+    evaluationId,
+    evaluationItems,
+    omrResults,
+  } = body as {
+    classes: Record<string, unknown>[];
+    asignatura?: string;
+    curso?: string;
+    userId?: string;
+    evaluationId?: string | null;
+    evaluationItems?: Array<{
+      question_text: string;
+      cognitive_skill: string | null;
+      oa: string | null;
+    }>;
+    omrResults?: Array<{
+      question_number: number;
+      skill_tag: string | null;
+      correct_count: number;
+      total_count: number;
+      pct_correct: number;
+    }>;
+  };
 
   if (!classes || !Array.isArray(classes) || classes.length === 0) {
     return NextResponse.json({ error: 'No hay clases seleccionadas' }, { status: 400 });
@@ -106,6 +132,48 @@ export async function POST(req: NextRequest) {
       }).join('\n\n---\n\n')
     : '(Sin datos estructurados de planificación disponibles — la IA deberá inferir desde el tema de la clase)';
 
+  // --- Contexto de evaluación sumativa (si el profe asoció una) ---
+  const evaluationContext = (() => {
+    if (!evaluationId || !evaluationItems || evaluationItems.length === 0) {
+      return '(Sin evaluación sumativa asociada — generá T2 con plantilla general para que el profe complete)';
+    }
+
+    const lines: string[] = [`=== EVALUACIÓN SUMATIVA (id: ${evaluationId}) ===`];
+    lines.push(`Preguntas (${evaluationItems.length}):`);
+    evaluationItems.slice(0, 40).forEach((it, i) => {
+      const skill = it.cognitive_skill || 'sin clasificar';
+      const oa = it.oa ? ` | OA: ${it.oa}` : '';
+      const text = it.question_text.length > 140
+        ? it.question_text.slice(0, 140) + '…'
+        : it.question_text;
+      lines.push(`  ${i + 1}. [${skill}${oa}] ${text}`);
+    });
+
+    if (omrResults && omrResults.length > 0) {
+      lines.push('');
+      lines.push('Resultados OMR (corrección automática):');
+      const general = omrResults.find((r) => r.skill_tag === 'promedio_general');
+      if (general) {
+        lines.push(`- Estudiantes evaluados: ${general.total_count}`);
+        lines.push(`- Porcentaje de logro general: ${general.pct_correct}%`);
+      }
+      const porHabilidad = omrResults.filter(
+        (r) => r.skill_tag && r.skill_tag !== 'promedio_general'
+      );
+      if (porHabilidad.length > 0) {
+        lines.push('- Por habilidad:');
+        porHabilidad.forEach((r) => {
+          lines.push(`    · ${r.skill_tag}: ${r.pct_correct}% (${r.correct_count}/${r.total_count})`);
+        });
+      }
+    } else {
+      lines.push('');
+      lines.push('(Sin resultados OMR todavía — la prueba está diseñada pero aún no se corrigió)');
+    }
+
+    return lines.join('\n');
+  })();
+
   const prompt = `Eres un experto en educación chilena y en el Portafolio Docentemás 2025 (Carrera Docente). Un profesor de ${asignatura || 'una asignatura'} de ${curso || 'un curso'} necesita que redactes los borradores del Módulo 1 de su portafolio.
 
 DATOS REALES DEL PROFESOR (de su plataforma EducMark):
@@ -115,6 +183,9 @@ ${classContext}
 
 === SECUENCIAS DE PLANIFICACIÓN REAL (usa estos datos como fuente principal) ===
 ${sequencesContext}
+
+=== EVALUACIÓN SUMATIVA ASOCIADA (fuente primaria para T2) ===
+${evaluationContext}
 
 INSTRUCCIONES CRÍTICAS:
 - Usa los datos REALES de las secuencias de planificación como fuente primaria
@@ -131,11 +202,11 @@ Redacta la descripción de 3 experiencias de aprendizaje usando los datos reales
 - Al final: fundamentación de la diversidad usando los datos de NEE (diagnóstico, barrera identificada, adaptaciones, DUA). Vincula las oportunidades con al menos 2 tipos de características reales del grupo.
 
 === BORRADOR T2: EVALUACIÓN FORMATIVA ===
-Usa los datos del campo secuencia_evaluacion (tipo, instrumento, detalle):
+Si hay EVALUACIÓN SUMATIVA ASOCIADA con resultados OMR, usá esos datos REALES como fuente primaria (indicadores concretos, habilidades medidas, % de logro por habilidad). Si no, usá secuencia_evaluacion de las secuencias.
 - 2.A: Describe la estrategia de monitoreo con el instrumento REAL usado y los indicadores observables
-- 2.B.a: Analiza resultados probables basándote en el tipo de evaluación y las características del grupo
-- 2.B.b: Explica causas pedagógicas (tus decisiones) Y contextuales
-- 2.B.c: Describe 2+ acciones concretas de mejora, al menos 1 que involucre a los estudiantes
+- 2.B.a: Analiza resultados concretos (cuando haya OMR: cita los % reales y qué habilidades salieron mejor/peor; qué diferencias observás entre estudiantes)
+- 2.B.b: Explica causas pedagógicas (tus decisiones) Y contextuales — si hay preguntas con bajo % de logro, interpretá por qué
+- 2.B.c: Describe 2+ acciones concretas de mejora, al menos 1 que involucre a los estudiantes en revisar su propia evidencia (auto-regulación)
 
 === BORRADOR T3: REFLEXIÓN SOCIOEMOCIONAL ===
 - 3.a: Identifica UN aprendizaje socioemocional alineado con las barreras y perfil neurocognitivo REAL del grupo (datos en secuencia_nee). Fundamenta con comportamientos probables en esa diversidad.

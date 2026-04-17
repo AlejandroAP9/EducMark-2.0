@@ -1065,6 +1065,44 @@ export const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ initialEva
                             </table>
                         </div>
                     </motion.div>
+
+                    {/* ── Puente a Portafolio Carrera Docente ── */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.55 }}
+                        className="glass-card-premium p-6 md:p-8 relative overflow-hidden"
+                    >
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[var(--primary)]/10 to-[var(--secondary)]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                        <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6 justify-between">
+                            <div className="flex-1">
+                                <span className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] text-[10px] font-bold uppercase tracking-wider border border-[var(--primary)]/25 mb-3">
+                                    Carrera Docente
+                                </span>
+                                <h3 className="text-xl md:text-2xl font-bold text-[var(--on-background)] mb-2">
+                                    Estos resultados son evidencia para tu Portafolio
+                                </h3>
+                                <p className="text-sm text-[var(--muted)] leading-relaxed max-w-xl">
+                                    La Tarea 2 del Portafolio pide análisis de evaluación y decisiones
+                                    pedagógicas a partir de datos. Con un click, pre-llenamos tu borrador
+                                    usando los resultados OMR, indicadores y habilidades de esta prueba.
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    if (selectedEvalId) {
+                                        window.location.href = `/dashboard/portfolio?evaluation_id=${selectedEvalId}`;
+                                    } else {
+                                        window.location.href = `/dashboard/portfolio`;
+                                    }
+                                }}
+                                className="btn-gradient px-6 py-3 rounded-xl text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-all hover:scale-105 w-full md:w-auto justify-center"
+                            >
+                                <FileText size={16} />
+                                Usar en mi Portafolio
+                            </button>
+                        </div>
+                    </motion.div>
                 </>
             )}
 

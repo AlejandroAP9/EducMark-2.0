@@ -1,18 +1,21 @@
 'use client';
 
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { useSearchParams } from 'next/navigation';
 import { usePortfolioStore } from '../store/usePortfolioStore';
 import { updateDraft, saveDraft } from '../services/portfolioService';
 import { createClient } from '@/lib/supabase/client';
 import PortfolioWizard from './PortfolioWizard';
 import TaskDraftEditor from './TaskDraftEditor';
 
-export default function PortfolioPreview() {
+function PortfolioPreviewInner() {
   const store = usePortfolioStore();
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const supabase = createClient();
+  const searchParams = useSearchParams();
+  const preSelectedEvaluationId = searchParams.get('evaluation_id');
 
   // Auto-save debounced
   const triggerAutoSave = useCallback(async () => {
@@ -149,8 +152,20 @@ export default function PortfolioPreview() {
         </div>
 
         {/* Main content */}
-        {store.wizardCompleted ? <TaskDraftEditor /> : <PortfolioWizard />}
+        {store.wizardCompleted ? (
+          <TaskDraftEditor />
+        ) : (
+          <PortfolioWizard preSelectedEvaluationId={preSelectedEvaluationId} />
+        )}
       </div>
     </div>
+  );
+}
+
+export default function PortfolioPreview() {
+  return (
+    <Suspense fallback={null}>
+      <PortfolioPreviewInner />
+    </Suspense>
   );
 }
