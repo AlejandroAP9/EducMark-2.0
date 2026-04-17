@@ -8,6 +8,7 @@ import { Button } from '@/shared/components/ui/UIComponents';
 import { Features } from './Features';
 import { Comparison } from './Comparison';
 import { SocialProof } from './SocialProof';
+import { EbookLeadMagnet } from './EbookLeadMagnet';
 import { Pricing } from './Pricing';
 import { FAQ } from './FAQ';
 import { Footer } from './Footer';
@@ -84,6 +85,7 @@ function LandingPageContent() {
                 <Features />
                 <Comparison />
                 <SocialProof />
+                <EbookLeadMagnet />
                 <Pricing />
                 <FAQ />
                 <FinalCTA />
