@@ -8,6 +8,12 @@ export interface BlueprintRow {
     skill: string;
     itemType: string;
     count: number;
+    /**
+     * Solo aplica para Ordenamiento (default 5), Términos Pareados (default 4)
+     * y Completación (default 1). Define cuántos sub-ítems (slots OMR) genera
+     * cada ejercicio pedagógico de esa fila.
+     */
+    elementsPerItem?: number;
 }
 
 export interface TestData {

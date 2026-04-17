@@ -45,6 +45,12 @@ export interface GeneratedItem {
     id: number;
     type?: string;
     itemType?: string;
+    /** Tipo pedagógico: mc, tf, doble_proceso, ordenamiento, pareados, completacion, desarrollo, respuesta_breve */
+    pedagogical_type?: string;
+    /** UUID compartido entre filas que forman un ítem pedagógico compuesto */
+    group_id?: string;
+    /** Si true, este item no se corrige por OMR (desarrollo, respuesta breve) */
+    is_manual?: boolean;
     oa?: string;
     topic?: string;
     skill?: string;
@@ -348,7 +354,8 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
                     topic: row.topic,
                     skill: row.skill,
                     itemType: row.itemType,
-                    count: row.count
+                    count: row.count,
+                    elementsPerItem: row.elementsPerItem,
                 };
             });
 
@@ -419,22 +426,45 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
             }
 
             // === PERSISTIR BLUEPRINT EN SUPABASE ===
+            // Ahora expande Ordenamiento/Pareados/Completación a N slots OMR por ítem,
+            // Doble Proceso a 1 TF + 1 MC, y Desarrollo/Respuesta Breve NO se persiste
+            // en blueprint (no ocupan slot OMR, se manejan por is_manual en evaluation_items).
             try {
                 const evaluationTarget = responseEvaluationId;
                 const blueprintRows: Record<string, unknown>[] = [];
                 let questionNumber = 1;
 
                 for (const row of blueprint) {
+                    const els = row.elementsPerItem ?? (row.itemType === 'Ordenamiento' ? 5 : row.itemType === 'Términos Pareados' ? 4 : 1);
                     for (let i = 0; i < row.count; i++) {
-                        blueprintRows.push({
-                            evaluation_id: evaluationTarget,
-                            question_number: questionNumber,
-                            question_type: row.itemType === 'Verdadero o Falso' ? 'tf' : 'mc',
-                            oa: row.oa,
-                            topic: row.topic,
-                            skill: row.skill,
-                        });
-                        questionNumber++;
+                        switch (row.itemType) {
+                            case 'Verdadero o Falso':
+                                blueprintRows.push({ evaluation_id: evaluationTarget, question_number: questionNumber++, question_type: 'tf', oa: row.oa, topic: row.topic, skill: row.skill });
+                                break;
+                            case 'Selección Múltiple':
+                            case 'Completación':
+                                blueprintRows.push({ evaluation_id: evaluationTarget, question_number: questionNumber++, question_type: 'mc', oa: row.oa, topic: row.topic, skill: row.skill });
+                                break;
+                            case 'Doble Proceso':
+                                // 1 TF + 1 MC secuenciales (misma lógica que SM con V/F previo)
+                                blueprintRows.push({ evaluation_id: evaluationTarget, question_number: questionNumber++, question_type: 'tf', oa: row.oa, topic: row.topic, skill: row.skill });
+                                blueprintRows.push({ evaluation_id: evaluationTarget, question_number: questionNumber++, question_type: 'mc', oa: row.oa, topic: row.topic, skill: row.skill });
+                                break;
+                            case 'Ordenamiento':
+                            case 'Términos Pareados':
+                                // N slots MC consecutivos (cada elemento/ítem es 1 slot)
+                                for (let j = 0; j < els; j++) {
+                                    blueprintRows.push({ evaluation_id: evaluationTarget, question_number: questionNumber++, question_type: 'mc', oa: row.oa, topic: row.topic, skill: row.skill });
+                                }
+                                break;
+                            case 'Desarrollo':
+                            case 'Respuesta Breve':
+                                // Sin slot OMR — se salta
+                                break;
+                            default:
+                                // Fallback conservador
+                                blueprintRows.push({ evaluation_id: evaluationTarget, question_number: questionNumber++, question_type: 'mc', oa: row.oa, topic: row.topic, skill: row.skill });
+                        }
                     }
                 }
 
@@ -467,6 +497,10 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
                 const dbItems = itemsToSave.map(item => ({
                     evaluation_id: evaluationId,
                     type: item.type || item.itemType || 'mc',
+                    pedagogical_type: item.pedagogical_type || null,
+                    group_id: item.group_id || null,
+                    is_manual: item.is_manual ?? false,
+                    rubric: item.rubric || null,
                     oa: item.oa,
                     topic: item.topic,
                     skill: item.skill,

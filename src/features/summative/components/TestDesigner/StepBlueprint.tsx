@@ -53,9 +53,35 @@ export const StepBlueprint: React.FC = () => {
     const [loadingOAs, setLoadingOAs] = useState(false);
     const totalQuestions = blueprint.reduce((acc, row) => acc + row.count, 0);
     const maxQuestions = getMaxQuestions(grade);
-    const devQuestions = blueprint.filter(r => r.itemType === 'Desarrollo').reduce((s, r) => s + r.count, 0);
+    const devQuestions = blueprint.filter(r => r.itemType === 'Desarrollo' || r.itemType === 'Respuesta Breve').reduce((s, r) => s + r.count, 0);
     const objQuestions = totalQuestions - devQuestions;
     const isOverLimit = objQuestions > maxQuestions;
+
+    // Slots OMR reales por tipo pedagógico.
+    // Doble Proceso consume 1 TF + 1 MC (misma lógica que SM con V/F previo).
+    // Ordenamiento y Pareados se expanden a N×elementsPerItem slots MC.
+    const omrSlots = blueprint.reduce(
+        (acc, row) => {
+            const els = row.elementsPerItem ?? (row.itemType === 'Ordenamiento' ? 5 : row.itemType === 'Términos Pareados' ? 4 : 1);
+            switch (row.itemType) {
+                case 'Verdadero o Falso': acc.tf += row.count; break;
+                case 'Selección Múltiple': acc.mc += row.count; break;
+                case 'Doble Proceso': acc.tf += row.count; acc.mc += row.count; break;
+                case 'Ordenamiento':
+                case 'Términos Pareados':
+                    acc.mc += row.count * els; break;
+                case 'Completación': acc.mc += row.count * Math.max(1, els); break;
+                case 'Desarrollo':
+                case 'Respuesta Breve': acc.manual += row.count; break;
+                default: acc.mc += row.count;
+            }
+            return acc;
+        },
+        { tf: 0, mc: 0, manual: 0 }
+    );
+    const overTF = omrSlots.tf > 15;
+    const overMC = omrSlots.mc > 45;
+    const overOMR = overTF || overMC;
 
     const loadOAs = async (forcePopulate = false) => {
         if (grade && subject && unit) {
@@ -216,12 +242,37 @@ export const StepBlueprint: React.FC = () => {
                     </button>
 
                     <div className="text-right">
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-[var(--muted)] block mb-1">Objetivas + Desarrollo</span>
-                        <div className={`text-3xl font-bold leading-none font-[var(--font-heading)] ${isOverLimit ? 'text-red-400' : 'text-[var(--on-background)]'}`}>
-                            {objQuestions}<span className="text-lg text-[var(--muted)]">/{maxQuestions}</span>
-                            {devQuestions > 0 && <span className="text-lg text-amber-400 ml-1">+{devQuestions}</span>}
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-[var(--muted)] block mb-1">Slots OMR (hoja fija 15 V/F + 45 MC)</span>
+                        <div className="flex items-baseline justify-end gap-3 font-[var(--font-heading)]">
+                            <div className={`${overTF ? 'text-red-400' : 'text-[var(--on-background)]'}`}>
+                                <span className="text-[9px] uppercase tracking-wider block text-[var(--muted)]">V/F</span>
+                                <span className="text-2xl font-bold leading-none">{omrSlots.tf}<span className="text-sm text-[var(--muted)]">/15</span></span>
+                            </div>
+                            <div className="text-[var(--muted)]">·</div>
+                            <div className={`${overMC ? 'text-red-400' : 'text-[var(--on-background)]'}`}>
+                                <span className="text-[9px] uppercase tracking-wider block text-[var(--muted)]">MC</span>
+                                <span className="text-2xl font-bold leading-none">{omrSlots.mc}<span className="text-sm text-[var(--muted)]">/45</span></span>
+                            </div>
+                            {omrSlots.manual > 0 && (
+                                <>
+                                    <div className="text-[var(--muted)]">·</div>
+                                    <div className="text-amber-400">
+                                        <span className="text-[9px] uppercase tracking-wider block text-[var(--muted)]">Manual</span>
+                                        <span className="text-2xl font-bold leading-none">{omrSlots.manual}</span>
+                                    </div>
+                                </>
+                            )}
                         </div>
-                        {isOverLimit && <span className="text-[10px] text-red-400 font-bold">Excede el máximo para {grade}</span>}
+                        {overOMR && (
+                            <span className="text-[10px] text-red-400 font-bold block mt-1">
+                                Excede la hoja OMR estándar. Divide en dos hojas.
+                            </span>
+                        )}
+                        {!overOMR && omrSlots.manual > 0 && (
+                            <span className="text-[10px] text-[var(--muted)] block mt-1">
+                                {omrSlots.manual} ítem{omrSlots.manual === 1 ? '' : 's'} de corrección manual (no ocupan burbujas)
+                            </span>
+                        )}
                     </div>
                 </div>
             </div>
@@ -308,16 +359,35 @@ export const StepBlueprint: React.FC = () => {
                                     </div>
                                 </td>
                                 <td className="p-5">
-                                    <div className="flex items-center justify-center gap-1 bg-[var(--input-bg)] rounded-lg p-1 border border-[var(--border)] shadow-inner">
-                                        <button
-                                            className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-[var(--card)] text-[var(--muted)] hover:text-white transition-all active:scale-95 text-lg"
-                                            onClick={() => handleUpdateRow(row.id, { count: Math.max(0, row.count - 1) })}
-                                        > - </button>
-                                        <span className="font-bold text-[var(--on-background)] w-6 text-center text-sm">{row.count}</span>
-                                        <button
-                                            className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-[var(--card)] text-[var(--muted)] hover:text-white transition-all active:scale-95 text-lg"
-                                            onClick={() => handleUpdateRow(row.id, { count: row.count + 1 })}
-                                        > + </button>
+                                    <div className="flex flex-col items-center gap-1.5">
+                                        <div className="flex items-center justify-center gap-1 bg-[var(--input-bg)] rounded-lg p-1 border border-[var(--border)] shadow-inner">
+                                            <button
+                                                className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-[var(--card)] text-[var(--muted)] hover:text-white transition-all active:scale-95 text-lg"
+                                                onClick={() => handleUpdateRow(row.id, { count: Math.max(0, row.count - 1) })}
+                                            > - </button>
+                                            <span className="font-bold text-[var(--on-background)] w-6 text-center text-sm">{row.count}</span>
+                                            <button
+                                                className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-[var(--card)] text-[var(--muted)] hover:text-white transition-all active:scale-95 text-lg"
+                                                onClick={() => handleUpdateRow(row.id, { count: row.count + 1 })}
+                                            > + </button>
+                                        </div>
+                                        {(row.itemType === 'Ordenamiento' || row.itemType === 'Términos Pareados' || row.itemType === 'Completación') && (
+                                            <div className="flex items-center gap-1 text-[10px] text-[var(--muted)]">
+                                                <span className="uppercase tracking-wider">×</span>
+                                                <input
+                                                    type="number"
+                                                    min={2}
+                                                    max={8}
+                                                    value={row.elementsPerItem ?? (row.itemType === 'Ordenamiento' ? 5 : row.itemType === 'Términos Pareados' ? 4 : 1)}
+                                                    onChange={(e) => handleUpdateRow(row.id, { elementsPerItem: Math.max(1, parseInt(e.target.value || '1', 10)) })}
+                                                    className="w-10 bg-[var(--input-bg)] border border-[var(--border)] rounded px-1 py-0.5 text-center text-[var(--on-background)] font-bold outline-none focus:border-[var(--primary)]"
+                                                    title={row.itemType === 'Ordenamiento' ? 'Cantidad de elementos a ordenar' : row.itemType === 'Términos Pareados' ? 'Items en columna A' : 'Blancos a completar'}
+                                                />
+                                                <span className="uppercase tracking-wider">
+                                                    {row.itemType === 'Ordenamiento' ? 'elem' : row.itemType === 'Términos Pareados' ? 'col A' : 'blanks'}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                 </td>
                                 <td className="p-5 text-center">
