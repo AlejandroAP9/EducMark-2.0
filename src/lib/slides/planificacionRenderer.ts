@@ -27,6 +27,11 @@ export interface NEEData {
     metodologia?: { descripcion?: string };
     evaluacion?: { descripcion?: string };
   };
+  adaptacion_por_fase?: {
+    inicio?: string;
+    desarrollo?: string;
+    cierre?: string;
+  };
   co_docencia?: {
     profesor_aula?: string;
     educador_diferencial?: string;
@@ -297,6 +302,7 @@ export function renderPlanificacionHtml(data: PlanificacionInput): string {
                             <span class="phase-time">15-20 min</span>
                         </div>
                         <div class="phase-content editable">${esc(data.fase_inicio)}</div>
+                        ${renderPhaseDua(nee.adaptacion_por_fase?.inicio)}
                         <div class="phase-tag">Pilar: Vínculo y Sorpresa</div>
                     </div>` : ''}
                     ${data.fase_desarrollo ? `<div class="phase desarrollo">
@@ -306,6 +312,7 @@ export function renderPlanificacionHtml(data: PlanificacionInput): string {
                             <span class="phase-time">50-60 min</span>
                         </div>
                         <div class="phase-content editable">${esc(data.fase_desarrollo)}</div>
+                        ${renderPhaseDua(nee.adaptacion_por_fase?.desarrollo)}
                         <div class="phase-tag">Pilar: Hacer para Aprender + Movimiento</div>
                     </div>` : ''}
                     ${data.fase_cierre ? `<div class="phase cierre">
@@ -315,6 +322,7 @@ export function renderPlanificacionHtml(data: PlanificacionInput): string {
                             <span class="phase-time">10-15 min</span>
                         </div>
                         <div class="phase-content editable">${esc(data.fase_cierre)}</div>
+                        ${renderPhaseDua(nee.adaptacion_por_fase?.cierre)}
                         <div class="phase-tag">Pilar: Reflexión Final</div>
                     </div>` : ''}
                 </div>
@@ -390,6 +398,17 @@ export function renderPlanificacionHtml(data: PlanificacionInput): string {
     </script>
 </body>
 </html>`;
+}
+
+function renderPhaseDua(adaptacion: string | undefined | null): string {
+  if (!adaptacion || !String(adaptacion).trim()) return '';
+  return `<div class="phase-dua" style="margin-top:12px; padding:12px 14px; background:rgba(220, 38, 38, 0.06); border-left:3px solid #dc2626; border-radius:6px;">
+    <div style="font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:#dc2626; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      Adaptación DUA en esta fase
+    </div>
+    <div class="editable" style="font-size:13px; color:#4b5563; line-height:1.5;">${esc(adaptacion)}</div>
+  </div>`;
 }
 
 function esc(str: string | undefined | null): string {

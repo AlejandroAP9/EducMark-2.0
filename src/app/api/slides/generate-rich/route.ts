@@ -57,6 +57,11 @@ JSON:
       "metodologia": { "descripcion": "Vinculada a actividad real" },
       "evaluacion": { "descripcion": "Adaptación evaluativa concreta" }
     },
+    "adaptacion_por_fase": {
+      "inicio": "Ajuste específico para la fase de inicio (15-20 min). 1-2 líneas concretas. Menciona el soporte/ajuste sin repetir el contenido de la fase.",
+      "desarrollo": "Ajuste específico para la fase de desarrollo (50-60 min). 1-2 líneas concretas. Vincula con el perfil neurocognitivo y la barrera identificada.",
+      "cierre": "Ajuste específico para la fase de cierre (10-15 min). 1-2 líneas concretas. Enfocado en metacognición accesible."
+    },
     "co_docencia": {
       "profesor_aula": "Qué hace durante la actividad adaptada",
       "educador_diferencial": "Qué hace el educador diferencial"
@@ -65,7 +70,8 @@ JSON:
   }
 }
 
-Máximo 3 líneas por campo. No inventes datos clínicos.`;
+Máximo 3 líneas por campo. No inventes datos clínicos.
+adaptacion_por_fase es OBLIGATORIO — Carrera Docente T1 exige que las adaptaciones aparezcan vinculadas a actividades concretas, no en un bloque separado.`;
 
 const PLANIFICACION_PROMPT = `# ROL: ARQUITECTO PEDAGÓGICO EDUCMARK
 
@@ -898,6 +904,11 @@ interface NEEEnrichedData {
     acceso?: { descripcion?: string };
     metodologia?: { descripcion?: string };
     evaluacion?: { descripcion?: string };
+  };
+  adaptacion_por_fase?: {
+    inicio?: string;
+    desarrollo?: string;
+    cierre?: string;
   };
   co_docencia?: { profesor_aula?: string; educador_diferencial?: string };
   estrategia_dua_universal?: string;
