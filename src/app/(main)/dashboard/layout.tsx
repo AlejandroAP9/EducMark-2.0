@@ -60,6 +60,10 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
             const localDismissed = localStorage.getItem('educmark_welcome_shown');
             if (localDismissed === 'true') return;
 
+            // Snooze: "Recordarme luego" aplaza el modal 24h sin marcarlo dismissed
+            const snoozeUntil = localStorage.getItem('educmark_welcome_snooze_until');
+            if (snoozeUntil && Date.now() < parseInt(snoozeUntil, 10)) return;
+
             const { data } = await supabase
                 .from('usuarios_crm')
                 .select('descarga_ebook')
@@ -75,6 +79,12 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
         } catch (err) {
             console.error(err);
         }
+    };
+
+    const handleSnoozeWelcome = () => {
+        const oneDay = 24 * 60 * 60 * 1000;
+        localStorage.setItem('educmark_welcome_snooze_until', String(Date.now() + oneDay));
+        setWelcomeModalOpen(false);
     };
 
     const downloadGuide = async () => {
@@ -122,8 +132,18 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
     };
 
     useEffect(() => {
-        // Clear welcome param from URL when it appears, but keep ebook-status check out of here
+        // Toast de onboarding cuando el profe llega recien registrado desde la landing.
+        // Conecta el onboarding con el diferencial Carrera Docente antes de que
+        // empiece a generar clases. Se muestra una sola vez por sesion.
         if (searchParams.get('welcome') === 'true') {
+            const shown = sessionStorage.getItem('educmark_onboarding_toast_shown');
+            if (shown !== 'true') {
+                toast.success(
+                    'Cada clase que generes alimenta tu Portafolio Carrera Docente. Encontrá el generador en la barra lateral.',
+                    { duration: 8000, id: 'onboarding-welcome' }
+                );
+                sessionStorage.setItem('educmark_onboarding_toast_shown', 'true');
+            }
             window.history.replaceState({}, '', pathname);
         }
     }, [searchParams, pathname]);
@@ -312,6 +332,14 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
                             )}
                         </Button>
                     </div>
+                    <button
+                        type="button"
+                        onClick={handleSnoozeWelcome}
+                        className="block mx-auto mt-4 text-sm text-[var(--muted)] hover:text-[var(--foreground)] transition-colors underline underline-offset-4"
+                        disabled={isDownloading}
+                    >
+                        Recordarme luego
+                    </button>
                 </div>
             </Modal>
         </div>

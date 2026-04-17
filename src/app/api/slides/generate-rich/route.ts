@@ -101,7 +101,7 @@ Di "los estudiantes" SIN mencionar el curso.
   "nivel_taxonomico": "Nivel Bloom numerado. Si hay varios, separados por coma (ej: 'Comprender - Nivel 2, Analizar - Nivel 4')",
   "actitud": "Actitud/OAT transversal del currículum chileno (ej: 'Pensamiento crítico e informado', 'Valorar la diversidad')",
   "objetivo_clase": "Objetivo TRIDIMENSIONAL. DEBE tener 3 partes claramente identificables:\\n  PARTE 1 - HABILIDAD: Inicia con verbo en infinitivo (Caracterizar, Analizar, Explicar, Comparar).\\n  PARTE 2 - CONTENIDO: El qué específico del tema, con detalles concretos.\\n  PARTE 3 - ACTITUD: 'valorando/apreciando/demostrando [actitud concreta]'.\\n  Ejemplo VÁLIDO: 'Caracterizar el Estado moderno y la economía mercantilista del siglo XVI, analizando los cambios en el poder político y económico, valorando el pensamiento crítico frente a los procesos históricos.'\\n  Ejemplo INVÁLIDO (sin actitud): 'Caracterizar el Estado moderno del siglo XVI.'\\n  UNA sola oración fluida, 30-50 palabras.",
-  "indicadores": ["Indicadores REALES del currículum MINEDUC, al menos 3"],
+  "indicadores": ["Indicadores REALES del currículum MINEDUC: 2 o 3 trabajables en la duración de la clase (NO todos los del OA completo)"],
   "fase_inicio": "Descripción detallada, mínimo 3-4 oraciones con actividades específicas",
   "fase_desarrollo": "Descripción con micro-ciclos 15+5+15, pausas activas, colaborativo, contexto chileno. Mín 5-6 oraciones.",
   "fase_cierre": "Descripción con metacognición, pregunta reflexiva, ticket de salida. Mín 3-4 oraciones."

@@ -67,7 +67,7 @@ export const Hero: React.FC = () => {
       if (error) throw error;
 
       trackEvent('signup_complete', { method: 'email', location: 'hero' });
-      router.push('/dashboard');
+      router.push('/dashboard?welcome=true');
 
     } catch (error: unknown) {
       let msg = error instanceof Error ? error.message : 'Error desconocido';
