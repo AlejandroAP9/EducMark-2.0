@@ -24,6 +24,7 @@ import { KitResultExitTicket } from './KitResultExitTicket';
 import { KitResultVersionHistory } from './KitResultVersionHistory';
 import { KitResultActions } from './KitResultActions';
 import { exportDocument } from './KitResultExportDocument';
+import { resolveClassPlanning, isPlanningEmpty } from '@/shared/lib/resolveClassPlanning';
 
 export function KitResult() {
     const supabase = createClient();
@@ -66,8 +67,18 @@ export function KitResult() {
                 if (error) throw error;
 
                 const parsedRow = data as GeneratedClassWorkflowRow;
-                const normalizedBlocks = normalizeBlocks(parsedRow.planning_blocks);
+                let normalizedBlocks = normalizeBlocks(parsedRow.planning_blocks);
                 const normalizedTicket = normalizeTicket(parsedRow.exit_ticket);
+
+                // Fallback: si planning_blocks está vacío (clases antiguas), resolver
+                // desde planning_sequences via endpoint server-side (service_role).
+                if (isPlanningEmpty(normalizedBlocks)) {
+                    const resolved = await resolveClassPlanning(parsedRow.id);
+                    if (resolved.source === 'planning_sequences') {
+                        normalizedBlocks = resolved.blocks;
+                    }
+                }
+
                 const snapshot = JSON.stringify({ normalizedBlocks, normalizedTicket });
 
                 setRow(parsedRow);
