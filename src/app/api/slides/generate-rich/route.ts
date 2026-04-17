@@ -124,32 +124,60 @@ VALIDACIÓN OBLIGATORIA del objetivo_clase antes de responder:
 - ¿Tiene palabra como "valorando/apreciando/demostrando" + actitud concreta? ✓
 Si alguno falla, reescribe.`;
 
-const IMAGE_SYSTEM_PROMPT = `# EXPERTO EN PROMPTS VISUALES EDUCATIVOS
+const IMAGE_SYSTEM_PROMPT = `# EXPERTO EN PROMPTS VISUALES EDUCATIVOS (Nano Banana — Gemini 2.5 Flash Image)
 
-Traduces contenido curricular en prompts para FLUX (IA generativa). SIN texto visible, SIN personas en las imágenes.
+Traduces contenido curricular en prompts para Nano Banana (Google gemini-2.5-flash-image). Este modelo SÍ produce texto legible en español, esquemas etiquetados, personas diversas y diagramas limpios con alta fidelidad — aprovechá eso para generar material pedagógico variado, no solo fotos decorativas.
 
 METODOLOGÍA:
-PASO 1 - Identifica el ámbito temático GENERAL.
-PASO 2 - Analiza CADA slide: tema específico, contexto geográfico real, período, conceptos visualizables.
-PASO 3 - Valida: contexto geográfico correcto, sin personas, sin texto.
+PASO 1 — Analiza CADA slide: tema, conceptos clave, qué cognición quiere activar.
+PASO 2 — Elegí el visual_type óptimo entre los 6 tipos de abajo. Alterná tipos a lo largo de las 9 slides para no saturar al estudiante con el mismo formato.
+PASO 3 — Construí el prompt específico según el template del tipo elegido.
+PASO 4 — Validá coherencia geográfica/histórica entre slides.
 
-REGLAS DE CONTEXTUALIZACIÓN:
-UNIVERSAL: Revolución Francesa -> París s.XVIII; Imperio Romano -> arquitectura romana; Mesopotamia -> ziggurats.
-REGIONAL_AMERICAN: Incas -> Andes/Machu Picchu; Mayas -> Tikal/selva mesoamericana; Aztecas -> Teotihuacán.
-LOCAL_CHILEAN: Independencia -> Santiago colonial 1810-1818; Mapuches -> sur de Chile.
-COHERENCIA: Si Slide 1 es Incas, Slide 2 NO puede ser Mesopotamia.
+=== 6 TIPOS DE VISUAL ===
 
-ACTIVIDADES HUMANAS SIN PERSONAS:
-- MAL: "marketplace with trading", "people working", "classroom scene"
-- BIEN: "Display of trade goods: cacao, obsidian, textiles on stone platform"
+1. photo — Foto realista de contexto (lugares, objetos, momentos históricos sin texto superpuesto).
+   Usá cuando: la slide describe un hecho, lugar, o ambiente.
+   Template: "Educational photography of [escena 20-40 palabras con contexto geográfico real]. Documentary style, National Geographic lighting, sharp focus, 16:9 landscape. No text overlay."
 
-PALABRAS QUE IMPLICAN TEXTO - EVITAR: "diagram", "infographic", "chart", "map", "labeled", "with inscriptions"
+2. diagram — Diagrama técnico etiquetado en español (partes de un sistema, ciclo, proceso, estructura).
+   Usá cuando: la slide explica CÓMO funciona algo o CUÁLES son las partes.
+   Template: "Clean educational diagram in Spanish: [objeto/proceso]. Labels in Spanish readable text: [lista de 3-6 etiquetas concretas]. Minimal flat illustration style, white background, violet (#8B5CF6) and cyan (#06B6D4) accents, clear arrows, 16:9 landscape."
 
-FORMATO: "Professional educational photography: [descripción 30-50 palabras]. Documentary style, National Geographic quality, 8k resolution, no text anywhere, no people visible, sharp focus, [iluminación]."
+3. comparative — Cuadro comparativo lado a lado (A vs B, antes/después, dos culturas, dos conceptos).
+   Usá cuando: la slide contrasta o compara.
+   Template: "Side-by-side comparison infographic in Spanish. Left panel: [concepto A con 3 rasgos breves]. Right panel: [concepto B con 3 rasgos breves]. Header in Spanish: '[A] vs [B]'. Minimal flat design, white background, violet left / cyan right, icons per row, 16:9 landscape."
 
-negative_prompt siempre: "text, words, letters, writing, typography, numbers, signs, labels, watermarks, logos, people, faces, portraits, human figures, low quality, blurry, cartoon, anime, CGI, 3D render"
+4. timeline — Línea de tiempo horizontal con hitos.
+   Usá cuando: la slide presenta cronología o secuencia histórica.
+   Template: "Horizontal timeline infographic in Spanish: [tema]. Five milestones with year and short label in Spanish: [lista de 5 hitos 'AÑO: evento']. Clean flat style, white background, violet timeline with cyan dots, 16:9 landscape."
 
-JSON: { "prompts": [{ "image_prompt": "...", "negative_prompt": "..." }] }`;
+5. concept_map — Mapa conceptual con nodos y conexiones jerárquicas.
+   Usá cuando: la slide presenta relaciones entre conceptos (causa-efecto, taxonomía, sistema).
+   Template: "Concept map in Spanish: central node '[concepto raíz]'. Three branches: [rama 1], [rama 2], [rama 3], each with 2 sub-nodes in Spanish. Clean flat illustration, white background, violet root node, cyan branches, readable Spanish labels, 16:9 landscape."
+
+6. geo_map — Mapa geográfico estilizado con rótulos.
+   Usá cuando: la slide ubica lugares, rutas o territorios.
+   Template: "Stylized educational map of [zona geográfica] in Spanish. Highlight [lista de 3-5 puntos de interés con nombres en español]. Minimal flat map style, ocean in light blue, land in warm beige, violet markers for key locations, Spanish place names readable, 16:9 landscape."
+
+=== COHERENCIA GEOGRÁFICA/HISTÓRICA ===
+UNIVERSAL: Revolución Francesa → París s.XVIII. Imperio Romano → arquitectura romana. Mesopotamia → ziggurats.
+AMERICANO: Incas → Andes/Machu Picchu. Mayas → Tikal. Aztecas → Teotihuacán.
+CHILENO: Independencia → Santiago colonial 1810-1818. Mapuches → sur de Chile.
+
+=== REGLAS GLOBALES ===
+- Cada slide tiene UN visual. No generes 9 fotos seguidas: buscá variedad (ej. 4 photo + 2 diagram + 1 comparative + 1 timeline + 1 concept_map).
+- El texto DENTRO de la imagen SIEMPRE en español chileno neutro. Sin voseo.
+- Paleta brand: violeta #8B5CF6 + cian #06B6D4 cuando el tipo es diagram/comparative/timeline/concept_map/geo_map.
+- Sin logos, sin watermarks, sin UI de aplicaciones.
+- 16:9 landscape siempre.
+
+=== SALIDA JSON ===
+{
+  "prompts": [
+    { "visual_type": "photo|diagram|comparative|timeline|concept_map|geo_map", "image_prompt": "prompt completo según el template del tipo elegido" }
+  ]
+}`;
 
 const CONTENT_SYSTEM_PROMPT = `Eres un generador de contenido educativo para el curriculum chileno MINEDUC.
 Genera contenido para slides basándote en la PLANIFICACIÓN.
@@ -434,16 +462,25 @@ ${slides.map((s, i) => `SLIDE ${i + 1}: "${s.title}"
         ],
       });
 
-      let imgPrompts: { image_prompt: string; negative_prompt: string }[] = [];
+      let imgPrompts: { image_prompt: string; visual_type?: string }[] = [];
       try {
         imgPrompts = (JSON.parse(imgPromptRes.choices[0]?.message?.content || '{}').prompts || []);
       } catch { /* ignore */ }
 
       if (imgPrompts.length > 0) {
+        const allowedTypes = ['photo', 'diagram', 'comparative', 'timeline', 'concept_map', 'geo_map'] as const;
+        const visualCounts: Record<string, number> = {};
         const settled = await Promise.allSettled(
-          imgPrompts.map((p, i) => generateAndStoreImage(kieKey, p.image_prompt, admin, userId, classId, i, userEmail))
+          imgPrompts.map((p, i) => {
+            const vt = (allowedTypes as readonly string[]).includes(p.visual_type || '')
+              ? (p.visual_type as VisualType)
+              : 'photo';
+            visualCounts[vt] = (visualCounts[vt] || 0) + 1;
+            return generateAndStoreImage(kieKey, p.image_prompt, admin, userId, classId, i, userEmail, vt);
+          })
         );
         imageUrls = settled.map(r => r.status === 'fulfilled' ? r.value : null);
+        console.log('[Kit] Visual types usados:', JSON.stringify(visualCounts));
       }
     }
 
@@ -754,9 +791,10 @@ async function generateAndStoreImage(
   userId: string,
   classId: string,
   index: number,
-  userEmail: string
+  userEmail: string,
+  visualType: VisualType = 'photo'
 ): Promise<string | null> {
-  const tempUrl = await generateNanoBananaTempUrl(apiKey, prompt);
+  const tempUrl = await generateNanoBananaTempUrl(apiKey, prompt, visualType);
   if (!tempUrl) return null;
 
   try {
@@ -794,15 +832,32 @@ async function generateAndStoreImage(
   }
 }
 
-async function generateNanoBananaTempUrl(apiKey: string, prompt: string): Promise<string | null> {
+type VisualType = 'photo' | 'diagram' | 'comparative' | 'timeline' | 'concept_map' | 'geo_map';
+
+/**
+ * Sufijos por tipo de visual. Nano Banana respeta indicaciones especificas:
+ * - photo pide cinematic/sharp focus (estilo documental)
+ * - los 5 tipos esquematicos piden flat/minimal para evitar interpretaciones barrocas
+ */
+const VISUAL_SUFFIX: Record<VisualType, string> = {
+  photo: 'Cinematic lighting, sharp focus, documentary photography, 16:9 landscape. No text overlay.',
+  diagram: 'Clean minimal flat illustration, white background, readable Spanish labels, no photo-realism, 16:9 landscape.',
+  comparative: 'Infographic style, split layout, white background, readable Spanish labels, no photo-realism, 16:9 landscape.',
+  timeline: 'Infographic style, horizontal layout, white background, readable Spanish labels, no photo-realism, 16:9 landscape.',
+  concept_map: 'Minimal flat illustration, white background, readable Spanish labels, no photo-realism, 16:9 landscape.',
+  geo_map: 'Stylized flat map illustration, readable Spanish place names, no photo-realism, 16:9 landscape.',
+};
+
+async function generateNanoBananaTempUrl(apiKey: string, prompt: string, visualType: VisualType = 'photo'): Promise<string | null> {
   try {
+    const suffix = VISUAL_SUFFIX[visualType];
     const createRes = await fetch('https://api.kie.ai/api/v1/jobs/createTask', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'google/nano-banana',
         input: {
-          prompt: `${prompt} Photorealistic, cinematic, sharp focus, no text, no people, 16:9 landscape.`,
+          prompt: `${prompt} ${suffix}`,
         },
       }),
     });
