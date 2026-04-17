@@ -52,10 +52,13 @@ export interface SelfUploadResult {
 /**
  * Sube un archivo al Supabase self-hosted bucket "generated-classes".
  *
- * @param content - String o Buffer
+ * IMPORTANTE: usa TextEncoder + Blob para forzar UTF-8 correcto. Pasar un
+ * Buffer directamente causa double-encoding: los bytes UTF-8 (ej: 0xC3 0xA1 = 'á')
+ * se interpretan como Latin-1 y se re-codifican como UTF-8, resultando en 'Ã¡'.
+ *
+ * @param content - String o Buffer (imágenes usan Buffer)
  * @param path - Ruta del archivo (ej: "user-id/class-id.html")
  * @param contentType - MIME type
- * @returns URL pública + path
  */
 export async function uploadToSelfStorage(
   content: string | Buffer,
@@ -63,11 +66,20 @@ export async function uploadToSelfStorage(
   contentType: string
 ): Promise<SelfUploadResult> {
   const client = getSelfClient();
-  const buffer = typeof content === 'string' ? Buffer.from(content, 'utf-8') : content;
+
+  // Garantiza UTF-8 correcto: TextEncoder convierte strings JS (UTF-16 interno)
+  // a bytes UTF-8 reales. Para buffers (imágenes), se usa tal cual.
+  let body: Blob;
+  if (typeof content === 'string') {
+    const bytes = new TextEncoder().encode(content);
+    body = new Blob([bytes], { type: contentType });
+  } else {
+    body = new Blob([new Uint8Array(content)], { type: contentType });
+  }
 
   const { error } = await client.storage
     .from('generated-classes')
-    .upload(path, buffer, { contentType, upsert: false });
+    .upload(path, body, { contentType, upsert: false });
 
   if (error) throw new Error(`Self-hosted upload failed: ${error.message}`);
 
