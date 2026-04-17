@@ -1,12 +1,10 @@
 /**
  * Supabase self-hosted storage (en Easypanel).
- * Usa las mismas envs NEXT_PUBLIC_RAG_SUPABASE_URL y RAG_SUPABASE_KEY
- * que ya están configuradas para el RAG.
  *
- * Ventajas vs Supabase Cloud:
- * - Cuota = capacidad del VPS (no los 1GB gratis del cloud)
- * - Costo = cero adicional (ya lo pagamos en Easypanel)
- * - Mismas APIs de Supabase Storage
+ * Usa DOS URLs distintas:
+ * - NEXT_PUBLIC_RAG_SUPABASE_URL (ej: http://kong:8000) — DNS interno Docker, para uploads/queries
+ * - NEXT_PUBLIC_SUPABASE_STORAGE_PUBLIC_URL (ej: https://educmark-supabase.vfuqpl.easypanel.host) —
+ *   URL pública que funciona desde el browser del usuario. Fallback a la URL interna si no está configurada.
  */
 import { createClient } from '@supabase/supabase-js';
 
@@ -19,6 +17,19 @@ function getSelfClient() {
   if (!url || !key) throw new Error('Self-hosted Supabase env vars not configured');
   selfClient = createClient(url, key);
   return selfClient;
+}
+
+/**
+ * Construye la URL pública del archivo usando la URL externa (no el DNS interno Docker).
+ * Esto es crítico porque los links se envían por email y deben ser accesibles desde
+ * el browser del usuario, no solo desde dentro del VPS.
+ */
+function buildPublicUrl(path: string): string {
+  const publicBase = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_PUBLIC_URL
+    || process.env.NEXT_PUBLIC_RAG_SUPABASE_URL!;
+  // Normaliza: remueve trailing slash
+  const base = publicBase.replace(/\/$/, '');
+  return `${base}/storage/v1/object/public/generated-classes/${path}`;
 }
 
 export interface SelfUploadResult {
@@ -48,6 +59,5 @@ export async function uploadToSelfStorage(
 
   if (error) throw new Error(`Self-hosted upload failed: ${error.message}`);
 
-  const { data } = client.storage.from('generated-classes').getPublicUrl(path);
-  return { path, publicUrl: data.publicUrl };
+  return { path, publicUrl: buildPublicUrl(path) };
 }
