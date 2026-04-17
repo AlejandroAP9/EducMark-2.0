@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { usePortfolioStore } from '../store/usePortfolioStore';
 import { RUBRICA_INDICADORES } from '../data/rubricaIndicadores';
 import GuidedQuestions from './GuidedQuestions';
-import type { GuidedAnswers } from '../types/portfolio';
+import type { GuidedAnswers, TaskScoring, RubricLevel } from '../types/portfolio';
 
 type TabKey = 'T1' | 'T2' | 'T3';
 
@@ -40,6 +40,69 @@ const TABS: TabConfig[] = [
     sections: [{ id: 't3_socioemocional', label: 'Reflexion socioemocional' }],
   },
 ];
+
+const LEVEL_META: Record<RubricLevel, { label: string; color: string; bg: string; border: string }> = {
+  no_logrado: { label: 'No logrado', color: '#b91c1c', bg: 'rgba(239, 68, 68, 0.08)', border: 'rgba(239, 68, 68, 0.25)' },
+  en_desarrollo: { label: 'En desarrollo', color: '#b45309', bg: 'rgba(245, 158, 11, 0.08)', border: 'rgba(245, 158, 11, 0.25)' },
+  competente: { label: 'Competente', color: '#6d28d9', bg: 'rgba(124, 58, 237, 0.08)', border: 'rgba(124, 58, 237, 0.25)' },
+  destacado: { label: 'Destacado', color: '#15803d', bg: 'rgba(16, 185, 129, 0.10)', border: 'rgba(16, 185, 129, 0.30)' },
+};
+
+function ScoringPanel({ tarea, scoring }: { tarea: TabKey; scoring?: TaskScoring }) {
+  if (!scoring) return null;
+  const meta = LEVEL_META[scoring.level];
+
+  return (
+    <div
+      className="rounded-xl p-4 md:p-5"
+      style={{ background: meta.bg, border: `1px solid ${meta.border}` }}
+    >
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <div className="flex items-center gap-3">
+          <span
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"
+            style={{ background: meta.color, color: '#fff' }}
+          >
+            {tarea} · {meta.label}
+          </span>
+          <span className="text-xs font-semibold" style={{ color: meta.color }}>
+            {scoring.score}/5 — rúbrica CPEIP 2025
+          </span>
+        </div>
+      </div>
+
+      {scoring.strengths.length > 0 && (
+        <div className="mb-2">
+          <p className="text-[10px] font-bold uppercase tracking-wider mb-1 text-[var(--muted)]">
+            Qué está bien
+          </p>
+          <ul className="space-y-1">
+            {scoring.strengths.map((s, i) => (
+              <li key={i} className="text-xs text-[var(--foreground)] leading-relaxed">
+                ✓ {s}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {scoring.gaps.length > 0 && (
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider mb-1 text-[var(--muted)]">
+            Qué afinar para subir al siguiente nivel
+          </p>
+          <ul className="space-y-1">
+            {scoring.gaps.map((g, i) => (
+              <li key={i} className="text-xs text-[var(--foreground)] leading-relaxed">
+                → {g}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function RubricHints({ tarea }: { tarea: TabKey }) {
   const indicators = RUBRICA_INDICADORES.filter((r) => r.tarea === tarea);
@@ -153,6 +216,9 @@ export default function TaskDraftEditor() {
           transition={{ duration: 0.15 }}
           className="space-y-6"
         >
+          {/* Scoring contra rúbrica CPEIP 2025 */}
+          <ScoringPanel tarea={activeTab} scoring={store.scoring[activeTab.toLowerCase() as 't1' | 't2' | 't3']} />
+
           {/* Rubric hints */}
           <RubricHints tarea={activeTab} />
 

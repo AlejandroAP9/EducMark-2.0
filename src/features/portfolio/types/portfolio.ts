@@ -88,6 +88,21 @@ export interface PortfolioWizardState {
   hasOMR: boolean;
 }
 
+export type RubricLevel = 'no_logrado' | 'en_desarrollo' | 'competente' | 'destacado';
+
+export interface TaskScoring {
+  level: RubricLevel;
+  score: number;         // 1-5
+  strengths: string[];   // 1-2 frases
+  gaps: string[];        // 1-3 frases accionables
+}
+
+export interface PortfolioScoring {
+  t1?: TaskScoring;
+  t2?: TaskScoring;
+  t3?: TaskScoring;
+}
+
 export type TemplateSection = 'auto' | 'template' | 'auto+template';
 
 export interface RubricIndicator {

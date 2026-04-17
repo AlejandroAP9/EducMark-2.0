@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { GuidedAnswers } from '../types/portfolio';
+import type { GuidedAnswers, PortfolioScoring } from '../types/portfolio';
 
 interface PortfolioStoreState {
   draftId: string | null;
@@ -9,6 +9,7 @@ interface PortfolioStoreState {
   guidedAnswers: GuidedAnswers;
   saving: boolean;
   wizardCompleted: boolean;
+  scoring: PortfolioScoring;
 
   setDraft: (t1: string, t2: string, t3: string) => void;
   setDraftT1: (t1: string) => void;
@@ -22,6 +23,7 @@ interface PortfolioStoreState {
   ) => void;
   setSaving: (saving: boolean) => void;
   setWizardCompleted: (completed: boolean) => void;
+  setScoring: (scoring: PortfolioScoring) => void;
   reset: () => void;
 }
 
@@ -33,6 +35,7 @@ const initialState = {
   guidedAnswers: {} as GuidedAnswers,
   saving: false,
   wizardCompleted: false,
+  scoring: {} as PortfolioScoring,
 };
 
 export const usePortfolioStore = create<PortfolioStoreState>((set) => ({
@@ -60,6 +63,8 @@ export const usePortfolioStore = create<PortfolioStoreState>((set) => ({
   setSaving: (saving) => set({ saving }),
 
   setWizardCompleted: (completed) => set({ wizardCompleted: completed }),
+
+  setScoring: (scoring) => set({ scoring }),
 
   reset: () => set(initialState),
 }));

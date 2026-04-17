@@ -262,11 +262,17 @@ export default function PortfolioWizard({ preSelectedEvaluationId = null }: Port
 
       const drafts = await res.json();
       store.setDraft(drafts.t1 || '', drafts.t2 || '', drafts.t3 || '');
+      if (drafts.scoring) {
+        store.setScoring(drafts.scoring);
+      }
       store.setWizardCompleted(true);
       trackEvent('portfolio_draft_generated', {
         classes: selectedClasses.length,
         with_evaluation: wizardState.selectedEvaluation ? 1 : 0,
         with_omr: data.omrResults.length > 0 ? 1 : 0,
+        t1_level: drafts.scoring?.t1?.level || 'unknown',
+        t2_level: drafts.scoring?.t2?.level || 'unknown',
+        t3_level: drafts.scoring?.t3?.level || 'unknown',
       });
       toast.success('Borradores generados exitosamente');
     } catch (err) {

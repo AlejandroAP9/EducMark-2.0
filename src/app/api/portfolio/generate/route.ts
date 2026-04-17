@@ -242,10 +242,26 @@ REGLAS:
     console.log('[Portfolio] Got response, length:', content.length);
     const drafts = JSON.parse(content);
 
+    // --- Scoring post-generación contra rúbrica CPEIP 2025 ---
+    // Llamada secundaria que evalúa cada borrador contra los indicadores oficiales
+    // y devuelve nivel (competente/destacado/etc), score 1-5, strengths y gaps.
+    // No bloquea: si falla, devolvemos drafts sin scoring.
+    let scoring: PortfolioScoring | null = null;
+    try {
+      scoring = await scoreDrafts(openai, {
+        t1: drafts.t1 || '',
+        t2: drafts.t2 || '',
+        t3: drafts.t3 || '',
+      });
+    } catch (err) {
+      console.warn('[Portfolio] Scoring falló (no crítico):', err);
+    }
+
     return NextResponse.json({
       t1: drafts.t1 || '',
       t2: drafts.t2 || '',
       t3: drafts.t3 || '',
+      scoring,
       sequencesUsed: planningSequences.length,
     });
   } catch (error) {
@@ -255,6 +271,101 @@ REGLAS:
       { status: 500 }
     );
   }
+}
+
+// --- Scoring helper ---
+type RubricLevel = 'no_logrado' | 'en_desarrollo' | 'competente' | 'destacado';
+
+interface TaskScoring {
+  level: RubricLevel;
+  score: number;
+  strengths: string[];
+  gaps: string[];
+}
+
+interface PortfolioScoring {
+  t1?: TaskScoring;
+  t2?: TaskScoring;
+  t3?: TaskScoring;
+}
+
+const SCORING_PROMPT = `Eres evaluador CPEIP del Portafolio Docentemás 2025. Recibes 3 borradores (T1, T2, T3) del Módulo 1 y debes puntuar cada uno contra las rúbricas oficiales.
+
+RÚBRICAS (resumen oficial 2025):
+
+T1 — Planificación. Tres indicadores:
+- Formulación de objetivos: habilidad + conocimiento claros; destacado = integra actitudes.
+- Relación actividades↔objetivos: todos los objetivos abordados; destacado = actividad contextualizada con sentido.
+- Fundamentación de diversidad: vincula oportunidades con al menos 2 tipos de características (aprendizaje, contexto sociocultural, experiencias/intereses); destacado = explica cómo promueve respeto/valoración de diversidad O reflexiona sobre enfoque inclusivo propio.
+
+T2 — Evaluación. Tres indicadores:
+- Estrategia de monitoreo: indicadores observables alineados al OA; actividad que recoge evidencia de todos; destacado = ofrece alternativas para demostrar aprendizaje.
+- Análisis a partir del monitoreo: logros, no logros, diferencias; explica causas (decisiones pedagógicas O contextuales); destacado = causas de distinta naturaleza (pedagógicas Y contextuales).
+- Uso formativo: al menos 2 acciones de mejora, una que involucre a estudiantes; destacado = se hace cargo de quienes tuvieron dificultades Y de quienes lograron.
+
+T3 — Reflexión socioemocional. Un indicador:
+- Identifica aprendizaje socioemocional + fundamenta por qué el grupo lo necesita + qué mantendría/modificaría de su actitud + cómo aporta; destacado = relaciona factores que influyen en comportamiento + hipótesis de pensamiento/sentimiento.
+
+ESCALA:
+- no_logrado (1): no cumple criterios mínimos
+- en_desarrollo (2): cumple parcialmente
+- competente (3-4): cumple todos los criterios del nivel competente (3 = ajustado, 4 = sólido)
+- destacado (5): cumple competente + criterios adicionales de destacado
+
+FORMATO DE RESPUESTA (JSON estricto):
+{
+  "t1": { "level": "...", "score": 1-5, "strengths": ["1-2 frases cortas"], "gaps": ["1-3 frases accionables"] },
+  "t2": { "level": "...", "score": 1-5, "strengths": [...], "gaps": [...] },
+  "t3": { "level": "...", "score": 1-5, "strengths": [...], "gaps": [...] }
+}
+
+Reglas:
+- gaps deben ser CONCRETOS y ACCIONABLES. No digas "mejorar redacción"; di "T1 no vincula la fundamentación con características específicas del grupo (aprendizaje, contexto). Agregá al menos 2."
+- Lenguaje directo al profe, en segunda persona singular.
+- Sin markdown.`;
+
+async function scoreDrafts(
+  openai: OpenAI,
+  drafts: { t1: string; t2: string; t3: string }
+): Promise<PortfolioScoring | null> {
+  const hasAny = drafts.t1 || drafts.t2 || drafts.t3;
+  if (!hasAny) return null;
+
+  const completion = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    temperature: 0.3,
+    max_tokens: 1200,
+    response_format: { type: 'json_object' },
+    messages: [
+      { role: 'system', content: SCORING_PROMPT },
+      {
+        role: 'user',
+        content: `=== T1 ===\n${drafts.t1 || '(vacío)'}\n\n=== T2 ===\n${drafts.t2 || '(vacío)'}\n\n=== T3 ===\n${drafts.t3 || '(vacío)'}`,
+      },
+    ],
+  });
+
+  const raw = completion.choices[0]?.message?.content;
+  if (!raw) return null;
+  const parsed = JSON.parse(raw);
+
+  const clean = (s: unknown): TaskScoring | undefined => {
+    if (!s || typeof s !== 'object') return undefined;
+    const obj = s as Record<string, unknown>;
+    const levelRaw = typeof obj.level === 'string' ? obj.level : 'en_desarrollo';
+    const level: RubricLevel = (['no_logrado', 'en_desarrollo', 'competente', 'destacado'] as const)
+      .includes(levelRaw as RubricLevel) ? (levelRaw as RubricLevel) : 'en_desarrollo';
+    const score = typeof obj.score === 'number' ? Math.max(1, Math.min(5, Math.round(obj.score))) : 2;
+    const strengths = Array.isArray(obj.strengths) ? obj.strengths.map(String).slice(0, 3) : [];
+    const gaps = Array.isArray(obj.gaps) ? obj.gaps.map(String).slice(0, 4) : [];
+    return { level, score, strengths, gaps };
+  };
+
+  return {
+    t1: clean(parsed.t1),
+    t2: clean(parsed.t2),
+    t3: clean(parsed.t3),
+  };
 }
 
 // --- Types ---
