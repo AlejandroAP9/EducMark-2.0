@@ -10,6 +10,7 @@ import {
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { logAuditEvent } from '@/shared/lib/auditLog';
+import { trackEvent } from '@/shared/lib/analytics';
 import { decryptQRData, type QRData } from '../AnswerSheet/QRCodeGenerator';
 
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '');
@@ -1106,6 +1107,25 @@ export const WebOMRScanner: React.FC<WebOMRScannerProps> = ({ onBack, onOpenFeed
                 console.error('[OMR] Ping Test FALLÓ. El servidor bloqueó el POST pequeño:', pingErr);
             }
 
+            // Validación de tamaño mínimo: fotos muy pequeñas hacen fallar detect_fiducials
+            // y los bubbles colapsan a radio <4px (imposible distinguir marcados).
+            stage = 'validate-image-size';
+            if (capturedImage) {
+                const dims = await new Promise<{ width: number; height: number }>((resolve) => {
+                    const img = new window.Image();
+                    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+                    img.onerror = () => resolve({ width: 0, height: 0 });
+                    img.src = capturedImage;
+                });
+                if (dims.width < 640 || dims.height < 480) {
+                    toast.error(
+                        `Foto demasiado pequeña (${dims.width}×${dims.height}). Necesitamos al menos 640×480 para que las burbujas se detecten.`
+                    );
+                    setPhase('preview');
+                    return;
+                }
+            }
+
             stage = 'build-payload';
             let reqOptions: RequestInit;
             let targetEndpoint: string;
@@ -1174,6 +1194,12 @@ export const WebOMRScanner: React.FC<WebOMRScannerProps> = ({ onBack, onOpenFeed
             try {
                 await persistScanResult(data.data, effectiveEvaluationId);
                 logAuditEvent('omr_scan_completed', { evaluationId: effectiveEvaluationId });
+                trackEvent('omr_scan_success', {
+                    score_pct: data.data?.score?.percentage ?? 0,
+                    correct: data.data?.score?.correct ?? 0,
+                    total: data.data?.score?.total ?? 0,
+                    batch_mode: isBatchMode ? 1 : 0,
+                });
             } catch (persistError) {
                 console.error('[OMR] Error persisting result, queued for retry:', persistError);
                 queueResultForSync(data.data, effectiveEvaluationId);

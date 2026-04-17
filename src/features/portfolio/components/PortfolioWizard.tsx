@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { usePortfolioBuilder } from '../hooks/usePortfolioBuilder';
 import { usePortfolioStore } from '../store/usePortfolioStore';
 import type { GeneratedClassRow, EvaluationRow } from '../types/portfolio';
+import { trackEvent } from '@/shared/lib/analytics';
 
 // Las asignaturas y cursos se cargan dinámicamente desde las clases del usuario
 
@@ -262,6 +263,11 @@ export default function PortfolioWizard({ preSelectedEvaluationId = null }: Port
       const drafts = await res.json();
       store.setDraft(drafts.t1 || '', drafts.t2 || '', drafts.t3 || '');
       store.setWizardCompleted(true);
+      trackEvent('portfolio_draft_generated', {
+        classes: selectedClasses.length,
+        with_evaluation: wizardState.selectedEvaluation ? 1 : 0,
+        with_omr: data.omrResults.length > 0 ? 1 : 0,
+      });
       toast.success('Borradores generados exitosamente');
     } catch (err) {
       console.error('Error generando borradores:', err);

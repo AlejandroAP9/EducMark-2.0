@@ -427,8 +427,9 @@ export const generateAnswerSheetPageHTML = (data: AnswerSheetData): string => {
                     ${subtitleLine2 ? `<div style="font-size: 11pt; color: #4a4a5e; margin-top: 0.6mm;">${subtitleLine2}</div>` : ''}
                 </div>
 
-                <div style="width: 24mm; height: 24mm; border: 0.8mm solid #000; padding: 0.8mm; background: #fff;">
-                    <img src="${qrCodeDataUrl}" alt="QR" style="width: 100%; height: 100%; object-fit: contain;" />
+                <div style="width: 24mm; height: 24mm; border: 0.8mm solid #000; padding: 0.8mm; background: #fff;"
+                     title="Este QR se usa cuando escaneas con la app móvil en modo offline. En el escaneo web se ignora.">
+                    <img src="${qrCodeDataUrl}" alt="QR (solo app móvil offline)" style="width: 100%; height: 100%; object-fit: contain;" />
                 </div>
             </div>
         </div>
