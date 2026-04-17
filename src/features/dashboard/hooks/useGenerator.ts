@@ -352,10 +352,13 @@ export function useGenerator() {
 
             const cacheKey = await generateCacheKey(payload);
 
-            // FEATURE FLAG: si NEXT_PUBLIC_USE_NEW_GENERATOR=true usa el endpoint Next.js
-            // (genera en ~30-90s con Nano Banana + Drive + Resend directo).
-            // Default: usa la Edge Function supabase que llama a n8n (~4-5 min).
-            const useNewGenerator = process.env.NEXT_PUBLIC_USE_NEW_GENERATOR === 'true';
+            // FEATURE FLAG: default = generador nuevo Next.js (endpoint /api/slides/generate-rich)
+            // que tiene Nano Banana con 6 tipos de visuales, Bloom 4+, DUA por fase e
+            // indicadores por clase. Genera en ~30-90s + email Resend.
+            // Opt-out legacy: setear NEXT_PUBLIC_USE_LEGACY_GENERATOR=true para volver al
+            // Edge Function de Supabase que llama a n8n (~4-5 min).
+            const useLegacyGenerator = process.env.NEXT_PUBLIC_USE_LEGACY_GENERATOR === 'true';
+            const useNewGenerator = !useLegacyGenerator;
             let result: Record<string, unknown>;
 
             if (useNewGenerator) {
