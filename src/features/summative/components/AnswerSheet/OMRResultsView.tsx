@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, RefreshCw, Smartphone, TrendingUp, Users, CheckCircle, XCircle, AlertCircle, BookOpen, Layers, Download, ToggleLeft, ToggleRight, Ban } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { ArrowLeft, RefreshCw, Smartphone, TrendingUp, Users, CheckCircle, XCircle, AlertCircle, BookOpen, Layers, Download, ToggleLeft, ToggleRight, Ban, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { calculateGrade, applyChanceCorrection, DEFAULT_SCALE } from '@/shared/lib/gradeCalculator';
+import { ManualScoringModal } from './ManualScoringModal';
 
 const supabase = createClient();
 
@@ -53,6 +54,13 @@ export const OMRResultsView: React.FC<OMRResultsViewProps> = ({ onBack, evaluati
     const [annulInput, setAnnulInput] = useState('');
     // AD-10: Institution grade scale
     const [gradeScale, setGradeScale] = useState(DEFAULT_SCALE);
+
+    // Corrección manual (Desarrollo / Respuesta Breve)
+    // - manualItemsByEval: cuántos items manuales tiene cada evaluación (para saber si mostrar botón)
+    // - manualScoresByResult: agregado {awarded, max, count} por omr_result_id para recalcular nota
+    const [manualItemsByEval, setManualItemsByEval] = useState<Record<string, number>>({});
+    const [manualScoresByResult, setManualScoresByResult] = useState<Record<string, { awarded: number; max: number; count: number }>>({});
+    const [manualModal, setManualModal] = useState<{ resultId: string; evaluationId: string; studentName: string } | null>(null);
 
     // AD-10: Load institution grade scale on mount
     useEffect(() => {
@@ -105,6 +113,47 @@ export const OMRResultsView: React.FC<OMRResultsViewProps> = ({ onBack, evaluati
             // 2. Fetch Metadata from Supabase for all unique evaluation_ids
             const uniqueEvalIds = Array.from(new Set((data || []).map(r => r.evaluation_id)));
             if (uniqueEvalIds.length > 0) {
+                // 2b. Conteo de items manuales por evaluación (para saber si mostrar botón)
+                try {
+                    const { data: manualItems } = await supabase
+                        .from('evaluation_items')
+                        .select('evaluation_id')
+                        .in('evaluation_id', uniqueEvalIds)
+                        .eq('is_manual', true);
+                    if (manualItems) {
+                        const counts: Record<string, number> = {};
+                        manualItems.forEach((it: { evaluation_id: string }) => {
+                            counts[it.evaluation_id] = (counts[it.evaluation_id] || 0) + 1;
+                        });
+                        setManualItemsByEval(counts);
+                    }
+                } catch (err) {
+                    console.warn('[OMR] manual items count failed:', err);
+                }
+
+                // 2c. Scores manuales agregados por omr_result_id (para recalcular nota)
+                try {
+                    const resultIds = (data || []).map((r: OMRResult) => r.id);
+                    if (resultIds.length > 0) {
+                        const { data: manualScores } = await supabase
+                            .from('manual_scores')
+                            .select('omr_result_id, score_awarded, max_score')
+                            .in('omr_result_id', resultIds);
+                        if (manualScores) {
+                            const agg: Record<string, { awarded: number; max: number; count: number }> = {};
+                            manualScores.forEach((ms: { omr_result_id: string; score_awarded: number; max_score: number }) => {
+                                if (!agg[ms.omr_result_id]) agg[ms.omr_result_id] = { awarded: 0, max: 0, count: 0 };
+                                agg[ms.omr_result_id].awarded += Number(ms.score_awarded || 0);
+                                agg[ms.omr_result_id].max += Number(ms.max_score || 0);
+                                agg[ms.omr_result_id].count += 1;
+                            });
+                            setManualScoresByResult(agg);
+                        }
+                    }
+                } catch (err) {
+                    console.warn('[OMR] manual scores fetch failed:', err);
+                }
+
                 const { data: evals, error: evalError } = await supabase
                     .from('evaluations')
                     .select('id, subject, grade, title')
@@ -170,13 +219,55 @@ export const OMRResultsView: React.FC<OMRResultsViewProps> = ({ onBack, evaluati
             : total;
         const adjustedCorrect = Math.min(correct, adjustedTotal);
 
+        // Combinar con scores manuales (desarrollo / respuesta breve) si los hay.
+        // Los items manuales sin corregir cuentan como pendientes: restan del max esperado
+        // pero no del awarded hasta que el profe los llene.
+        const manual = manualScoresByResult[result.id];
+        const manualItemsTotal = manualItemsByEval[result.evaluation_id] || 0;
+        const manualAwarded = manual?.awarded || 0;
+        const manualMaxCorrected = manual?.max || 0;
+        const manualPending = Math.max(0, manualItemsTotal - (manual?.count || 0));
+        // Pendientes suman max=1 por ítem por default, sin awarded
+        const manualMax = manualMaxCorrected + manualPending;
+
+        const finalAwarded = adjustedCorrect + manualAwarded;
+        const finalTotal = adjustedTotal + manualMax;
+
         return {
             correct: adjustedCorrect,
             total: adjustedTotal,
-            percentage: adjustedTotal > 0 ? Math.round((adjustedCorrect / adjustedTotal) * 100) : 0,
-            grade: calculateGrade(adjustedCorrect, adjustedTotal, gradeScale),
+            // Valores expuestos (combinados con manual si aplica)
+            percentage: finalTotal > 0 ? Math.round((finalAwarded / finalTotal) * 100) : 0,
+            grade: calculateGrade(finalAwarded, finalTotal, gradeScale),
+            manualAwarded,
+            manualMax,
+            manualPending,
+            manualItemsTotal,
         };
     };
+
+    const refreshManualScores = useCallback(async () => {
+        try {
+            const resultIds = results.map((r) => r.id);
+            if (resultIds.length === 0) return;
+            const { data: manualScores } = await supabase
+                .from('manual_scores')
+                .select('omr_result_id, score_awarded, max_score')
+                .in('omr_result_id', resultIds);
+            if (manualScores) {
+                const agg: Record<string, { awarded: number; max: number; count: number }> = {};
+                manualScores.forEach((ms: { omr_result_id: string; score_awarded: number; max_score: number }) => {
+                    if (!agg[ms.omr_result_id]) agg[ms.omr_result_id] = { awarded: 0, max: 0, count: 0 };
+                    agg[ms.omr_result_id].awarded += Number(ms.score_awarded || 0);
+                    agg[ms.omr_result_id].max += Number(ms.max_score || 0);
+                    agg[ms.omr_result_id].count += 1;
+                });
+                setManualScoresByResult(agg);
+            }
+        } catch (err) {
+            console.warn('[OMR] refresh manual scores failed:', err);
+        }
+    }, [results]);
 
     const handleAnnulQuestion = () => {
         const num = parseInt(annulInput, 10);
@@ -512,6 +603,30 @@ export const OMRResultsView: React.FC<OMRResultsViewProps> = ({ onBack, evaluati
                                                                 <XCircle size={12} /> Reprobado
                                                             </span>
                                                         )}
+                                                        {adj.manualItemsTotal > 0 && (
+                                                            <button
+                                                                onClick={() => setManualModal({
+                                                                    resultId: result.id,
+                                                                    evaluationId: result.evaluation_id,
+                                                                    studentName: result.student_name || 'Estudiante sin nombre',
+                                                                })}
+                                                                className={`mt-2 inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-md border transition-colors ${
+                                                                    adj.manualPending > 0
+                                                                        ? 'text-amber-400 bg-amber-500/10 border-amber-500/25 hover:bg-amber-500/20'
+                                                                        : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20'
+                                                                }`}
+                                                                title={adj.manualPending > 0
+                                                                    ? `${adj.manualPending} ítem(s) pendientes de corrección manual`
+                                                                    : 'Ítems manuales corregidos'
+                                                                }
+                                                            >
+                                                                <FileText size={10} />
+                                                                {adj.manualPending > 0
+                                                                    ? `Corregir ${adj.manualPending} ítem(s)`
+                                                                    : `Manual ${adj.manualAwarded}/${adj.manualMax}`
+                                                                }
+                                                            </button>
+                                                        )}
                                                     </td>
                                                 </tr>
                                                 );
@@ -524,6 +639,16 @@ export const OMRResultsView: React.FC<OMRResultsViewProps> = ({ onBack, evaluati
                     )}
                 </div>
             </div>
+
+            {/* Modal de corrección manual (Desarrollo / Respuesta Breve) */}
+            <ManualScoringModal
+                isOpen={!!manualModal}
+                onClose={() => setManualModal(null)}
+                omrResultId={manualModal?.resultId || ''}
+                evaluationId={manualModal?.evaluationId || ''}
+                studentName={manualModal?.studentName || ''}
+                onSaved={refreshManualScores}
+            />
         </div>
     );
 };
