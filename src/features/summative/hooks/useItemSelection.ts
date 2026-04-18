@@ -1161,33 +1161,27 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
   <table class="student-table">
     <tbody>
       <tr>
-        <td class="label-cell">Nombre</td>
-        <td colspan="3"></td>
+        <td class="label-cell" style="width:13%;">Nombre</td>
+        <td colspan="5"></td>
       </tr>
       <tr>
-        <td class="label-cell">Curso</td>
-        <td style="width:32%;"></td>
-        <td class="label-cell">Fecha</td>
-        <td></td>
-      </tr>
-      <tr>
-        <td class="label-cell">Puntaje ideal</td>
-        <td style="width:32%;">${totalEvalPoints} pts.</td>
-        <td class="label-cell">Puntaje obtenido</td>
-        <td></td>
+        <td class="label-cell" style="width:13%;">Curso</td>
+        <td style="width:17%;"></td>
+        <td class="label-cell" style="width:13%;">Fecha</td>
+        <td style="width:17%;"></td>
+        <td class="label-cell" style="width:22%;">Puntaje ideal / obtenido</td>
+        <td style="width:18%;"><b>${totalEvalPoints} pts.</b> / _______</td>
       </tr>
     </tbody>
   </table>
 
   <div class="general-instructions">
-    <h3>Instrucciones generales</h3>
+    <h3>Instrucciones generales:</h3>
     <ul>
-      <li>Lee con atención cada pregunta antes de responder.</li>
-      <li>Usa lápiz pasta azul o negro. <strong>No se acepta el uso de corrector</strong>.</li>
-      <li>Mantén tu letra clara y legible.</li>
-      <li>No está permitido el uso de celular ni dispositivos electrónicos durante la evaluación.</li>
-      <li>Cualquier indicio de copia anula la evaluación.</li>
-      <li>Lee atentamente las instrucciones específicas de cada sección antes de comenzar.</li>
+      <li>Lee bien las instrucciones antes de responder.</li>
+      <li>Usa lápiz pasta azul o negro. <strong>No se acepta uso de corrector</strong>.</li>
+      <li>Revisa bien la prueba antes de entregarla.</li>
+      <li>La prueba tiene una duración de ________ minutos.</li>
     </ul>
   </div>
 
