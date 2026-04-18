@@ -963,26 +963,22 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
             (s || '').replace(/^\s*[A-Za-z][\.\)]\s+/, '');
 
         const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+        // Numeración REINICIA por sección (I.1, I.2...; II.1, II.2...) para que
+        // coincida con las columnas de la hoja OMR (V/F aparte de SM). Así el
+        // estudiante no se confunde marcando el slot 11 cuando debía ir al 1.
         const slotCounter = { value: 1 };
         let romanIdx = 0;
         const sectionsHtml = SECTION_DEFS.map((def) => {
             if (!groupedBySection[def.key] || groupedBySection[def.key].length === 0) return '';
+            slotCounter.value = 1; // reset en cada sección
             const html = renderSection(def, romanIdx, slotCounter);
             romanIdx++;
             return html;
         }).join('');
 
-        // Pauta de corrección: N° (correlativo de impresión), Respuesta, Tipo, Habilidad, OA.
-        // Reordenada para coincidir con el orden de impresión por sección.
-        // Se compacta la columna OA: solo el código (OA 16) para evitar páginas infinitas;
-        // el texto completo va en un glosario al final (una vez por OA, no repetido).
-        const itemsForAnswerKey: GeneratedItem[] = [];
-        for (const def of SECTION_DEFS) {
-            const blocks = groupedBySection[def.key] || [];
-            for (const block of blocks) {
-                for (const it of block) itemsForAnswerKey.push(it);
-            }
-        }
+        // Pauta de corrección con numeración REINICIADA por sección (I.1, I.2... ; II.1...)
+        // — coincide con lo impreso. Filas manuales con fondo amarillo Y badge MANUAL
+        // (doble señal porque el fondo se pierde si el profe no activa "Imprimir fondos").
 
         // Extrae el código corto del OA (ej "OA 16" de "OA 16 — Reconocer que la Constitución…")
         const extractOACode = (oa: string | undefined): string => {
@@ -995,39 +991,51 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
             return oa.replace(/^OA\s*\d+[A-Za-z]?\s*[—\-:]\s*/i, '').trim();
         };
 
-        // Numeración impresa: incluye manuales (47, 48, 49…). Coincide con lo que el alumno ve.
-        let printNum = 0;
         let omrSlot = 0;
-        const answerKeyRows = itemsForAnswerKey.map((item: GeneratedItem) => {
-            const isManual = !!item.is_manual;
-            printNum++;
-            if (!isManual) omrSlot++;
-            const typeLabel = item.pedagogical_type === 'doble_proceso' ? 'Doble P.'
-                : item.pedagogical_type === 'ordenamiento' ? 'Orden.'
-                : item.pedagogical_type === 'pareados' ? 'Pareados'
-                : item.pedagogical_type === 'completacion' ? 'Compl.'
-                : item.pedagogical_type === 'desarrollo' ? 'Desarrollo'
-                : item.pedagogical_type === 'respuesta_breve' ? 'Resp. Breve'
-                : item.type === 'tf' ? 'V/F' : 'SM';
-            const answerCell = isManual
-                ? (item.rubric
-                    ? `<em style="color:#b45309;">Rúbrica:</em> ${item.rubric}`
-                    : '<em style="color:#b45309;">Corrección manual</em>')
-                : `<b>${item.correctAnswer || '—'}</b>`;
-            const rowBg = isManual ? 'background-color:#fffbeb;' : '';
-            const numCell = isManual
-                ? `<b>${printNum}</b> <span style="color:#9ca3af; font-size:10px;">(manual)</span>`
-                : `<b>${printNum}</b>`;
-            return `
-                <tr style="${rowBg}">
-                    <td style="border: 1px solid #d1d5db; padding: 5px 7px;">${numCell}</td>
-                    <td style="border: 1px solid #d1d5db; padding: 5px 7px;">${answerCell}</td>
-                    <td style="border: 1px solid #d1d5db; padding: 5px 7px; color: #4b5563;">${typeLabel}</td>
-                    <td style="border: 1px solid #d1d5db; padding: 5px 7px; color: #4b5563;">${item.skill || '-'}</td>
-                    <td style="border: 1px solid #d1d5db; padding: 5px 7px; color: #4b5563; font-weight:600;">${extractOACode(item.oa)}</td>
-                </tr>
-            `;
-        }).join('');
+        const itemsForAnswerKey: GeneratedItem[] = [];
+        const answerKeyRowsHtml: string[] = [];
+        let sectionRomanIdx = 0;
+        for (const def of SECTION_DEFS) {
+            const blocks = groupedBySection[def.key] || [];
+            if (blocks.length === 0) continue;
+            const roman = ROMAN[sectionRomanIdx];
+            let localNum = 0;
+            for (const block of blocks) {
+                for (const item of block) {
+                    itemsForAnswerKey.push(item);
+                    localNum++;
+                    const isManual = !!item.is_manual;
+                    if (!isManual) omrSlot++;
+                    const typeLabel = item.pedagogical_type === 'doble_proceso' ? 'Doble P.'
+                        : item.pedagogical_type === 'ordenamiento' ? 'Orden.'
+                        : item.pedagogical_type === 'pareados' ? 'Pareados'
+                        : item.pedagogical_type === 'completacion' ? 'Compl.'
+                        : item.pedagogical_type === 'desarrollo' ? 'Desarrollo'
+                        : item.pedagogical_type === 'respuesta_breve' ? 'Resp. Breve'
+                        : item.type === 'tf' ? 'V/F' : 'SM';
+                    const answerCell = isManual
+                        ? (item.rubric
+                            ? `<em style="color:#b45309;">Rúbrica:</em> ${item.rubric}`
+                            : '<em style="color:#b45309;">Corrección manual</em>')
+                        : `<b>${item.correctAnswer || '—'}</b>`;
+                    const rowBg = isManual ? 'background-color:#fef3c7;' : '';
+                    const manualBadge = isManual
+                        ? ' <span style="display:inline-block; background:#f59e0b; color:#fff; padding:1px 6px; border-radius:3px; font-size:9px; font-weight:700; letter-spacing:0.5px; vertical-align:middle;">MANUAL</span>'
+                        : '';
+                    answerKeyRowsHtml.push(`
+                        <tr style="${rowBg}">
+                            <td style="border: 1px solid #d1d5db; padding: 5px 7px;"><b>${roman}.${localNum}</b>${manualBadge}</td>
+                            <td style="border: 1px solid #d1d5db; padding: 5px 7px;">${answerCell}</td>
+                            <td style="border: 1px solid #d1d5db; padding: 5px 7px; color: #4b5563;">${typeLabel}</td>
+                            <td style="border: 1px solid #d1d5db; padding: 5px 7px; color: #4b5563;">${item.skill || '-'}</td>
+                            <td style="border: 1px solid #d1d5db; padding: 5px 7px; color: #4b5563; font-weight:600;">${extractOACode(item.oa)}</td>
+                        </tr>
+                    `);
+                }
+            }
+            sectionRomanIdx++;
+        }
+        const answerKeyRows = answerKeyRowsHtml.join('');
 
         // Glosario de OAs — uno por código, ordenado por número
         const oaSet = new Map<string, string>();
@@ -1059,7 +1067,11 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
         const answerKeyHtml = `
             <div style="page-break-before: always; font-family: 'Inter', sans-serif;">
                 <h2 style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">Pauta de Corrección: ${title}</h2>
-                <p style="font-size: 11px; color: #6b7280; margin-bottom: 10px;">N° = número impreso en la prueba. Filas amarillas = corrección manual (desarrollo/respuesta breve). Total OMR: ${omrSlot} ítems.</p>
+                <p style="font-size: 11px; color: #6b7280; margin-bottom: 10px;">
+                    N° = sección romana y número de pregunta (ej. <b>II.5</b> = sección II, pregunta 5).
+                    Los ítems marcados con <span style="background:#f59e0b; color:#fff; padding:1px 5px; border-radius:3px; font-size:9px; font-weight:700;">MANUAL</span> no se corrigen por OMR; los revisa el docente.
+                    Total OMR: ${omrSlot} ítems.
+                </p>
                 <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                     <thead>
                         <tr style="background-color: #f3f4f6;">
@@ -1089,7 +1101,8 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
 
     @page { size: legal; margin: 18mm; }
 
-    body { font-family: 'Inter', sans-serif; color: #111827; line-height: 1.45; background: #fff; margin: 0; font-size: 13px; }
+    body { font-family: 'Inter', sans-serif; color: #111827; line-height: 1.45; background: #fff; margin: 0; font-size: 13px; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
     /* Header institucional con logo */
     .header { display: grid; grid-template-columns: 90px 1fr 130px; gap: 14px; align-items: center; padding-bottom: 12px; margin-bottom: 14px; border-bottom: 2px solid #111827; }
