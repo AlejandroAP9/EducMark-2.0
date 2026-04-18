@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 import { createClient } from '@/lib/supabase/client';
 import { useTestDesignerStore } from '@/features/summative/store/useTestDesignerStore';
+import { fetchInstitutionBranding } from '@/shared/lib/institutionBranding';
 
 const supabase = createClient();
 
@@ -489,31 +490,64 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
             return;
         }
 
+        const itemsToSave = items.filter(item => selectedItems.includes(item.id));
+        if (itemsToSave.length === 0) {
+            toast.error('Selecciona al menos un ítem antes de publicar.');
+            return;
+        }
+
+        // Normaliza el type al formato corto que espera el OMR (mc/tf) y la hoja de respuesta.
+        const mapToShortType = (item: GeneratedItem): string => {
+            const ped = item.pedagogical_type;
+            if (ped === 'doble_proceso' || ped === 'tf') return item.type === 'tf' ? 'tf' : 'tf';
+            if (ped === 'desarrollo' || ped === 'respuesta_breve') return 'manual';
+            if (item.type === 'tf' || item.type === 'mc') return item.type;
+            const t = (item.type || item.itemType || '').toLowerCase();
+            if (t.includes('verdadero') || t === 'tf') return 'tf';
+            if (t.includes('desarrollo') || t.includes('respuesta breve')) return 'manual';
+            return 'mc';
+        };
+
+        const dbItems = itemsToSave.map(item => ({
+            evaluation_id: evaluationId,
+            type: mapToShortType(item),
+            pedagogical_type: item.pedagogical_type || null,
+            group_id: item.group_id || null,
+            is_manual: item.is_manual ?? false,
+            rubric: item.rubric || null,
+            oa: item.oa,
+            topic: item.topic,
+            skill: item.skill,
+            difficulty: item.difficulty || 'medium',
+            question: item.question,
+            options: item.options || null,
+            correct_answer: item.correctAnswer || null,
+            explanation: item.explanation || null
+        }));
+
         try {
-            // Filtrar solo los ítems seleccionados
-            const itemsToSave = items.filter(item => selectedItems.includes(item.id));
+            const { error: deleteError } = await supabase
+                .from('evaluation_items')
+                .delete()
+                .eq('evaluation_id', evaluationId);
+            if (deleteError) {
+                console.error('[Publish] delete evaluation_items:', deleteError);
+                throw new Error(`No se pudieron limpiar los ítems previos: ${deleteError.message}`);
+            }
 
-            if (itemsToSave.length > 0) {
-                const dbItems = itemsToSave.map(item => ({
-                    evaluation_id: evaluationId,
-                    type: item.type || item.itemType || 'mc',
-                    pedagogical_type: item.pedagogical_type || null,
-                    group_id: item.group_id || null,
-                    is_manual: item.is_manual ?? false,
-                    rubric: item.rubric || null,
-                    oa: item.oa,
-                    topic: item.topic,
-                    skill: item.skill,
-                    difficulty: item.difficulty || 'medium',
-                    question: item.question,
-                    options: item.options || null,
-                    correct_answer: item.correctAnswer || null,
-                    explanation: item.explanation || null
-                }));
+            const { error: insertError } = await supabase.from('evaluation_items').insert(dbItems);
+            if (insertError) {
+                console.error('[Publish] insert evaluation_items:', insertError);
+                throw new Error(`No se pudieron guardar los ítems: ${insertError.message}`);
+            }
 
-                await supabase.from('evaluation_items').delete().eq('evaluation_id', evaluationId);
-                const { error } = await supabase.from('evaluation_items').insert(dbItems);
-                if (error) throw error;
+            // Refrescar status + updated_at para que la prueba aparezca arriba en el banco.
+            const { error: updateError } = await supabase
+                .from('evaluations')
+                .update({ status: 'active', updated_at: new Date().toISOString() })
+                .eq('id', evaluationId);
+            if (updateError) {
+                console.warn('[Publish] update evaluation status (non-fatal):', updateError);
             }
 
             confetti({
@@ -522,11 +556,12 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
                 origin: { y: 0.5 },
                 colors: ['#8b5cf6', '#a78bfa', '#c4b5fd', '#ffffff']
             });
-            toast.success('Evaluación publicada y enviada a tu correo.');
+            toast.success(`¡Prueba publicada! La encontrarás en tu banco de evaluaciones para imprimir la hoja OMR o escanear respuestas.`);
             onFinalize();
         } catch (error) {
-            console.error('Error saving evaluation items:', error);
-            toast.error('Ocurrió un error al guardar los ítems de la evaluación.');
+            console.error('[Publish] Error saving evaluation:', error);
+            const msg = error instanceof Error ? error.message : 'Error desconocido al publicar.';
+            toast.error(msg);
         }
     };
 
@@ -658,7 +693,7 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
         });
     };
 
-    const handlePrintEvaluation = () => {
+    const handlePrintEvaluation = async () => {
         const itemsToPrint = items.filter((item: GeneratedItem) => selectedItems.includes(item.id));
         if (itemsToPrint.length === 0) {
             toast.error('Selecciona al menos un ítem para imprimir.');
@@ -667,9 +702,285 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
 
         const title = testData.testTitle || 'Evaluación Sumativa';
 
+        // Logo + nombre institucional desde el perfil (misma lógica que la hoja OMR).
+        let branding: { logo: string | null; institutionName: string | null } = { logo: null, institutionName: null };
+        try {
+            const result = await fetchInstitutionBranding();
+            branding = { logo: result.logo, institutionName: result.institutionName };
+        } catch (err) {
+            console.warn('[Print] No se pudo cargar branding institucional:', err);
+        }
+
+        // === Agrupación por SECCIÓN pedagógica con numeración romana ===
+        // Reordena los ítems en bloques: V/F, SM (incluye completación), Doble Proceso,
+        // Ordenamiento, Pareados, Respuesta Breve, Desarrollo. Cada sección recibe un
+        // header con puntaje total e instrucción específica.
+        const POINTS_BY_SECTION: Record<string, number> = {
+            tf: 1,
+            mc: 2,
+            doble_proceso: 3,
+            ordenamiento: 1,
+            pareados: 1,
+            completacion: 1,
+            respuesta_breve: 2,
+            desarrollo: 4,
+        };
+
+        const SECTION_DEFS: { key: string; title: string; instruction: string }[] = [
+            {
+                key: 'tf',
+                title: 'ÍTEM VERDADERO O FALSO',
+                instruction: 'Escribe una V si la afirmación es verdadera o una F si es falsa. Debes justificar obligatoriamente las respuestas falsas para obtener el puntaje.',
+            },
+            {
+                key: 'mc',
+                title: 'ÍTEM DE SELECCIÓN MÚLTIPLE',
+                instruction: 'Marca con una X (equis) la respuesta correcta. Solo una alternativa es válida; las respuestas con más de una marca o con borrones serán anuladas.',
+            },
+            {
+                key: 'completacion',
+                title: 'ÍTEM DE COMPLETACIÓN',
+                instruction: 'Selecciona la alternativa que completa correctamente la afirmación.',
+            },
+            {
+                key: 'doble_proceso',
+                title: 'ÍTEM DE DOBLE PROCESO',
+                instruction: 'Primero indica si la afirmación es verdadera o falsa. Luego justifica tu elección marcando la alternativa que mejor explique tu respuesta.',
+            },
+            {
+                key: 'ordenamiento',
+                title: 'ÍTEM DE ORDENAMIENTO',
+                instruction: 'Ordena los elementos de acuerdo a la secuencia solicitada y marca la posición correspondiente en la hoja de respuestas.',
+            },
+            {
+                key: 'pareados',
+                title: 'ÍTEM DE TÉRMINOS PAREADOS',
+                instruction: 'Asocia cada concepto de la columna A con su definición en la columna B. Marca la letra correspondiente en la hoja de respuestas.',
+            },
+            {
+                key: 'respuesta_breve',
+                title: 'ÍTEM DE RESPUESTA BREVE',
+                instruction: 'Responde de forma breve, clara y precisa cada pregunta planteada.',
+            },
+            {
+                key: 'desarrollo',
+                title: 'ÍTEM DE DESARROLLO',
+                instruction: 'Responde las siguientes preguntas de forma clara y fundamentada, usando un lenguaje formal y sin abreviaturas.',
+            },
+        ];
+
+        const sectionKeyForItem = (item: GeneratedItem): string => {
+            const ped = item.pedagogical_type;
+            if (ped && ['doble_proceso', 'ordenamiento', 'pareados', 'completacion', 'desarrollo', 'respuesta_breve'].includes(ped)) {
+                return ped;
+            }
+            const t = (item.type || item.itemType || '').toLowerCase();
+            if (t === 'tf' || t === 'verdadero o falso') return 'tf';
+            if (t === 'mc' || t === 'selección múltiple' || t === 'seleccion multiple') return 'mc';
+            return 'mc';
+        };
+
+        // Agrupa por section key, colapsa group_id a un solo "ítem visual"
+        const groupedBySection: Record<string, GeneratedItem[][]> = {};
+        const seenGroups = new Set<string>();
+        for (const item of itemsToPrint) {
+            const sectionKey = sectionKeyForItem(item);
+            if (!groupedBySection[sectionKey]) groupedBySection[sectionKey] = [];
+
+            if (item.group_id && seenGroups.has(item.group_id)) continue;
+
+            if (item.group_id && ['doble_proceso', 'ordenamiento', 'pareados', 'completacion'].includes(sectionKey)) {
+                seenGroups.add(item.group_id);
+                const groupItems = itemsToPrint.filter((it) => it.group_id === item.group_id);
+                groupedBySection[sectionKey].push(groupItems);
+            } else {
+                groupedBySection[sectionKey].push([item]);
+            }
+        }
+
+        // Calcula puntaje total por sección
+        const sectionScores: Record<string, { itemCount: number; totalPoints: number }> = {};
+        let totalEvalPoints = 0;
+        for (const def of SECTION_DEFS) {
+            const blocks = groupedBySection[def.key] || [];
+            if (blocks.length === 0) continue;
+            const ptsPerItem = POINTS_BY_SECTION[def.key] || 1;
+            // Para grupos compound, cada elemento del grupo cuenta (Ordenamiento/Pareados con N elementos)
+            const itemCount = blocks.reduce((acc, blk) => acc + (def.key === 'ordenamiento' || def.key === 'pareados' ? blk.length : 1), 0);
+            const totalPoints = itemCount * ptsPerItem;
+            sectionScores[def.key] = { itemCount, totalPoints };
+            totalEvalPoints += totalPoints;
+        }
+
+        // Renderiza una sección completa
+        const renderSection = (def: { key: string; title: string; instruction: string }, romanIdx: number, startSlot: { value: number }): string => {
+            const blocks = groupedBySection[def.key] || [];
+            if (blocks.length === 0) return '';
+            const score = sectionScores[def.key];
+            const ptsPerItem = POINTS_BY_SECTION[def.key] || 1;
+            const headerLine = `${ROMAN[romanIdx]}. ${def.title} (${ptsPerItem} pto${ptsPerItem !== 1 ? 's' : ''}. c/u. Total ${score.totalPoints} pto${score.totalPoints !== 1 ? 's' : ''}.)`;
+
+            const itemsHtml = blocks.map((block) => {
+                const first = block[0];
+
+                // Doble Proceso (group_id, 2 ítems V/F + SM)
+                if (def.key === 'doble_proceso' && block.length >= 2) {
+                    const [tfItem, mcItem] = block;
+                    const startNum = startSlot.value;
+                    startSlot.value += 2;
+                    return `
+                    <div class="question-block">
+                        <div class="question-title"><strong>${startNum}.</strong> ${tfItem.question || ''}</div>
+                        <div style="margin:6px 0 12px 24px; display:flex; gap:28px; font-size:14px;">
+                            <div class="option-item"><div class="circle"></div><span>V) Verdadero</span></div>
+                            <div class="option-item"><div class="circle"></div><span>F) Falso</span></div>
+                        </div>
+                        <div class="question-title"><strong>${startNum + 1}.</strong> ${mcItem.question || ''}</div>
+                        ${(mcItem.options && mcItem.options.length > 0) ? `
+                            <div class="options-grid">
+                                ${mcItem.options.map((opt: string, i: number) => `
+                                    <div class="option-item"><div class="circle"></div><span>${String.fromCharCode(65 + i)}) ${opt}</span></div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>`;
+                }
+
+                // Ordenamiento
+                if (def.key === 'ordenamiento') {
+                    const firstQ = first.question || '';
+                    const premise = firstQ.includes(' — Elemento ') ? firstQ.split(' — Elemento ')[0] : firstQ;
+                    const elements = block.map((it) => {
+                        const m = (it.question || '').match(/— Elemento ([A-Z]): "([^"]*)"/);
+                        return m ? { label: m[1], text: m[2] } : { label: '?', text: it.question || '' };
+                    });
+                    const startNum = startSlot.value;
+                    startSlot.value += block.length;
+                    return `
+                    <div class="question-block">
+                        <div class="question-title"><strong>${startNum}–${startNum + block.length - 1}.</strong> ${premise}</div>
+                        <ul style="margin:8px 0 8px 28px; padding:0; list-style:none;">
+                            ${elements.map((e) => `<li style="margin:3px 0; font-size:14px;"><strong>${e.label})</strong> ${e.text}</li>`).join('')}
+                        </ul>
+                    </div>`;
+                }
+
+                // Términos Pareados
+                if (def.key === 'pareados') {
+                    const firstQ = first.question || '';
+                    const premise = firstQ.includes(' — Ítem ') ? firstQ.split(' — Ítem ')[0] : firstQ;
+                    const colA = block.map((it) => {
+                        const m = (it.question || '').match(/— Ítem ([A-Z0-9]+): "([^"]*)"/);
+                        return m ? { label: m[1], text: m[2] } : { label: '?', text: it.question || '' };
+                    });
+                    const colB = (first.options || []).map((o: string) => o);
+                    const startNum = startSlot.value;
+                    startSlot.value += block.length;
+                    return `
+                    <div class="question-block">
+                        <div class="question-title"><strong>${startNum}–${startNum + block.length - 1}.</strong> ${premise}</div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin:10px 0 0 0;">
+                            <div>
+                                <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; font-weight:700; margin-bottom:4px;">Columna A</div>
+                                <ol style="margin:0; padding-left:18px;">
+                                    ${colA.map((a) => `<li style="margin:3px 0; font-size:14px;"><strong>${a.label}.</strong> ${a.text}</li>`).join('')}
+                                </ol>
+                            </div>
+                            <div>
+                                <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; font-weight:700; margin-bottom:4px;">Columna B</div>
+                                <ul style="margin:0; padding-left:18px; list-style:none;">
+                                    ${colB.map((b: string, i: number) => `<li style="margin:3px 0; font-size:14px;"><strong>${String.fromCharCode(65 + i)}.</strong> ${b}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>`;
+                }
+
+                // Desarrollo / Respuesta Breve
+                if (def.key === 'desarrollo' || def.key === 'respuesta_breve') {
+                    const linesCount = def.key === 'desarrollo' ? 8 : 3;
+                    const startNum = startSlot.value;
+                    startSlot.value += 1;
+                    return `
+                    <div class="question-block">
+                        <div class="question-title"><strong>${startNum}.</strong> ${first.question || '(Sin enunciado)'}</div>
+                        <div class="open-lines" style="margin-top:10px;">
+                            ${Array(linesCount).fill('<div class="line"></div>').join('')}
+                        </div>
+                    </div>`;
+                }
+
+                // V/F suelto
+                if (def.key === 'tf') {
+                    const startNum = startSlot.value;
+                    startSlot.value += 1;
+                    return `
+                    <div class="question-block">
+                        <div class="question-title">
+                            <span style="display:inline-block; min-width:30px; border-bottom:1px solid #6b7280; margin-right:8px; text-align:center;">&nbsp;</span>
+                            <strong>${startNum}.</strong> ${first.question || '(Sin enunciado)'}
+                        </div>
+                        <div style="margin:6px 0 0 38px; font-size:12px; color:#4b5563;">Justificación (si es Falso): <span style="display:inline-block; width:60%; border-bottom:1px solid #d1d5db;">&nbsp;</span></div>
+                    </div>`;
+                }
+
+                // Default: MC / Completación
+                const startNum = startSlot.value;
+                startSlot.value += 1;
+                return `
+                <div class="question-block">
+                    ${first.stimulusText ? `
+                      <div class="stimulus-box" style="margin-bottom: 10px; padding: 12px 16px; background: #f8f9fa; border-left: 4px solid #6e56cf; border-radius: 0 8px 8px 0; font-size: 0.9em; line-height: 1.6;">
+                        <strong style="font-size: 0.75em; text-transform: uppercase; letter-spacing: 1px; color: #6e56cf; display: block; margin-bottom: 6px;">
+                          ${first.stimulusType === 'source' ? 'Fuente' : first.stimulusType === 'table' ? 'Datos' : 'Lee el siguiente texto'}
+                        </strong>
+                        <span style="white-space: pre-wrap;">${first.stimulusText}</span>
+                      </div>
+                    ` : ''}
+                    ${first.imageUrl ? `<img src="${first.imageUrl}" class="question-image" alt="Pregunta ${startNum}" />` : ''}
+                    <div class="question-title"><strong>${startNum}.</strong> ${first.question || '(Sin enunciado)'}</div>
+                    ${(first.options && first.options.length > 0) ? `
+                      <div class="options-grid">
+                        ${first.options.map((opt: string, i: number) => `
+                          <div class="option-item">
+                            <div class="circle"></div>
+                            <span>${String.fromCharCode(65 + i)}) ${opt}</span>
+                          </div>
+                        `).join('')}
+                      </div>
+                    ` : ''}
+                </div>`;
+            }).join('');
+
+            return `
+            <div class="section-block">
+                <h2 class="section-header">${headerLine}</h2>
+                <p class="section-instruction"><strong>Instrucciones:</strong> ${def.instruction}</p>
+                ${itemsHtml}
+            </div>`;
+        };
+
+        const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+        const slotCounter = { value: 1 };
+        let romanIdx = 0;
+        const sectionsHtml = SECTION_DEFS.map((def) => {
+            if (!groupedBySection[def.key] || groupedBySection[def.key].length === 0) return '';
+            const html = renderSection(def, romanIdx, slotCounter);
+            romanIdx++;
+            return html;
+        }).join('');
+
         // Pauta de corrección: N°, Respuesta (o Rúbrica si is_manual), Tipo, Habilidad, OA
+        // Reordenada para coincidir con el orden de impresión por sección.
+        const itemsForAnswerKey: GeneratedItem[] = [];
+        for (const def of SECTION_DEFS) {
+            const blocks = groupedBySection[def.key] || [];
+            for (const block of blocks) {
+                for (const it of block) itemsForAnswerKey.push(it);
+            }
+        }
         let answerKeySlot = 0;
-        const answerKeyRows = itemsToPrint.map((item: GeneratedItem) => {
+        const answerKeyRows = itemsForAnswerKey.map((item: GeneratedItem) => {
             const isManual = !!item.is_manual;
             if (!isManual) answerKeySlot++;
             const slotLabel = isManual ? '—' : String(answerKeySlot);
@@ -727,224 +1038,113 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-    @page { size: letter; margin: 20mm; }
+    @page { size: letter; margin: 18mm; }
 
-    body { font-family: 'Inter', sans-serif; color: #111827; line-height: 1.5; background: #fff; margin: 0; }
+    body { font-family: 'Inter', sans-serif; color: #111827; line-height: 1.45; background: #fff; margin: 0; font-size: 13px; }
 
-    /* Header Institucional */
-    .header { border-bottom: 2px solid #111827; padding-bottom: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start; }
-    .header-left h1 { margin: 0 0 4px 0; font-size: 20px; font-weight: 700; text-transform: uppercase; }
-    .header-left .subtitle { color: #4b5563; font-size: 14px; font-weight: 500; }
-    .institution-box { text-align: right; font-size: 12px; color: #6b7280; }
+    /* Header institucional con logo */
+    .header { display: grid; grid-template-columns: 90px 1fr 130px; gap: 14px; align-items: center; padding-bottom: 12px; margin-bottom: 14px; border-bottom: 2px solid #111827; }
+    .header-logo { width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; }
+    .header-logo img { max-width: 90px; max-height: 90px; object-fit: contain; }
+    .header-logo .logo-placeholder { width: 80px; height: 80px; border: 1px dashed #9ca3af; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #9ca3af; text-align: center; padding: 6px; }
+    .header-center { text-align: center; }
+    .header-center .institution-name { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #374151; margin-bottom: 4px; }
+    .header-center h1 { margin: 0; font-size: 18px; font-weight: 700; text-transform: uppercase; color: #111827; }
+    .header-center .subtitle { color: #4b5563; font-size: 12px; font-weight: 500; margin-top: 2px; }
+    .nota-box { border: 2px solid #111827; border-radius: 6px; padding: 8px 10px; text-align: center; }
+    .nota-box .label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; }
+    .nota-box .value-line { height: 36px; border-bottom: 1px solid #9ca3af; margin-top: 4px; }
 
-    /* Datos del alumno */
-    .student-data { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; }
-    .data-field { display: flex; font-size: 14px; }
-    .data-field strong { margin-right: 8px; font-weight: 600; color: #374151; width: 60px; }
-    .data-field .line-fill { flex: 1; border-bottom: 1px solid #9ca3af; }
+    /* Datos del alumno (tabla compacta) */
+    .student-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 12px; }
+    .student-table td { border: 1px solid #d1d5db; padding: 6px 8px; }
+    .student-table .label-cell { background: #f9fafb; font-weight: 600; color: #374151; width: 18%; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
 
-    /* Cajas y Preguntas */
-    .question-block { margin-bottom: 24px; page-break-inside: avoid; break-inside: avoid; }
-    .question-title { font-size: 15px; font-weight: 500; margin-bottom: 12px; }
-    .question-image { max-width: 400px; max-height: 300px; margin: 12px 0; display: block; border: 1px solid #d1d5db; border-radius: 4px; }
+    /* Instrucciones generales */
+    .general-instructions { border: 1px solid #d1d5db; border-radius: 6px; padding: 10px 14px; margin-bottom: 18px; background: #f9fafb; }
+    .general-instructions h3 { margin: 0 0 6px 0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #111827; }
+    .general-instructions ul { margin: 0; padding-left: 18px; font-size: 12px; color: #374151; }
+    .general-instructions li { margin: 2px 0; }
+
+    /* Sección con header + instrucción */
+    .section-block { margin: 18px 0 12px 0; page-break-inside: auto; }
+    .section-header { font-size: 13px; font-weight: 700; text-transform: uppercase; margin: 0 0 4px 0; padding: 6px 10px; background: #111827; color: #fff; border-radius: 4px; letter-spacing: 0.5px; }
+    .section-instruction { font-size: 12px; color: #374151; margin: 0 0 12px 0; padding: 6px 10px; background: #f3f4f6; border-left: 3px solid #6e56cf; font-style: italic; }
+
+    /* Preguntas */
+    .question-block { margin-bottom: 14px; page-break-inside: avoid; break-inside: avoid; }
+    .question-title { font-size: 13px; font-weight: 500; margin-bottom: 8px; line-height: 1.5; }
+    .question-image { max-width: 380px; max-height: 280px; margin: 8px 0; display: block; border: 1px solid #d1d5db; border-radius: 4px; }
 
     /* Opciones */
-    .options-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-left: 20px; }
-    .option-item { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: #374151; }
-    .circle { width: 14px; height: 14px; min-width: 14px; border: 1px solid #6b7280; border-radius: 50%; margin-top: 3px; }
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; margin: 4px 0 4px 24px; }
+    .option-item { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: #1f2937; }
+    .circle { width: 12px; height: 12px; min-width: 12px; border: 1.2px solid #374151; border-radius: 50%; margin-top: 3px; }
 
     /* Líneas de desarrollo */
-    .open-lines { margin-top: 20px; }
-    .line { border-bottom: 1px solid #d1d5db; height: 28px; margin-bottom: 8px; }
+    .open-lines { margin-top: 8px; }
+    .line { border-bottom: 1px solid #d1d5db; height: 22px; margin-bottom: 4px; }
 
-    /* LaTeX block fixes */
+    /* LaTeX */
     .math-inline { display: inline-block; }
-    .math-display { display: block; text-align: center; margin: 10px 0; }
+    .math-display { display: block; text-align: center; margin: 8px 0; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
   <div class="header">
-    <div class="header-left">
-      <h1>${title}</h1>
-      <div class="subtitle">${testData.subject || 'Asignatura'} · ${testData.grade || 'Curso'}</div>
+    <div class="header-logo">
+      ${branding.logo
+        ? `<img src="${branding.logo}" alt="Logo institución" />`
+        : `<div class="logo-placeholder">Sin logo institucional</div>`
+      }
     </div>
-    <div class="institution-box">
-      <strong>EducMark Generative AI</strong><br/>
-      Impreso el ${new Date().toLocaleDateString('es-CL')}
+    <div class="header-center">
+      ${branding.institutionName ? `<div class="institution-name">${branding.institutionName}</div>` : ''}
+      <h1>${title}</h1>
+      <div class="subtitle">${testData.subject || 'Asignatura'} · ${testData.grade || 'Curso'}${testData.unit ? ` · ${testData.unit}` : ''}</div>
+    </div>
+    <div class="nota-box">
+      <div class="label">Nota</div>
+      <div class="value-line"></div>
     </div>
   </div>
 
-  <div class="student-data">
-    <div class="data-field">
-      <strong>Nombre:</strong>
-      <div class="line-fill"></div>
-    </div>
-    <div class="data-field">
-      <strong>Fecha:</strong>
-      <div class="line-fill"></div>
-    </div>
-    <div class="data-field" style="grid-column: span 2;">
-      <strong>Puntaje:</strong>
-      <div style="flex: 1;">__________ / ${itemsToPrint.length} pts.</div>
-      <strong style="margin-left:auto; width:auto; margin-right:8px;">Nota:</strong>
-      <div style="width: 80px; border-bottom: 1px solid #9ca3af;"></div>
-    </div>
+  <table class="student-table">
+    <tbody>
+      <tr>
+        <td class="label-cell">Nombre</td>
+        <td colspan="3"></td>
+      </tr>
+      <tr>
+        <td class="label-cell">Curso</td>
+        <td style="width:32%;"></td>
+        <td class="label-cell">Fecha</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td class="label-cell">Puntaje ideal</td>
+        <td style="width:32%;">${totalEvalPoints} pts.</td>
+        <td class="label-cell">Puntaje obtenido</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="general-instructions">
+    <h3>Instrucciones generales</h3>
+    <ul>
+      <li>Lee con atención cada pregunta antes de responder.</li>
+      <li>Usa lápiz pasta azul o negro. <strong>No se acepta el uso de corrector</strong>.</li>
+      <li>Mantén tu letra clara y legible.</li>
+      <li>No está permitido el uso de celular ni dispositivos electrónicos durante la evaluación.</li>
+      <li>Cualquier indicio de copia anula la evaluación.</li>
+      <li>Lee atentamente las instrucciones específicas de cada sección antes de comenzar.</li>
+    </ul>
   </div>
 
   <div class="questions">
-    ${(() => {
-        // Agrupa items consecutivos que comparten group_id + pedagogical_type
-        // en bloques pedagógicos. Items manuales (desarrollo/respuesta breve)
-        // no consumen slot OMR, los demás sí (contador separado).
-        type Block = { kind: string; items: GeneratedItem[]; startSlot: number };
-        const blocks: Block[] = [];
-        let omrSlot = 1;
-        for (let i = 0; i < itemsToPrint.length; i++) {
-            const item = itemsToPrint[i];
-            const kind = item.pedagogical_type || item.type || 'mc';
-            const prev = blocks[blocks.length - 1];
-            const isCompound = item.group_id && ['doble_proceso', 'ordenamiento', 'pareados', 'completacion'].includes(kind);
-            if (isCompound && prev && prev.items[0].group_id === item.group_id) {
-                prev.items.push(item);
-            } else {
-                blocks.push({ kind, items: [item], startSlot: item.is_manual ? 0 : omrSlot });
-            }
-            if (!item.is_manual) omrSlot++;
-        }
-
-        return blocks.map((block) => {
-            const first = block.items[0];
-            const slotRange = block.items.filter((i: GeneratedItem) => !i.is_manual).length > 1
-                ? `preguntas ${block.startSlot} a ${block.startSlot + block.items.length - 1}`
-                : `pregunta ${block.startSlot}`;
-
-            // === Doble Proceso ===
-            if (block.kind === 'doble_proceso' && block.items.length === 2) {
-                const [tfItem, mcItem] = block.items;
-                return `
-                <div class="question-block" style="padding:14px 18px; background:#faf7ff; border:1px solid #e9d5ff; border-radius:10px;">
-                    <div style="font-size:10px; letter-spacing:2px; color:#7c3aed; font-weight:700; text-transform:uppercase; margin-bottom:8px;">Doble Proceso · ${slotRange}</div>
-                    <div class="question-title"><strong>${block.startSlot}.</strong> ${tfItem.question || ''} <span style="color:#7c3aed;">(Marca V o F)</span></div>
-                    <div style="margin:10px 0 16px 20px; display:flex; gap:28px; font-size:14px;">
-                        <div class="option-item"><div class="circle"></div><span>V) Verdadero</span></div>
-                        <div class="option-item"><div class="circle"></div><span>F) Falso</span></div>
-                    </div>
-                    <div class="question-title"><strong>${block.startSlot + 1}.</strong> ${mcItem.question || ''}</div>
-                    ${(mcItem.options && mcItem.options.length > 0) ? `
-                        <div class="options-grid">
-                            ${mcItem.options.map((opt: string, i: number) => `
-                                <div class="option-item"><div class="circle"></div><span>${String.fromCharCode(65 + i)}) ${opt}</span></div>
-                            `).join('')}
-                        </div>
-                    ` : ''}
-                </div>`;
-            }
-
-            // === Ordenamiento ===
-            if (block.kind === 'ordenamiento') {
-                // Extrae el premise del primer item y los elementos del texto de cada pregunta
-                const firstQ = first.question || '';
-                const premise = firstQ.includes(' — Elemento ') ? firstQ.split(' — Elemento ')[0] : firstQ;
-                const elements = block.items.map((it) => {
-                    const m = (it.question || '').match(/— Elemento ([A-Z]): "([^"]*)"/);
-                    return m ? { label: m[1], text: m[2] } : { label: '?', text: it.question || '' };
-                });
-                return `
-                <div class="question-block" style="padding:14px 18px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px;">
-                    <div style="font-size:10px; letter-spacing:2px; color:#2563eb; font-weight:700; text-transform:uppercase; margin-bottom:8px;">Ordenamiento · ${slotRange}</div>
-                    <div style="font-size:15px; margin-bottom:10px;"><strong>${premise}</strong></div>
-                    <ul style="margin:10px 0 14px 24px; padding:0; list-style:none;">
-                        ${elements.map((e) => `<li style="margin:4px 0; font-size:14px;"><strong style="color:#2563eb;">${e.label})</strong> ${e.text}</li>`).join('')}
-                    </ul>
-                    <div style="background:white; border:1px solid #bfdbfe; border-radius:8px; padding:10px 14px; font-size:13px; color:#1e3a8a;">
-                        <strong>Instrucciones:</strong> en la hoja OMR, marca para cada elemento la posición correcta (1°, 2°, 3°, ...) en las <strong>${slotRange}</strong>. Cada posición corresponde a una letra: A=1°, B=2°, C=3°, D=4°, E=5°.
-                    </div>
-                </div>`;
-            }
-
-            // === Términos Pareados ===
-            if (block.kind === 'pareados') {
-                const firstQ = first.question || '';
-                const premise = firstQ.includes(' — Ítem ') ? firstQ.split(' — Ítem ')[0] : firstQ;
-                const colA = block.items.map((it) => {
-                    const m = (it.question || '').match(/— Ítem ([A-Z0-9]+): "([^"]*)"/);
-                    return m ? { label: m[1], text: m[2] } : { label: '?', text: it.question || '' };
-                });
-                const colB = (first.options || []).map((o: string) => o);
-                return `
-                <div class="question-block" style="padding:14px 18px; background:#fdf2f8; border:1px solid #fbcfe8; border-radius:10px;">
-                    <div style="font-size:10px; letter-spacing:2px; color:#db2777; font-weight:700; text-transform:uppercase; margin-bottom:8px;">Términos Pareados · ${slotRange}</div>
-                    <div style="font-size:15px; margin-bottom:10px;"><strong>${premise}</strong></div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin:12px 0;">
-                        <div>
-                            <div style="font-size:11px; color:#9f1239; letter-spacing:1px; text-transform:uppercase; font-weight:700; margin-bottom:6px;">Columna A</div>
-                            <ol style="margin:0; padding-left:18px;">
-                                ${colA.map((a) => `<li style="margin:4px 0; font-size:14px;"><strong>${a.label}.</strong> ${a.text}</li>`).join('')}
-                            </ol>
-                        </div>
-                        <div>
-                            <div style="font-size:11px; color:#9f1239; letter-spacing:1px; text-transform:uppercase; font-weight:700; margin-bottom:6px;">Columna B (opciones)</div>
-                            <ul style="margin:0; padding-left:18px; list-style:none;">
-                                ${colB.map((b: string, i: number) => `<li style="margin:4px 0; font-size:14px;"><strong>${String.fromCharCode(65 + i)}.</strong> ${b}</li>`).join('')}
-                            </ul>
-                        </div>
-                    </div>
-                    <div style="background:white; border:1px solid #fbcfe8; border-radius:8px; padding:10px 14px; font-size:13px; color:#831843;">
-                        <strong>Instrucciones:</strong> para cada ítem de columna A, marca en la hoja OMR la letra de columna B que le corresponde (${slotRange}).
-                    </div>
-                </div>`;
-            }
-
-            // === Desarrollo / Respuesta Breve ===
-            if (first.is_manual) {
-                const isDev = block.kind === 'desarrollo';
-                const linesCount = isDev ? 8 : 3;
-                return `
-                <div class="question-block" style="padding:14px 18px; background:#fffbeb; border:1px solid #fde68a; border-radius:10px;">
-                    <div style="font-size:10px; letter-spacing:2px; color:#b45309; font-weight:700; text-transform:uppercase; margin-bottom:8px;">
-                        ${isDev ? 'Desarrollo' : 'Respuesta Breve'} · Corrección Manual
-                    </div>
-                    <div class="question-title">${first.question || '(Sin enunciado)'}</div>
-                    <div class="open-lines" style="margin-top:12px;">
-                        ${Array(linesCount).fill('<div class="line"></div>').join('')}
-                    </div>
-                    <div style="margin-top:8px; font-size:11px; color:#92400e; font-style:italic;">
-                        Esta pregunta NO se responde en la hoja OMR; el docente la corrige manualmente.
-                    </div>
-                </div>`;
-            }
-
-            // === Default: MC / VF / Completación suelto ===
-            return block.items.map((item: GeneratedItem, localIdx: number) => {
-                const slotNum = first.is_manual ? '' : `${block.startSlot + localIdx}.`;
-                return `
-                <div class="question-block">
-                    ${item.stimulusText ? `
-                      <div class="stimulus-box" style="margin-bottom: 10px; padding: 12px 16px; background: #f8f9fa; border-left: 4px solid #6e56cf; border-radius: 0 8px 8px 0; font-size: 0.9em; line-height: 1.6;">
-                        <strong style="font-size: 0.75em; text-transform: uppercase; letter-spacing: 1px; color: #6e56cf; display: block; margin-bottom: 6px;">
-                          ${item.stimulusType === 'source' ? 'Fuente' : item.stimulusType === 'table' ? 'Datos' : 'Lee el siguiente texto'}
-                        </strong>
-                        <span style="white-space: pre-wrap;">${item.stimulusText}</span>
-                      </div>
-                    ` : ''}
-                    ${item.imageUrl ? `<img src="${item.imageUrl}" class="question-image" alt="Pregunta ${slotNum}" />` : ''}
-                    <div class="question-title"><strong>${slotNum}</strong> ${item.question || '(Sin enunciado)'}</div>
-
-                    ${(item.options && item.options.length > 0) ? `
-                      <div class="options-grid">
-                        ${item.options.map((opt: string, i: number) => `
-                          <div class="option-item">
-                            <div class="circle"></div>
-                            <span>${String.fromCharCode(65 + i)}) ${opt}</span>
-                          </div>
-                        `).join('')}
-                      </div>
-                    ` : ''}
-                </div>`;
-            }).join('');
-        }).join('');
-    })()}
+    ${sectionsHtml}
   </div>
 
   ${answerKeyHtml}
