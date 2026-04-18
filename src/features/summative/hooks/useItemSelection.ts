@@ -972,8 +972,10 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
             return html;
         }).join('');
 
-        // Pauta de corrección: N°, Respuesta (o Rúbrica si is_manual), Tipo, Habilidad, OA
+        // Pauta de corrección: N° (correlativo de impresión), Respuesta, Tipo, Habilidad, OA.
         // Reordenada para coincidir con el orden de impresión por sección.
+        // Se compacta la columna OA: solo el código (OA 16) para evitar páginas infinitas;
+        // el texto completo va en un glosario al final (una vez por OA, no repetido).
         const itemsForAnswerKey: GeneratedItem[] = [];
         for (const def of SECTION_DEFS) {
             const blocks = groupedBySection[def.key] || [];
@@ -981,53 +983,98 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
                 for (const it of block) itemsForAnswerKey.push(it);
             }
         }
-        let answerKeySlot = 0;
+
+        // Extrae el código corto del OA (ej "OA 16" de "OA 16 — Reconocer que la Constitución…")
+        const extractOACode = (oa: string | undefined): string => {
+            if (!oa) return '—';
+            const m = oa.match(/^(OA\s*\d+[A-Za-z]?)/i);
+            return m ? m[1].replace(/\s+/g, ' ') : oa.slice(0, 10);
+        };
+        const extractOAText = (oa: string | undefined): string => {
+            if (!oa) return '';
+            return oa.replace(/^OA\s*\d+[A-Za-z]?\s*[—\-:]\s*/i, '').trim();
+        };
+
+        // Numeración impresa: incluye manuales (47, 48, 49…). Coincide con lo que el alumno ve.
+        let printNum = 0;
+        let omrSlot = 0;
         const answerKeyRows = itemsForAnswerKey.map((item: GeneratedItem) => {
             const isManual = !!item.is_manual;
-            if (!isManual) answerKeySlot++;
-            const slotLabel = isManual ? '—' : String(answerKeySlot);
-            const typeLabel = item.pedagogical_type === 'doble_proceso' ? 'Doble Proceso'
-                : item.pedagogical_type === 'ordenamiento' ? 'Ordenamiento'
+            printNum++;
+            if (!isManual) omrSlot++;
+            const typeLabel = item.pedagogical_type === 'doble_proceso' ? 'Doble P.'
+                : item.pedagogical_type === 'ordenamiento' ? 'Orden.'
                 : item.pedagogical_type === 'pareados' ? 'Pareados'
-                : item.pedagogical_type === 'completacion' ? 'Completación'
+                : item.pedagogical_type === 'completacion' ? 'Compl.'
                 : item.pedagogical_type === 'desarrollo' ? 'Desarrollo'
-                : item.pedagogical_type === 'respuesta_breve' ? 'Respuesta Breve'
+                : item.pedagogical_type === 'respuesta_breve' ? 'Resp. Breve'
                 : item.type === 'tf' ? 'V/F' : 'SM';
             const answerCell = isManual
                 ? (item.rubric
-                    ? `<em style="color:#b45309; font-size:12px;">Rúbrica:</em> ${item.rubric}`
-                    : '<em style="color:#b45309;">(Corrección manual — sin rúbrica definida)</em>')
+                    ? `<em style="color:#b45309;">Rúbrica:</em> ${item.rubric}`
+                    : '<em style="color:#b45309;">Corrección manual</em>')
                 : `<b>${item.correctAnswer || '—'}</b>`;
             const rowBg = isManual ? 'background-color:#fffbeb;' : '';
+            const numCell = isManual
+                ? `<b>${printNum}</b> <span style="color:#9ca3af; font-size:10px;">(manual)</span>`
+                : `<b>${printNum}</b>`;
             return `
                 <tr style="${rowBg}">
-                    <td style="border: 1px solid #d1d5db; padding: 10px;">${slotLabel}</td>
-                    <td style="border: 1px solid #d1d5db; padding: 10px;">${answerCell}</td>
-                    <td style="border: 1px solid #d1d5db; padding: 10px; color: #4b5563; font-size:12px;">${typeLabel}</td>
-                    <td style="border: 1px solid #d1d5db; padding: 10px; color: #4b5563;">${item.skill || '-'}</td>
-                    <td style="border: 1px solid #d1d5db; padding: 10px; color: #4b5563;">${item.oa || '-'}</td>
+                    <td style="border: 1px solid #d1d5db; padding: 5px 7px;">${numCell}</td>
+                    <td style="border: 1px solid #d1d5db; padding: 5px 7px;">${answerCell}</td>
+                    <td style="border: 1px solid #d1d5db; padding: 5px 7px; color: #4b5563;">${typeLabel}</td>
+                    <td style="border: 1px solid #d1d5db; padding: 5px 7px; color: #4b5563;">${item.skill || '-'}</td>
+                    <td style="border: 1px solid #d1d5db; padding: 5px 7px; color: #4b5563; font-weight:600;">${extractOACode(item.oa)}</td>
                 </tr>
             `;
         }).join('');
 
+        // Glosario de OAs — uno por código, ordenado por número
+        const oaSet = new Map<string, string>();
+        for (const it of itemsForAnswerKey) {
+            const code = extractOACode(it.oa);
+            if (code !== '—' && !oaSet.has(code)) {
+                oaSet.set(code, extractOAText(it.oa));
+            }
+        }
+        const sortedOAs = Array.from(oaSet.entries()).sort((a, b) => {
+            const numA = parseInt(a[0].replace(/\D/g, ''), 10) || 0;
+            const numB = parseInt(b[0].replace(/\D/g, ''), 10) || 0;
+            return numA - numB;
+        });
+        const oaGlossaryHtml = sortedOAs.length > 0 ? `
+            <h3 style="font-size:13px; font-weight:700; margin:18px 0 6px 0; text-transform:uppercase; letter-spacing:0.5px;">Objetivos de Aprendizaje</h3>
+            <table style="width:100%; border-collapse:collapse; font-size:11px;">
+                <tbody>
+                    ${sortedOAs.map(([code, text]) => `
+                        <tr>
+                            <td style="border:1px solid #d1d5db; padding:4px 7px; font-weight:700; width:70px; vertical-align:top;">${code}</td>
+                            <td style="border:1px solid #d1d5db; padding:4px 7px; color:#374151;">${text}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        ` : '';
+
         const answerKeyHtml = `
             <div style="page-break-before: always; font-family: 'Inter', sans-serif;">
-                <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Pauta de Corrección: ${title}</h2>
-                <p style="font-size: 12px; color: #6b7280; margin-bottom: 20px;">N° = slot OMR. Los ítems marcados con "—" son de corrección manual (desarrollo / respuesta breve).</p>
-                <table style="width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 14px;">
+                <h2 style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">Pauta de Corrección: ${title}</h2>
+                <p style="font-size: 11px; color: #6b7280; margin-bottom: 10px;">N° = número impreso en la prueba. Filas amarillas = corrección manual (desarrollo/respuesta breve). Total OMR: ${omrSlot} ítems.</p>
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                     <thead>
                         <tr style="background-color: #f3f4f6;">
-                            <th style="border: 1px solid #d1d5db; padding: 10px; text-align: left; width:50px;">N°</th>
-                            <th style="border: 1px solid #d1d5db; padding: 10px; text-align: left;">Respuesta / Rúbrica</th>
-                            <th style="border: 1px solid #d1d5db; padding: 10px; text-align: left; width:120px;">Tipo</th>
-                            <th style="border: 1px solid #d1d5db; padding: 10px; text-align: left; width:140px;">Habilidad</th>
-                            <th style="border: 1px solid #d1d5db; padding: 10px; text-align: left; width:100px;">OA</th>
+                            <th style="border: 1px solid #d1d5db; padding: 6px 7px; text-align: left; width:60px;">N°</th>
+                            <th style="border: 1px solid #d1d5db; padding: 6px 7px; text-align: left;">Respuesta / Rúbrica</th>
+                            <th style="border: 1px solid #d1d5db; padding: 6px 7px; text-align: left; width:90px;">Tipo</th>
+                            <th style="border: 1px solid #d1d5db; padding: 6px 7px; text-align: left; width:110px;">Habilidad</th>
+                            <th style="border: 1px solid #d1d5db; padding: 6px 7px; text-align: left; width:70px;">OA</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${answerKeyRows}
                     </tbody>
                 </table>
+                ${oaGlossaryHtml}
             </div>
         `;
 
@@ -1070,12 +1117,12 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
 
     /* Sección con header + instrucción */
     .section-block { margin: 18px 0 12px 0; page-break-inside: auto; }
-    .section-header { font-size: 13px; font-weight: 700; text-transform: uppercase; margin: 0 0 4px 0; padding: 6px 10px; background: #111827; color: #fff; border-radius: 4px; letter-spacing: 0.5px; }
-    .section-instruction { font-size: 12px; color: #374151; margin: 0 0 12px 0; padding: 6px 10px; background: #f3f4f6; border-left: 3px solid #6e56cf; font-style: italic; }
+    .section-header { font-size: 13px; font-weight: 700; text-transform: uppercase; margin: 0 0 4px 0; padding: 6px 10px; background: #111827; color: #fff; border-radius: 4px; letter-spacing: 0.5px; page-break-after: avoid; break-after: avoid; }
+    .section-instruction { font-size: 12px; color: #374151; margin: 0 0 12px 0; padding: 6px 10px; background: #f3f4f6; border-left: 3px solid #6e56cf; font-style: italic; page-break-after: avoid; break-after: avoid; }
 
-    /* Preguntas */
-    .question-block { margin-bottom: 14px; page-break-inside: avoid; break-inside: avoid; }
-    .question-title { font-size: 13px; font-weight: 500; margin-bottom: 8px; line-height: 1.5; }
+    /* Preguntas — widow/orphan control para evitar enunciados colgados al final de página */
+    .question-block { margin-bottom: 14px; page-break-inside: avoid; break-inside: avoid; orphans: 3; widows: 3; }
+    .question-title { font-size: 13px; font-weight: 500; margin-bottom: 8px; line-height: 1.5; page-break-after: avoid; break-after: avoid; }
     .question-image { max-width: 380px; max-height: 280px; margin: 8px 0; display: block; border: 1px solid #d1d5db; border-radius: 4px; }
 
     /* Opciones: 1 columna, sin burbujas (el alumno marca con X sobre la letra) */
