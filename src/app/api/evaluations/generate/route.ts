@@ -390,24 +390,58 @@ export async function POST(req: NextRequest) {
     try {
         console.log('[Eval] Generating —', blueprint.length, 'rows, totals:', JSON.stringify(totals));
 
+        // Estimación: cada ítem ~250 tokens. Blueprints grandes necesitan más budget.
+        // gpt-4o-mini: hasta 16.384 tokens output. gpt-4o: 16.384. Si estimamos >12.000, usamos gpt-4o por calidad.
+        const totalItems = blueprint.reduce((sum, r) => sum + r.count, 0);
+        const estimatedTokens = totalItems * 280;
+        const useBiggerModel = estimatedTokens > 10000;
+        const model = useBiggerModel ? 'gpt-4o' : OPENAI_MODEL;
+        const maxTokens = Math.min(16000, Math.max(estimatedTokens + 2000, 8000));
+
+        console.log('[Eval] Model:', model, 'max_tokens:', maxTokens, 'items:', totalItems);
+
         const completion = await openai.chat.completions.create({
-            model: OPENAI_MODEL,
+            model,
             messages: [
                 { role: 'system', content: buildSystemPrompt() },
                 { role: 'user', content: buildUserPrompt(subject || '', grade || '', unit || '', blueprint) },
             ],
             temperature: 0.7,
-            max_tokens: 6000,
+            max_tokens: maxTokens,
             response_format: { type: 'json_object' },
         });
 
         const content = completion.choices[0]?.message?.content;
+        const finishReason = completion.choices[0]?.finish_reason;
         if (!content) {
             console.error('[Eval] Empty response from OpenAI');
             return NextResponse.json({ error: 'Sin respuesta de la IA' }, { status: 500 });
         }
+        if (finishReason === 'length') {
+            console.error('[Eval] Truncated by max_tokens. Blueprint too big:', totalItems, 'items');
+            return NextResponse.json(
+                {
+                    error: `La evaluación es muy grande (${totalItems} ítems). Por favor reduce la cantidad o divide en dos evaluaciones.`,
+                    itemsRequested: totalItems,
+                    finishReason,
+                },
+                { status: 413 }
+            );
+        }
 
-        const parsed = JSON.parse(content);
+        let parsed;
+        try {
+            parsed = JSON.parse(content);
+        } catch (parseErr) {
+            console.error('[Eval] JSON parse failed. Content length:', content.length, 'First 200:', content.substring(0, 200));
+            return NextResponse.json(
+                {
+                    error: 'La IA devolvió un JSON inválido. Intenta con menos ítems o vuelve a intentar.',
+                    details: parseErr instanceof Error ? parseErr.message : 'unknown',
+                },
+                { status: 500 }
+            );
+        }
         const rawItems = Array.isArray(parsed.items) ? parsed.items : [];
 
         if (rawItems.length === 0) {
