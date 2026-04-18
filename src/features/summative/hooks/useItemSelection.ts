@@ -839,7 +839,7 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
                         ${(mcItem.options && mcItem.options.length > 0) ? `
                             <div class="options-grid">
                                 ${mcItem.options.map((opt: string, i: number) => `
-                                    <div class="option-item"><div class="circle"></div><span>${String.fromCharCode(65 + i)}) ${opt}</span></div>
+                                    <div class="option-item"><strong>${String.fromCharCode(65 + i)})</strong> ${stripLetterPrefix(opt)}</div>
                                 `).join('')}
                             </div>
                         ` : ''}
@@ -889,7 +889,7 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
                             <div>
                                 <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; font-weight:700; margin-bottom:4px;">Columna B</div>
                                 <ul style="margin:0; padding-left:18px; list-style:none;">
-                                    ${colB.map((b: string, i: number) => `<li style="margin:3px 0; font-size:14px;"><strong>${String.fromCharCode(65 + i)}.</strong> ${b}</li>`).join('')}
+                                    ${colB.map((b: string, i: number) => `<li style="margin:3px 0; font-size:14px;"><strong>${String.fromCharCode(65 + i)}.</strong> ${stripLetterPrefix(b)}</li>`).join('')}
                                 </ul>
                             </div>
                         </div>
@@ -942,10 +942,7 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
                     ${(first.options && first.options.length > 0) ? `
                       <div class="options-grid">
                         ${first.options.map((opt: string, i: number) => `
-                          <div class="option-item">
-                            <div class="circle"></div>
-                            <span>${String.fromCharCode(65 + i)}) ${opt}</span>
-                          </div>
+                          <div class="option-item"><strong>${String.fromCharCode(65 + i)})</strong> ${stripLetterPrefix(opt)}</div>
                         `).join('')}
                       </div>
                     ` : ''}
@@ -959,6 +956,11 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
                 ${itemsHtml}
             </div>`;
         };
+
+        // Remueve "A.", "A)", "a)" etc. del inicio del texto de la opción
+        // para evitar que salga duplicado cuando nuestro renderer ya agrega "A)".
+        const stripLetterPrefix = (s: string): string =>
+            (s || '').replace(/^\s*[A-Za-z][\.\)]\s+/, '');
 
         const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
         const slotCounter = { value: 1 };
@@ -1076,10 +1078,9 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
     .question-title { font-size: 13px; font-weight: 500; margin-bottom: 8px; line-height: 1.5; }
     .question-image { max-width: 380px; max-height: 280px; margin: 8px 0; display: block; border: 1px solid #d1d5db; border-radius: 4px; }
 
-    /* Opciones: 1 columna con aire entre cada alternativa (formato evaluación docente) */
-    .options-grid { display: flex; flex-direction: column; gap: 8px; margin: 6px 0 6px 24px; }
-    .option-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: #1f2937; line-height: 1.4; }
-    .circle { width: 13px; height: 13px; min-width: 13px; border: 1.2px solid #374151; border-radius: 50%; margin-top: 3px; }
+    /* Opciones: 1 columna, sin burbujas (el alumno marca con X sobre la letra) */
+    .options-grid { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 6px 30px; }
+    .option-item { display: block; font-size: 13px; color: #1f2937; line-height: 1.45; }
 
     /* Líneas de desarrollo */
     .open-lines { margin-top: 8px; }
