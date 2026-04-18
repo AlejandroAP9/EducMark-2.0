@@ -1038,7 +1038,7 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-    @page { size: letter; margin: 18mm; }
+    @page { size: legal; margin: 18mm; }
 
     body { font-family: 'Inter', sans-serif; color: #111827; line-height: 1.45; background: #fff; margin: 0; font-size: 13px; }
 
@@ -1076,10 +1076,10 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
     .question-title { font-size: 13px; font-weight: 500; margin-bottom: 8px; line-height: 1.5; }
     .question-image { max-width: 380px; max-height: 280px; margin: 8px 0; display: block; border: 1px solid #d1d5db; border-radius: 4px; }
 
-    /* Opciones */
-    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; margin: 4px 0 4px 24px; }
-    .option-item { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: #1f2937; }
-    .circle { width: 12px; height: 12px; min-width: 12px; border: 1.2px solid #374151; border-radius: 50%; margin-top: 3px; }
+    /* Opciones: 1 columna con aire entre cada alternativa (formato evaluación docente) */
+    .options-grid { display: flex; flex-direction: column; gap: 8px; margin: 6px 0 6px 24px; }
+    .option-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: #1f2937; line-height: 1.4; }
+    .circle { width: 13px; height: 13px; min-width: 13px; border: 1.2px solid #374151; border-radius: 50%; margin-top: 3px; }
 
     /* Líneas de desarrollo */
     .open-lines { margin-top: 8px; }
