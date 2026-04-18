@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { Search, Plus, Sparkles, Wand2, RefreshCw, Mail, Check, Save, Download, Trash2, ArrowUp, ArrowDown, Pencil, X, GripVertical, Heart, ImagePlus, Printer, Clock, FileText } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, Plus, Sparkles, Wand2, RefreshCw, Mail, Check, Save, Download, Trash2, ArrowUp, ArrowDown, Pencil, X, Heart, ImagePlus, Printer, Clock, FileText, MoreVertical, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/shared/components/ui/UIComponents';
 import { Modal } from '@/shared/components/ui/UIComponents';
@@ -14,6 +14,24 @@ interface StepItemSelectionProps {
 }
 
 export const StepItemSelection: React.FC<StepItemSelectionProps> = ({ onFinalize }) => {
+    const [actionsOpen, setActionsOpen] = useState(false);
+    const [openKebabId, setOpenKebabId] = useState<number | null>(null);
+    const actionsRef = useRef<HTMLDivElement | null>(null);
+    const kebabRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (actionsRef.current && !actionsRef.current.contains(e.target as Node)) {
+                setActionsOpen(false);
+            }
+            if (kebabRef.current && !kebabRef.current.contains(e.target as Node)) {
+                setOpenKebabId(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     const {
         // Constants
         LOADING_MESSAGES,
@@ -221,69 +239,60 @@ export const StepItemSelection: React.FC<StepItemSelectionProps> = ({ onFinalize
 
             {generated && !generating && (
                 <div className="flex flex-col md:flex-row h-full gap-6 items-start animate-fade-in-up font-[var(--font-body)]">
-                    {/* Left: Summary */}
-                    <div className="w-full md:w-80 space-y-4 md:sticky md:top-0 flex-shrink-0">
-                        <div className="glass-card-premium p-5 rounded-2xl border border-[var(--border)] shadow-lg relative overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-b from-[var(--primary)]/5 to-transparent pointer-events-none"></div>
+                    {/* Left: Summary (compacto, acciones arriba) */}
+                    <div className="w-full md:w-72 space-y-3 md:sticky md:top-0 flex-shrink-0">
+                        {/* Acciones principales: primero visibles */}
+                        <div className="space-y-2">
+                            <button
+                                onClick={handleFinalizeAction}
+                                disabled={currentCount === 0}
+                                className="w-full btn-gradient py-3.5 rounded-xl font-bold shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95 group disabled:opacity-40 disabled:grayscale"
+                            >
+                                <Mail size={18} className="group-hover:animate-bounce" /> Finalizar y Publicar
+                            </button>
+                            <button
+                                onClick={handlePrintEvaluation}
+                                disabled={currentCount === 0}
+                                className="w-full bg-[var(--card)] border border-[var(--border)] text-[var(--on-background)] py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 hover:bg-[var(--card-hover)] hover:border-[var(--primary)] disabled:opacity-40 disabled:grayscale text-sm"
+                            >
+                                <Printer size={16} /> Imprimir Prueba y Pauta
+                            </button>
+                        </div>
 
-                            <h3 className="font-bold text-[var(--on-background)] mb-4 text-xs uppercase tracking-wider border-b border-[var(--border)] pb-3 flex justify-between items-center relative z-10 font-[var(--font-heading)]">
-                                <span>Progreso de Armado</span>
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${progress >= 100 ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-[var(--card)] text-[var(--muted)] border border-[var(--border)]'}`}>
-                                    {progress}%
+                        {/* Progreso compacto */}
+                        <div className="glass-card-premium p-4 rounded-xl border border-[var(--border)]">
+                            <div className="flex justify-between items-baseline mb-2">
+                                <span className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Progreso</span>
+                                <span className={`text-lg font-black ${progress >= 100 ? 'text-green-400' : 'text-[var(--on-background)]'}`}>
+                                    {currentCount}<span className="text-sm text-[var(--muted)] font-bold">/{totalQuestions}</span>
                                 </span>
-                            </h3>
+                            </div>
+                            <div className="w-full bg-[var(--input-bg)] h-1.5 rounded-full overflow-hidden mb-3">
+                                <div
+                                    className={`h-full transition-all duration-500 ${progress >= 100 ? 'bg-green-500' : 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)]'}`}
+                                    style={{ width: `${Math.min(progress, 100)}%` }}
+                                ></div>
+                            </div>
 
-                            <div className="space-y-2 relative z-10 max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
+                            {/* Distribución blueprint — lista densa */}
+                            <div className="space-y-1 max-h-[320px] overflow-y-auto custom-scrollbar">
                                 {blueprint.map(row => {
                                     const countSelected = items.filter((item: GeneratedItem) =>
                                         selectedItems.includes(item.id) &&
                                         ((item as any).blueprintRowId === row.id || ((item.type || item.itemType) === row.itemType && item.oa === row.oa))
                                     ).length;
+                                    const complete = countSelected >= row.count;
                                     return (
-                                        <div key={row.id} className="text-sm p-3 rounded-xl bg-[var(--input-bg)] border border-[var(--border)] group hover:border-[var(--primary)]/30 transition-colors">
-                                            <div className="flex justify-between font-semibold items-center mb-1">
-                                                <span className="text-[var(--on-background)] line-clamp-1 text-xs" title={row.topic}>{row.topic}</span>
-                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap border ${countSelected >= row.count ? 'bg-[var(--success)]/10 text-[var(--success)] border-[var(--success)]/20 shadow-[0_0_10px_var(--success)]' : 'bg-[var(--primary)]/5 text-[var(--primary)] border-[var(--primary)]/10'}`}>
-                                                    {countSelected}/{row.count}
-                                                </span>
-                                            </div>
-                                            <div className="flex gap-2 text-[10px] text-[var(--muted)]">
-                                                <span className="bg-[var(--card)] border border-[var(--border)] px-1.5 py-0.5 rounded opacity-80">{row.itemType}</span>
-                                            </div>
+                                        <div key={row.id} className="flex items-center gap-2 py-1 text-[11px]">
+                                            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${complete ? 'bg-green-400' : 'bg-[var(--muted)]/40'}`}></span>
+                                            <span className="text-[var(--muted)] truncate flex-1" title={row.topic}>{row.topic}</span>
+                                            <span className={`font-bold tabular-nums ${complete ? 'text-green-400' : 'text-[var(--muted)]'}`}>
+                                                {countSelected}/{row.count}
+                                            </span>
                                         </div>
                                     );
                                 })}
                             </div>
-
-                            <div className="mt-6 pt-4 border-t border-[var(--border)] relative z-10">
-                                <div className="flex justify-between items-center text-xs text-[var(--muted)] mb-2">
-                                    <span>Total Seleccionado</span>
-                                    <span className="text-[var(--on-background)] font-bold">{currentCount} / {totalQuestions}</span>
-                                </div>
-                                <div className="w-full bg-[var(--input-bg)] h-2 rounded-full overflow-hidden">
-                                    <div
-                                        className={`h-full transition-all duration-500 shadow-[0_0_10px_var(--primary)] ${progress >= 100 ? 'bg-green-500' : 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)]'}`}
-                                        style={{ width: `${Math.min(progress, 100)}%` }}
-                                    ></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="space-y-3">
-                            <button
-                                onClick={handlePrintEvaluation}
-                                disabled={currentCount === 0}
-                                className="w-full bg-[var(--card)] border border-[var(--border)] text-[var(--on-background)] py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 hover:bg-[var(--card-hover)] hover:border-[var(--primary)] disabled:opacity-50 disabled:grayscale"
-                            >
-                                <Printer size={18} /> Imprimir Prueba y Pauta
-                            </button>
-                            <button
-                                onClick={handleFinalizeAction}
-                                disabled={currentCount === 0}
-                                className="w-full btn-gradient py-4 rounded-xl font-bold shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95 group disabled:opacity-50 disabled:grayscale"
-                            >
-                                <Mail size={18} className="group-hover:animate-bounce" /> Finalizar y Publicar
-                            </button>
                         </div>
                     </div>
 
@@ -314,58 +323,66 @@ export const StepItemSelection: React.FC<StepItemSelectionProps> = ({ onFinalize
                                 </div>
                             )}
                         </div>
-                        <div className="p-4 bg-[var(--card)]/50 border-b border-[var(--border)] flex justify-between items-center rounded-t-2xl backdrop-blur-md sticky top-0 z-20">
-                            <div className="space-y-2">
-                                <h3 className="font-bold text-[var(--on-background)] flex items-center gap-2 font-[var(--font-heading)]">
-                                    <Sparkles size={18} className="text-[var(--primary)] fill-current" />
-                                    Sugerencias del Sistema
-                                    <span className="text-xs font-normal text-[var(--muted)] ml-2 bg-[var(--input-bg)] px-2 py-0.5 rounded border border-[var(--border)]">
-                                        {items.length} resultados
-                                    </span>
+                        <div className="p-3 bg-[var(--card)]/60 border-b border-[var(--border)] flex justify-between items-center rounded-t-2xl backdrop-blur-md sticky top-0 z-20 gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <h3 className="font-bold text-[var(--on-background)] flex items-center gap-2 font-[var(--font-heading)] text-sm whitespace-nowrap">
+                                    <Sparkles size={16} className="text-[var(--primary)] fill-current" />
+                                    {items.length} ítems
                                 </h3>
-                                <div className="flex items-center gap-2">
-                                    <label className="text-xs text-[var(--muted)]">Filtrar por habilidad:</label>
-                                    <select
-                                        value={skillFilter}
-                                        onChange={(e) => setSkillFilter(e.target.value)}
-                                        className="text-xs rounded-lg border border-[var(--border)] bg-[var(--input-bg)] px-2 py-1.5"
-                                    >
-                                        <option value="all">Todas</option>
-                                        {skillOptions.filter((skill) => skill !== 'all').map((skill) => (
-                                            <option key={skill} value={skill}>{skill}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                                <select
+                                    value={skillFilter}
+                                    onChange={(e) => setSkillFilter(e.target.value)}
+                                    className="text-xs rounded-lg border border-[var(--border)] bg-[var(--input-bg)] px-2 py-1.5 max-w-[180px]"
+                                    title="Filtrar por habilidad"
+                                >
+                                    <option value="all">Todas las habilidades</option>
+                                    {skillOptions.filter((skill) => skill !== 'all').map((skill) => (
+                                        <option key={skill} value={skill}>{skill}</option>
+                                    ))}
+                                </select>
                             </div>
-                            <div className="flex gap-2">
-                                <button onClick={handleImportFromBank} className="text-xs text-[var(--foreground)] font-bold hover:text-[var(--secondary)] flex items-center gap-1 transition-colors px-3 py-1.5 rounded-lg hover:bg-[var(--card)] border border-transparent hover:border-[var(--border)]">
-                                    <Download size={14} /> Importar desde Banco
+
+                            <div className="relative" ref={actionsRef}>
+                                <button
+                                    onClick={() => setActionsOpen((v) => !v)}
+                                    className="text-xs font-bold text-[var(--on-background)] flex items-center gap-1.5 transition-colors px-3 py-1.5 rounded-lg bg-[var(--input-bg)] border border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--card)]"
+                                >
+                                    Acciones <ChevronDown size={14} className={`transition-transform ${actionsOpen ? 'rotate-180' : ''}`} />
                                 </button>
-                                {filteredItems.length > 0 && (
-                                    <button
-                                        onClick={() => {
-                                            const allFilteredIds = filteredItems.map(({ item }) => item.id);
-                                            const allSelected = allFilteredIds.every((id) => selectedItems.includes(id));
-                                            if (allSelected) {
-                                                // Todas ya están seleccionadas → deseleccionar las filtradas
-                                                setSelectedItems(selectedItems.filter((id) => !allFilteredIds.includes(id)));
-                                            } else {
-                                                // Agregar las filtradas al conjunto de seleccionadas (sin duplicar)
-                                                setSelectedItems(Array.from(new Set([...selectedItems, ...allFilteredIds])));
-                                            }
-                                        }}
-                                        className="text-xs text-[var(--primary)] font-bold hover:text-[var(--secondary)] flex items-center gap-1 transition-colors px-3 py-1.5 rounded-lg hover:bg-[var(--primary)]/5 border border-transparent hover:border-[var(--primary)]/20"
-                                        title="Seleccionar/deseleccionar todas las preguntas visibles"
-                                    >
-                                        <Check size={14} />
-                                        {filteredItems.every(({ item }) => selectedItems.includes(item.id))
-                                            ? `Deseleccionar todas (${filteredItems.length})`
-                                            : `Seleccionar todas (${filteredItems.length})`}
-                                    </button>
+                                {actionsOpen && (
+                                    <div className="absolute right-0 top-full mt-1 w-56 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-xl z-30 overflow-hidden">
+                                        {filteredItems.length > 0 && (
+                                            <button
+                                                onClick={() => {
+                                                    const allFilteredIds = filteredItems.map(({ item }) => item.id);
+                                                    const allSelected = allFilteredIds.every((id) => selectedItems.includes(id));
+                                                    if (allSelected) {
+                                                        setSelectedItems(selectedItems.filter((id) => !allFilteredIds.includes(id)));
+                                                    } else {
+                                                        setSelectedItems(Array.from(new Set([...selectedItems, ...allFilteredIds])));
+                                                    }
+                                                    setActionsOpen(false);
+                                                }}
+                                                className="w-full px-4 py-2.5 text-sm text-left hover:bg-[var(--card-hover)] flex items-center gap-2 text-[var(--on-background)]"
+                                            >
+                                                <Check size={14} className="text-[var(--primary)]" />
+                                                {filteredItems.every(({ item }) => selectedItems.includes(item.id)) ? 'Deseleccionar todas' : 'Seleccionar todas'}
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => { handleImportFromBank(); setActionsOpen(false); }}
+                                            className="w-full px-4 py-2.5 text-sm text-left hover:bg-[var(--card-hover)] flex items-center gap-2 text-[var(--on-background)]"
+                                        >
+                                            <Download size={14} className="text-[var(--primary)]" /> Importar desde banco
+                                        </button>
+                                        <button
+                                            onClick={() => { handleGenerate(); setActionsOpen(false); }}
+                                            className="w-full px-4 py-2.5 text-sm text-left hover:bg-[var(--card-hover)] flex items-center gap-2 text-[var(--on-background)] border-t border-[var(--border)]"
+                                        >
+                                            <RefreshCw size={14} className="text-[var(--primary)]" /> Regenerar todo
+                                        </button>
+                                    </div>
                                 )}
-                                <button onClick={handleGenerate} className="text-xs text-[var(--primary)] font-bold hover:text-[var(--secondary)] flex items-center gap-1 transition-colors px-3 py-1.5 rounded-lg hover:bg-[var(--primary)]/5 border border-transparent hover:border-[var(--primary)]/20">
-                                    <RefreshCw size={12} /> Regenerar todo
-                                </button>
                             </div>
                         </div>
 
@@ -417,65 +434,68 @@ export const StepItemSelection: React.FC<StepItemSelectionProps> = ({ onFinalize
                                         ${draggingIndex === index ? 'opacity-60' : ''}
         `}
                                     >
-                                        <div className="absolute top-4 right-4 flex gap-2 z-10">
+                                        <div className="absolute top-4 right-4 flex gap-2 z-10 items-center">
                                             <button
                                                 onClick={() => setEditingItemId(isEditing ? null : item.id)}
-                                                className="p-2.5 rounded-xl transition-all flex items-center gap-2 bg-[var(--input-bg)] text-[var(--muted)] hover:text-[var(--primary)] border border-[var(--border)] hover:border-[var(--primary)] opacity-0 group-hover:opacity-100"
+                                                className="p-2 rounded-lg transition-all bg-[var(--input-bg)] text-[var(--muted)] hover:text-[var(--primary)] border border-[var(--border)] hover:border-[var(--primary)]"
                                                 title={isEditing ? 'Cancelar edición' : 'Editar ítem'}
                                             >
                                                 {isEditing ? <X size={16} /> : <Pencil size={16} />}
                                             </button>
                                             <button
-                                                onClick={() => handleMoveItem(index, 'up')}
-                                                className="p-2.5 rounded-xl transition-all flex items-center gap-2 bg-[var(--input-bg)] text-[var(--muted)] hover:text-[var(--on-background)] border border-[var(--border)] hover:border-[var(--primary)] opacity-0 group-hover:opacity-100"
-                                                title="Mover arriba"
-                                                disabled={index === 0}
-                                            >
-                                                <ArrowUp size={16} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleMoveItem(index, 'down')}
-                                                className="p-2.5 rounded-xl transition-all flex items-center gap-2 bg-[var(--input-bg)] text-[var(--muted)] hover:text-[var(--on-background)] border border-[var(--border)] hover:border-[var(--primary)] opacity-0 group-hover:opacity-100"
-                                                title="Mover abajo"
-                                                disabled={index === items.length - 1}
-                                            >
-                                                <ArrowDown size={16} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteItem(item.id)}
-                                                className="p-2.5 rounded-xl transition-all flex items-center gap-2 bg-[var(--input-bg)] text-[var(--muted)] hover:text-red-500 border border-[var(--border)] hover:border-red-500 opacity-0 group-hover:opacity-100"
-                                                title="Eliminar ítem"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleSaveToBank(item)}
-                                                className="p-2.5 rounded-xl transition-all flex items-center gap-2 bg-[var(--input-bg)] text-[var(--muted)] hover:text-[var(--warning)] border border-[var(--border)] hover:border-[var(--warning)] opacity-0 group-hover:opacity-100"
-                                                title="Guardar en mi Banco de Ítems"
-                                            >
-                                                <Save size={16} />
-                                            </button>
-                                            <button
                                                 onClick={() => handleToggleItemWithReuse(item.id, item.question)}
-                                                className={`p - 2.5 rounded - xl transition - all flex items - center gap - 2
-                                                ${isSelected
-                                                        ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white shadow-lg shadow-indigo-500/30'
-                                                        : 'bg-[var(--input-bg)] text-[var(--muted)] hover:text-[var(--primary)] border border-[var(--border)] hover:border-[var(--primary)]'
-                                                    }
-        `}
+                                                className={`px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 text-xs font-bold ${isSelected
+                                                    ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white shadow-md shadow-indigo-500/30'
+                                                    : 'bg-[var(--input-bg)] text-[var(--muted)] hover:text-[var(--primary)] border border-[var(--border)] hover:border-[var(--primary)]'
+                                                    }`}
+                                                title={isSelected ? 'Deseleccionar' : 'Seleccionar'}
                                             >
-                                                {isSelected ? <Check size={18} strokeWidth={3} /> : <Plus size={18} />}
-                                                <span className="text-xs font-bold hidden sm:inline">{isSelected ? 'Seleccionada' : 'Seleccionar'}</span>
+                                                {isSelected ? <Check size={16} strokeWidth={3} /> : <Plus size={16} />}
+                                                <span className="hidden sm:inline">{isSelected ? 'Seleccionada' : 'Seleccionar'}</span>
                                             </button>
+                                            <div className="relative" ref={openKebabId === item.id ? kebabRef : null}>
+                                                <button
+                                                    onClick={() => setOpenKebabId(openKebabId === item.id ? null : item.id)}
+                                                    className="p-2 rounded-lg transition-all bg-[var(--input-bg)] text-[var(--muted)] hover:text-[var(--on-background)] border border-[var(--border)] hover:border-[var(--primary)]"
+                                                    title="Más acciones"
+                                                >
+                                                    <MoreVertical size={16} />
+                                                </button>
+                                                {openKebabId === item.id && (
+                                                    <div className="absolute right-0 top-full mt-1 w-52 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-xl z-30 overflow-hidden">
+                                                        <button
+                                                            onClick={() => { handleMoveItem(index, 'up'); setOpenKebabId(null); }}
+                                                            disabled={index === 0}
+                                                            className="w-full px-4 py-2.5 text-sm text-left hover:bg-[var(--card-hover)] flex items-center gap-2 text-[var(--on-background)] disabled:opacity-40 disabled:cursor-not-allowed"
+                                                        >
+                                                            <ArrowUp size={14} /> Mover arriba
+                                                        </button>
+                                                        <button
+                                                            onClick={() => { handleMoveItem(index, 'down'); setOpenKebabId(null); }}
+                                                            disabled={index === items.length - 1}
+                                                            className="w-full px-4 py-2.5 text-sm text-left hover:bg-[var(--card-hover)] flex items-center gap-2 text-[var(--on-background)] disabled:opacity-40 disabled:cursor-not-allowed"
+                                                        >
+                                                            <ArrowDown size={14} /> Mover abajo
+                                                        </button>
+                                                        <button
+                                                            onClick={() => { handleSaveToBank(item); setOpenKebabId(null); }}
+                                                            className="w-full px-4 py-2.5 text-sm text-left hover:bg-[var(--card-hover)] flex items-center gap-2 text-[var(--on-background)] border-t border-[var(--border)]"
+                                                        >
+                                                            <Save size={14} className="text-amber-500" /> Guardar en banco
+                                                        </button>
+                                                        <button
+                                                            onClick={() => { handleDeleteItem(item.id); setOpenKebabId(null); }}
+                                                            className="w-full px-4 py-2.5 text-sm text-left hover:bg-red-500/10 flex items-center gap-2 text-red-400 border-t border-[var(--border)]"
+                                                        >
+                                                            <Trash2 size={14} /> Eliminar
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
 
-                                        {/* Padding-right reservado para la barra de botones absolute (6 botones × ~44px + gaps).
-                                            Evita que los badges queden debajo del toggle "Seleccionada". */}
-                                        <div className="flex flex-wrap gap-2 mb-4 pr-0 sm:pr-[280px] md:pr-[320px]">
-                                            <span className="bg-[var(--input-bg)] text-[var(--muted)] px-2 py-1 rounded-md text-[10px] font-bold uppercase border border-[var(--border)] tracking-wider inline-flex items-center gap-1">
-                                                <GripVertical size={12} />
-                                                Arrastrar
-                                            </span>
+                                        {/* Padding-right reservado para botones visibles (editar + seleccionar + kebab ≈ 220px). */}
+                                        <div className="flex flex-wrap gap-2 mb-4 pr-0 sm:pr-[220px]">
                                             <span className="bg-[var(--primary)]/5 text-[var(--primary)] px-2.5 py-1 rounded-md text-[10px] font-bold uppercase border border-[var(--primary)]/10 tracking-wider">{item.type || item.itemType || 'Item'}</span>
                                             <span className="bg-[var(--input-bg)] text-[var(--muted)] px-2.5 py-1 rounded-md text-[10px] font-bold uppercase border border-[var(--border)]">{item.oa || 'OA'}</span>
                                             <span className="bg-[var(--input-bg)] text-[var(--muted)] px-2.5 py-1 rounded-md text-[10px] font-bold uppercase border border-[var(--border)]">{item.difficulty || 'General'}</span>
