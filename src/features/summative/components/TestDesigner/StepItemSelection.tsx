@@ -23,6 +23,7 @@ export const StepItemSelection: React.FC<StepItemSelectionProps> = ({ onFinalize
         // Store data
         blueprint,
         selectedItems,
+        setSelectedItems,
         testData,
         items,
 
@@ -340,6 +341,28 @@ export const StepItemSelection: React.FC<StepItemSelectionProps> = ({ onFinalize
                                 <button onClick={handleImportFromBank} className="text-xs text-[var(--foreground)] font-bold hover:text-[var(--secondary)] flex items-center gap-1 transition-colors px-3 py-1.5 rounded-lg hover:bg-[var(--card)] border border-transparent hover:border-[var(--border)]">
                                     <Download size={14} /> Importar desde Banco
                                 </button>
+                                {filteredItems.length > 0 && (
+                                    <button
+                                        onClick={() => {
+                                            const allFilteredIds = filteredItems.map(({ item }) => item.id);
+                                            const allSelected = allFilteredIds.every((id) => selectedItems.includes(id));
+                                            if (allSelected) {
+                                                // Todas ya están seleccionadas → deseleccionar las filtradas
+                                                setSelectedItems(selectedItems.filter((id) => !allFilteredIds.includes(id)));
+                                            } else {
+                                                // Agregar las filtradas al conjunto de seleccionadas (sin duplicar)
+                                                setSelectedItems(Array.from(new Set([...selectedItems, ...allFilteredIds])));
+                                            }
+                                        }}
+                                        className="text-xs text-[var(--primary)] font-bold hover:text-[var(--secondary)] flex items-center gap-1 transition-colors px-3 py-1.5 rounded-lg hover:bg-[var(--primary)]/5 border border-transparent hover:border-[var(--primary)]/20"
+                                        title="Seleccionar/deseleccionar todas las preguntas visibles"
+                                    >
+                                        <Check size={14} />
+                                        {filteredItems.every(({ item }) => selectedItems.includes(item.id))
+                                            ? `Deseleccionar todas (${filteredItems.length})`
+                                            : `Seleccionar todas (${filteredItems.length})`}
+                                    </button>
+                                )}
                                 <button onClick={handleGenerate} className="text-xs text-[var(--primary)] font-bold hover:text-[var(--secondary)] flex items-center gap-1 transition-colors px-3 py-1.5 rounded-lg hover:bg-[var(--primary)]/5 border border-transparent hover:border-[var(--primary)]/20">
                                     <RefreshCw size={12} /> Regenerar todo
                                 </button>
@@ -446,7 +469,9 @@ export const StepItemSelection: React.FC<StepItemSelectionProps> = ({ onFinalize
                                             </button>
                                         </div>
 
-                                        <div className="flex gap-2 mb-4">
+                                        {/* Padding-right reservado para la barra de botones absolute (6 botones × ~44px + gaps).
+                                            Evita que los badges queden debajo del toggle "Seleccionada". */}
+                                        <div className="flex flex-wrap gap-2 mb-4 pr-0 sm:pr-[280px] md:pr-[320px]">
                                             <span className="bg-[var(--input-bg)] text-[var(--muted)] px-2 py-1 rounded-md text-[10px] font-bold uppercase border border-[var(--border)] tracking-wider inline-flex items-center gap-1">
                                                 <GripVertical size={12} />
                                                 Arrastrar

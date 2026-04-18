@@ -963,15 +963,47 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
 </body>
 </html>`;
 
-        const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=900,height=700');
-        if (!printWindow) {
-            toast.error('No se pudo abrir la ventana de impresión.');
-            return;
+        // Usamos iframe oculto en vez de window.open() para evitar bloqueo de pop-ups.
+        // Crea un iframe, escribe el HTML, dispara print, y limpia después.
+        try {
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'fixed';
+            iframe.style.right = '0';
+            iframe.style.bottom = '0';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = '0';
+            iframe.setAttribute('aria-hidden', 'true');
+            document.body.appendChild(iframe);
+
+            const doc = iframe.contentWindow?.document;
+            if (!doc) {
+                toast.error('No se pudo preparar la impresión. Intenta descargar el PDF.');
+                iframe.remove();
+                return;
+            }
+
+            doc.open();
+            doc.write(html);
+            doc.close();
+
+            // El HTML ya tiene window.onload que llama window.print() después de MathJax.
+            // Como estamos en iframe, onload dispara dentro del iframe.
+            // Limpiamos el iframe 60s después (suficiente para imprimir).
+            setTimeout(() => iframe.remove(), 60000);
+        } catch (err) {
+            console.error('[Print] iframe failed, falling back to window.open:', err);
+            // Fallback a window.open si el iframe falla por algún motivo
+            const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=900,height=700');
+            if (!printWindow) {
+                toast.error('No se pudo abrir la ventana de impresión. Revisa que los pop-ups estén permitidos.');
+                return;
+            }
+            printWindow.document.open();
+            printWindow.document.write(html);
+            printWindow.document.close();
+            printWindow.focus();
         }
-        printWindow.document.open();
-        printWindow.document.write(html);
-        printWindow.document.close();
-        printWindow.focus();
     };
 
     const handleItemFieldChange = (itemId: number, field: keyof GeneratedItem, value: string | null) => {
@@ -1054,6 +1086,7 @@ export const useItemSelection = ({ onFinalize }: UseItemSelectionParams) => {
         // Store data
         blueprint,
         selectedItems,
+        setSelectedItems: useTestDesignerStore.getState().setSelectedItems,
         testData,
         items,
 
